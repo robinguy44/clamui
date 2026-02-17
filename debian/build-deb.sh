@@ -303,6 +303,14 @@ create_package_structure() {
 	log_info "Creating usr/share/nemo/actions/ for Nemo actions..."
 	mkdir -p "$BUILD_DIR/usr/share/nemo/actions"
 
+	# Create /usr/share/clamui/integrations/ for Nautilus scripts
+	log_info "Creating usr/share/clamui/integrations/ for Nautilus scripts..."
+	mkdir -p "$BUILD_DIR/usr/share/clamui/integrations"
+
+	# Create /usr/share/kservices5/ServiceMenus/ for Dolphin service menus
+	log_info "Creating usr/share/kservices5/ServiceMenus/ for Dolphin menus..."
+	mkdir -p "$BUILD_DIR/usr/share/kservices5/ServiceMenus"
+
 	echo
 	log_success "Package directory structure created successfully!"
 	log_info "Build directory: $BUILD_DIR"
@@ -317,6 +325,8 @@ create_package_structure() {
 	log_info "  - usr/share/icons/hicolor/128x128/apps/"
 	log_info "  - usr/share/metainfo/"
 	log_info "  - usr/share/nemo/actions/"
+	log_info "  - usr/share/clamui/integrations/"
+	log_info "  - usr/share/kservices5/ServiceMenus/"
 
 	return 0
 }
@@ -522,6 +532,48 @@ copy_desktop_files() {
 	else
 		log_warning "VirusTotal Nemo action file not found: $NEMO_VT_ACTION"
 		log_warning "VirusTotal checking in Nemo will not be available"
+	fi
+
+	# Copy Nautilus scripts to integrations directory
+	NAUTILUS_SCAN_SCRIPT="$PROJECT_ROOT/scripts/clamui-scan-nautilus.sh"
+	if [ -f "$NAUTILUS_SCAN_SCRIPT" ]; then
+		log_info "Copying Nautilus scan script..."
+		cp "$NAUTILUS_SCAN_SCRIPT" "$BUILD_DIR/usr/share/clamui/integrations/"
+		chmod 755 "$BUILD_DIR/usr/share/clamui/integrations/clamui-scan-nautilus.sh"
+		log_success "Nautilus scan script installed"
+	else
+		log_warning "Nautilus scan script not found: $NAUTILUS_SCAN_SCRIPT"
+	fi
+
+	NAUTILUS_VT_SCRIPT="$PROJECT_ROOT/scripts/clamui-virustotal-nautilus.sh"
+	if [ -f "$NAUTILUS_VT_SCRIPT" ]; then
+		log_info "Copying Nautilus VirusTotal script..."
+		cp "$NAUTILUS_VT_SCRIPT" "$BUILD_DIR/usr/share/clamui/integrations/"
+		chmod 755 "$BUILD_DIR/usr/share/clamui/integrations/clamui-virustotal-nautilus.sh"
+		log_success "Nautilus VirusTotal script installed"
+	else
+		log_warning "Nautilus VirusTotal script not found: $NAUTILUS_VT_SCRIPT"
+	fi
+
+	# Copy Dolphin service menus
+	DOLPHIN_SCAN_SERVICE="$PROJECT_ROOT/io.github.linx_systems.ClamUI.service.desktop"
+	if [ -f "$DOLPHIN_SCAN_SERVICE" ]; then
+		log_info "Copying Dolphin scan service menu..."
+		cp "$DOLPHIN_SCAN_SERVICE" "$BUILD_DIR/usr/share/kservices5/ServiceMenus/"
+		chmod 644 "$BUILD_DIR/usr/share/kservices5/ServiceMenus/io.github.linx_systems.ClamUI.service.desktop"
+		log_success "Dolphin scan service menu installed"
+	else
+		log_warning "Dolphin scan service file not found: $DOLPHIN_SCAN_SERVICE"
+	fi
+
+	DOLPHIN_VT_SERVICE="$PROJECT_ROOT/io.github.linx_systems.ClamUI-virustotal.desktop"
+	if [ -f "$DOLPHIN_VT_SERVICE" ]; then
+		log_info "Copying Dolphin VirusTotal service menu..."
+		cp "$DOLPHIN_VT_SERVICE" "$BUILD_DIR/usr/share/kservices5/ServiceMenus/"
+		chmod 644 "$BUILD_DIR/usr/share/kservices5/ServiceMenus/io.github.linx_systems.ClamUI-virustotal.desktop"
+		log_success "Dolphin VirusTotal service menu installed"
+	else
+		log_warning "Dolphin VirusTotal service file not found: $DOLPHIN_VT_SERVICE"
 	fi
 
 	echo

@@ -448,10 +448,25 @@ install_xdg_files() {
 	if command -v dolphin >/dev/null 2>&1 || [ -d "$SHARE_DIR/kservices5" ]; then
 		log_info "Installing Dolphin service menus..."
 		mkdir -p "$DOLPHIN_SERVICES_DIR"
+		if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI.service.desktop" ]; then
+			cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI.service.desktop" "$DOLPHIN_SERVICES_DIR/"
+			log_success "Dolphin ClamUI scan service menu installed"
+		fi
 		if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI-virustotal.desktop" ]; then
 			cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI-virustotal.desktop" "$DOLPHIN_SERVICES_DIR/"
 			log_success "Dolphin VirusTotal service menu installed"
 		fi
+	fi
+
+	# Install AppStream metainfo
+	METAINFO_DIR="$SHARE_DIR/metainfo"
+	mkdir -p "$METAINFO_DIR"
+	if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI.metainfo.xml" ]; then
+		cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI.metainfo.xml" "$METAINFO_DIR/"
+		log_success "AppStream metainfo installed"
+	else
+		log_warning "AppStream metainfo file not found: $SCRIPT_DIR/io.github.linx_systems.ClamUI.metainfo.xml"
+		log_warning "Application may not appear in software centers"
 	fi
 
 	# Update desktop database if available
