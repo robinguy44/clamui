@@ -4,6 +4,7 @@ Dialog for configuring file manager context menu integration.
 
 Shown on first Flatpak launch to offer installation of context menu
 actions for supported file managers (Nemo, Nautilus, Dolphin).
+Supports install, removal, and repair of partial installations.
 """
 
 import logging
@@ -19,10 +20,13 @@ from gi.repository import Adw, Gtk
 from ..core.file_manager_integration import (
     FileManager,
     IntegrationInfo,
+    IntegrationStatus,
     get_available_integrations,
     install_integration,
+    remove_integration,
+    repair_integration,
 )
-from ..core.i18n import _, ngettext
+from ..core.i18n import _
 from .compat import create_switch_row, create_toolbar_view
 from .utils import resolve_icon_name
 
@@ -38,7 +42,7 @@ class FileManagerIntegrationDialog(Adw.Window):
 
     Shown on first Flatpak launch when file manager integrations are available
     but not yet installed. Allows the user to select which file managers to
-    integrate with.
+    integrate with, remove existing integrations, or repair partial ones.
 
     Uses Adw.Window instead of Adw.Dialog for compatibility with
     libadwaita < 1.5 (Ubuntu 22.04, Pop!_OS 22.04).
@@ -71,6 +75,7 @@ class FileManagerIntegrationDialog(Adw.Window):
         self._settings_manager = settings_manager
         self._on_complete = on_complete
         self._integration_rows: dict[FileManager, Adw.ActionRow] = {}
+        self._original_status: dict[FileManager, IntegrationStatus] = {}
 
         # Configure and set up the dialog
         self._setup_dialog()
@@ -166,6 +171,7 @@ class FileManagerIntegrationDialog(Adw.Window):
                 row = self._create_file_manager_row(integration)
                 fm_group.add(row)
                 self._integration_rows[integration.file_manager] = row
+                self._original_status[integration.file_manager] = integration.status
 
         if available_count == 0:
             # No file managers detected
@@ -187,6 +193,9 @@ class FileManagerIntegrationDialog(Adw.Window):
         """
         Create a switch row for a file manager integration.
 
+        Rows are always sensitive (interactive) so users can toggle
+        integrations on or off regardless of current state.
+
         Args:
             integration: The integration info.
 
@@ -196,15 +205,21 @@ class FileManagerIntegrationDialog(Adw.Window):
         row = create_switch_row()
         row.set_title(integration.display_name)
 
-        if integration.is_installed:
+        if integration.status == IntegrationStatus.INSTALLED:
             row.set_subtitle(
-                _("{description} (already installed)").format(description=integration.description)
+                _("{description} (installed)").format(description=_(integration.description))
             )
             row.set_active(True)
-            row.set_sensitive(False)
+        elif integration.status == IntegrationStatus.PARTIAL:
+            row.set_subtitle(
+                _("{description} (incomplete - needs repair)").format(
+                    description=_(integration.description)
+                )
+            )
+            row.set_active(True)
         else:
-            row.set_subtitle(integration.description)
-            row.set_active(True)  # Default to enabled
+            row.set_subtitle(_(integration.description))
+            row.set_active(False)  # Off by default; user opts in to install
 
         # Add file manager icon
         icon_name = self._get_file_manager_icon(integration.file_manager)
@@ -241,62 +256,97 @@ class FileManagerIntegrationDialog(Adw.Window):
         button_box.set_margin_top(12)
         button_box.set_margin_bottom(12)
 
-        # Skip button
-        skip_button = Gtk.Button()
-        skip_button.set_label(_("Skip"))
-        skip_button.connect("clicked", self._on_skip_clicked)
-        button_box.append(skip_button)
+        # Cancel button
+        cancel_button = Gtk.Button()
+        cancel_button.set_label(_("Cancel"))
+        cancel_button.connect("clicked", self._on_cancel_clicked)
+        button_box.append(cancel_button)
 
-        # Install button
-        install_button = Gtk.Button()
-        install_button.set_label(_("Install Integration"))
-        install_button.add_css_class("suggested-action")
-        install_button.connect("clicked", self._on_install_clicked)
-        button_box.append(install_button)
+        # Apply button
+        apply_button = Gtk.Button()
+        apply_button.set_label(_("Apply"))
+        apply_button.add_css_class("suggested-action")
+        apply_button.connect("clicked", self._on_apply_clicked)
+        button_box.append(apply_button)
 
         actions_group.add(button_box)
 
         preferences_page.add(actions_group)
 
-    def _on_skip_clicked(self, _button: Gtk.Button):
-        """Handle skip button click."""
+    def _on_cancel_clicked(self, _button: Gtk.Button):
+        """Handle cancel button click."""
         self._save_preference_and_close()
 
-    def _on_install_clicked(self, _button: Gtk.Button):
-        """Handle install button click."""
+    def _on_apply_clicked(self, _button: Gtk.Button):
+        """Handle apply button click."""
         installed_count = 0
+        removed_count = 0
+        repaired_count = 0
         error_count = 0
 
         for file_manager, row in self._integration_rows.items():
-            # Skip if not selected or already installed (not sensitive)
-            if not row.get_active() or not row.get_sensitive():
-                continue
+            is_active = row.get_active()
+            original = self._original_status.get(file_manager, IntegrationStatus.NOT_INSTALLED)
 
-            success, error = install_integration(file_manager)
-            if success:
-                installed_count += 1
-                logger.info(f"Installed {file_manager.value} integration")
-            else:
-                error_count += 1
-                logger.error(f"Failed to install {file_manager.value}: {error}")
+            if is_active and original == IntegrationStatus.NOT_INSTALLED:
+                # Install new integration
+                success, error = install_integration(file_manager)
+                if success:
+                    installed_count += 1
+                    logger.info("Installed %s integration", file_manager.value)
+                else:
+                    error_count += 1
+                    logger.error("Failed to install %s: %s", file_manager.value, error)
 
-        # Show result
-        if error_count > 0:
-            self._show_toast(
-                _("Installed {installed}, failed {failed}").format(
-                    installed=installed_count, failed=error_count
-                )
-            )
-        elif installed_count > 0:
-            self._show_toast(
-                ngettext(
-                    "Installed {count} integration",
-                    "Installed {count} integrations",
-                    installed_count,
-                ).format(count=installed_count)
-            )
+            elif is_active and original == IntegrationStatus.PARTIAL:
+                # Repair partial integration
+                success, error = repair_integration(file_manager)
+                if success:
+                    repaired_count += 1
+                    logger.info("Repaired %s integration", file_manager.value)
+                else:
+                    error_count += 1
+                    logger.error("Failed to repair %s: %s", file_manager.value, error)
 
+            elif not is_active and original in (
+                IntegrationStatus.INSTALLED,
+                IntegrationStatus.PARTIAL,
+            ):
+                # Remove integration
+                success, error = remove_integration(file_manager)
+                if success:
+                    removed_count += 1
+                    logger.info("Removed %s integration", file_manager.value)
+                else:
+                    error_count += 1
+                    logger.error("Failed to remove %s: %s", file_manager.value, error)
+
+            # is_active + INSTALLED = no-op
+            # not is_active + NOT_INSTALLED = no-op
+
+        # Show result summary
+        self._show_result_toast(installed_count, removed_count, repaired_count, error_count)
         self._save_preference_and_close()
+
+    def _show_result_toast(self, installed: int, removed: int, repaired: int, errors: int):
+        """Show a summary toast of the apply results."""
+        if errors > 0:
+            parts = []
+            total_ok = installed + removed + repaired
+            if total_ok > 0:
+                parts.append(_("{count} succeeded").format(count=total_ok))
+            parts.append(_("{count} failed").format(count=errors))
+            self._show_toast(", ".join(parts))
+        else:
+            parts = []
+            if installed > 0:
+                parts.append(_("{count} installed").format(count=installed))
+            if removed > 0:
+                parts.append(_("{count} removed").format(count=removed))
+            if repaired > 0:
+                parts.append(_("{count} repaired").format(count=repaired))
+            if parts:
+                self._show_toast(", ".join(parts))
 
     def _save_preference_and_close(self):
         """Save the prompted preference and close."""

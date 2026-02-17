@@ -13,7 +13,7 @@ and are copied to the user's local share directories on first run.
 import logging
 import os
 import shutil
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
@@ -31,6 +31,14 @@ class FileManager(Enum):
     DOLPHIN = "dolphin"
 
 
+class IntegrationStatus(Enum):
+    """Status of a file manager integration installation."""
+
+    NOT_INSTALLED = "not_installed"
+    PARTIAL = "partial"
+    INSTALLED = "installed"
+
+
 @dataclass
 class IntegrationInfo:
     """Information about a file manager integration."""
@@ -39,8 +47,19 @@ class IntegrationInfo:
     display_name: str
     description: str
     source_files: list[tuple[str, str]]  # List of (source_filename, dest_path) tuples
-    is_installed: bool = False
+    status: IntegrationStatus = IntegrationStatus.NOT_INSTALLED
     is_available: bool = False
+    missing_files: list[str] = field(default_factory=list)
+
+    @property
+    def is_installed(self) -> bool:
+        """Backward-compatible property: True when fully installed."""
+        return self.status == IntegrationStatus.INSTALLED
+
+    @property
+    def is_partial(self) -> bool:
+        """True when some but not all integration files are installed."""
+        return self.status == IntegrationStatus.PARTIAL
 
 
 # Bundled integration files location in Flatpak
@@ -60,12 +79,20 @@ NEMO_INTEGRATIONS = [
 
 NAUTILUS_INTEGRATIONS = [
     (
+        "clamui-scan-nautilus.sh",
+        "nautilus/scripts/Scan with ClamUI",
+    ),
+    (
         "clamui-virustotal-nautilus.sh",
         "nautilus/scripts/Scan with VirusTotal",
     ),
 ]
 
 DOLPHIN_INTEGRATIONS = [
+    (
+        "io.github.linx_systems.ClamUI.desktop",
+        "kservices5/ServiceMenus/io.github.linx_systems.ClamUI.desktop",
+    ),
     (
         "io.github.linx_systems.ClamUI-virustotal.desktop",
         "kservices5/ServiceMenus/io.github.linx_systems.ClamUI-virustotal.desktop",
@@ -146,15 +173,20 @@ def _can_create_directory(path: Path) -> bool:
         return False
 
 
-def _check_integration_installed(file_manager: FileManager) -> bool:
+def _check_integration_status(
+    file_manager: FileManager,
+) -> tuple[IntegrationStatus, list[str]]:
     """
-    Check if integration files are already installed for a file manager.
+    Check the installation status of integration files for a file manager.
+
+    Checks ALL files (not just the first) to detect partial installations.
 
     Args:
         file_manager: The file manager to check.
 
     Returns:
-        True if all integration files are installed.
+        Tuple of (status, missing_files) where missing_files lists
+        destination-relative paths that are not yet installed.
     """
     local_share = _get_local_share_dir()
 
@@ -165,15 +197,43 @@ def _check_integration_installed(file_manager: FileManager) -> bool:
     elif file_manager == FileManager.DOLPHIN:
         files = DOLPHIN_INTEGRATIONS
     else:
-        return False
+        return IntegrationStatus.NOT_INSTALLED, []
 
-    # Check if at least the primary integration file exists
-    if files:
-        _, dest_rel = files[0]
+    if not files:
+        return IntegrationStatus.NOT_INSTALLED, []
+
+    missing = []
+    installed_count = 0
+
+    for _source_name, dest_rel in files:
         dest_path = local_share / dest_rel
-        return dest_path.exists()
+        if dest_path.exists():
+            installed_count += 1
+        else:
+            missing.append(dest_rel)
 
-    return False
+    if installed_count == 0:
+        return IntegrationStatus.NOT_INSTALLED, missing
+    elif missing:
+        return IntegrationStatus.PARTIAL, missing
+    else:
+        return IntegrationStatus.INSTALLED, []
+
+
+def _check_integration_installed(file_manager: FileManager) -> bool:
+    """
+    Check if integration files are already installed for a file manager.
+
+    Backward-compatible wrapper around _check_integration_status().
+
+    Args:
+        file_manager: The file manager to check.
+
+    Returns:
+        True if all integration files are installed.
+    """
+    status, _ = _check_integration_status(file_manager)
+    return status == IntegrationStatus.INSTALLED
 
 
 def get_available_integrations() -> list[IntegrationInfo]:
@@ -199,43 +259,46 @@ def get_available_integrations() -> list[IntegrationInfo]:
 
     # Nemo (Linux Mint, Cinnamon)
     nemo_available = _check_file_manager_available(FileManager.NEMO)
-    nemo_installed = _check_integration_installed(FileManager.NEMO)
+    nemo_status, nemo_missing = _check_integration_status(FileManager.NEMO)
     integrations.append(
         IntegrationInfo(
             file_manager=FileManager.NEMO,
             display_name="Nemo",
             description=N_("Linux Mint / Cinnamon file manager"),
             source_files=NEMO_INTEGRATIONS,
-            is_installed=nemo_installed,
+            status=nemo_status,
             is_available=nemo_available,
+            missing_files=nemo_missing,
         )
     )
 
     # Nautilus (GNOME Files)
     nautilus_available = _check_file_manager_available(FileManager.NAUTILUS)
-    nautilus_installed = _check_integration_installed(FileManager.NAUTILUS)
+    nautilus_status, nautilus_missing = _check_integration_status(FileManager.NAUTILUS)
     integrations.append(
         IntegrationInfo(
             file_manager=FileManager.NAUTILUS,
             display_name="Nautilus",
             description=N_("GNOME Files"),
             source_files=NAUTILUS_INTEGRATIONS,
-            is_installed=nautilus_installed,
+            status=nautilus_status,
             is_available=nautilus_available,
+            missing_files=nautilus_missing,
         )
     )
 
     # Dolphin (KDE)
     dolphin_available = _check_file_manager_available(FileManager.DOLPHIN)
-    dolphin_installed = _check_integration_installed(FileManager.DOLPHIN)
+    dolphin_status, dolphin_missing = _check_integration_status(FileManager.DOLPHIN)
     integrations.append(
         IntegrationInfo(
             file_manager=FileManager.DOLPHIN,
             display_name="Dolphin",
             description=N_("KDE file manager"),
             source_files=DOLPHIN_INTEGRATIONS,
-            is_installed=dolphin_installed,
+            status=dolphin_status,
             is_available=dolphin_available,
+            missing_files=dolphin_missing,
         )
     )
 
@@ -303,6 +366,75 @@ def install_integration(file_manager: FileManager) -> tuple[bool, str | None]:
     except Exception as e:
         error_msg = _("Failed to install integration: {error}").format(error=e)
         logger.error("Failed to install integration: %s", e)
+        return False, error_msg
+
+
+def repair_integration(file_manager: FileManager) -> tuple[bool, str | None]:
+    """
+    Repair a partial file manager integration by installing only missing files.
+
+    Args:
+        file_manager: The file manager to repair integration for.
+
+    Returns:
+        Tuple of (success, error_message).
+    """
+    status, missing = _check_integration_status(file_manager)
+
+    if status == IntegrationStatus.INSTALLED:
+        return True, None  # Nothing to repair
+
+    if status == IntegrationStatus.NOT_INSTALLED:
+        return install_integration(file_manager)
+
+    # PARTIAL: install only missing files
+    if not is_flatpak():
+        return False, _("Not running as Flatpak")
+
+    if not INTEGRATIONS_SOURCE_DIR.exists():
+        return False, _("Integration files not found")
+
+    local_share = _get_local_share_dir()
+
+    if file_manager == FileManager.NEMO:
+        files = NEMO_INTEGRATIONS
+    elif file_manager == FileManager.NAUTILUS:
+        files = NAUTILUS_INTEGRATIONS
+    elif file_manager == FileManager.DOLPHIN:
+        files = DOLPHIN_INTEGRATIONS
+    else:
+        return False, _("Unknown file manager: {name}").format(name=file_manager)
+
+    try:
+        for source_name, dest_rel in files:
+            if dest_rel not in missing:
+                continue
+
+            source_path = INTEGRATIONS_SOURCE_DIR / source_name
+            dest_path = local_share / dest_rel
+
+            if not source_path.exists():
+                logger.warning("Source file not found: %s", source_path)
+                continue
+
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, dest_path)
+
+            if source_name.endswith(".sh"):
+                dest_path.chmod(0o755)
+
+            logger.info("Repaired: %s", dest_path)
+
+        return True, None
+
+    except PermissionError as e:
+        error_msg = _("Permission denied: {error}").format(error=e)
+        logger.error("Permission denied: %s", e)
+        return False, error_msg
+
+    except Exception as e:
+        error_msg = _("Failed to repair integration: {error}").format(error=e)
+        logger.error("Failed to repair integration: %s", e)
         return False, error_msg
 
 

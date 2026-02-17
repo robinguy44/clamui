@@ -489,16 +489,36 @@ class ClamUIApp(Adw.Application):
 
         Checks if:
         1. Running as Flatpak
-        2. Not already prompted (stored in settings)
-        3. At least one file manager integration is available but not installed
+        2. Any partial installations exist (always re-show for repair)
+        3. Not already prompted (stored in settings)
+        4. At least one file manager integration is available but not installed
 
-        If all conditions are met, shows the integration dialog.
+        If conditions are met, shows the integration dialog.
         """
-        from .core.file_manager_integration import check_any_not_installed
+        from .core.file_manager_integration import (
+            IntegrationStatus,
+            get_available_integrations,
+        )
         from .core.flatpak import is_flatpak
 
         # Only show in Flatpak
         if not is_flatpak():
+            return
+
+        # Check for partial (bugged) installations - always re-show for repair
+        integrations = get_available_integrations()
+        has_partial = any(
+            i.is_available and i.status == IntegrationStatus.PARTIAL for i in integrations
+        )
+        if has_partial:
+            from .ui.file_manager_integration_dialog import FileManagerIntegrationDialog
+
+            dialog = FileManagerIntegrationDialog(
+                settings_manager=self._settings_manager,
+            )
+            dialog.set_transient_for(win)
+            dialog.present()
+            logger.info("Showing file manager integration dialog (partial install detected)")
             return
 
         # Check if already prompted
@@ -506,7 +526,8 @@ class ClamUIApp(Adw.Application):
             return
 
         # Check if any integrations are available but not installed
-        if not check_any_not_installed():
+        has_not_installed = any(i.is_available and not i.is_installed for i in integrations)
+        if not has_not_installed:
             # Either no file managers detected or all already integrated
             # Mark as prompted so we don't keep checking
             self._settings_manager.set("file_manager_integration_prompted", True)

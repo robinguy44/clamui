@@ -9,12 +9,14 @@ from src.core import file_manager_integration
 from src.core.file_manager_integration import (
     FileManager,
     IntegrationInfo,
+    IntegrationStatus,
     check_any_available,
     check_any_not_installed,
     get_available_integrations,
     install_all_available,
     install_integration,
     remove_integration,
+    repair_integration,
 )
 
 
@@ -76,30 +78,156 @@ class TestCheckFileManagerAvailable:
                 assert result is True
 
 
+class TestCheckIntegrationStatus:
+    """Tests for _check_integration_status() function."""
+
+    def test_all_files_installed(self, tmp_path):
+        """Test INSTALLED when all integration files exist."""
+        local_share = tmp_path / "share"
+        # Create all Nemo integration files
+        for _, dest_rel in file_manager_integration.NEMO_INTEGRATIONS:
+            dest = local_share / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text("test")
+
+        with mock.patch.object(
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
+        ):
+            status, missing = file_manager_integration._check_integration_status(FileManager.NEMO)
+            assert status == IntegrationStatus.INSTALLED
+            assert missing == []
+
+    def test_no_files_installed(self, tmp_path):
+        """Test NOT_INSTALLED when no integration files exist."""
+        local_share = tmp_path / "share"
+        local_share.mkdir()
+
+        with mock.patch.object(
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
+        ):
+            status, missing = file_manager_integration._check_integration_status(FileManager.NEMO)
+            assert status == IntegrationStatus.NOT_INSTALLED
+            assert len(missing) == len(file_manager_integration.NEMO_INTEGRATIONS)
+
+    def test_partial_install_detected(self, tmp_path):
+        """Test PARTIAL when only some integration files exist."""
+        local_share = tmp_path / "share"
+        # Create only the first Nemo integration file
+        first_source, first_dest = file_manager_integration.NEMO_INTEGRATIONS[0]
+        dest = local_share / first_dest
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text("test")
+
+        with mock.patch.object(
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
+        ):
+            status, missing = file_manager_integration._check_integration_status(FileManager.NEMO)
+            assert status == IntegrationStatus.PARTIAL
+            assert len(missing) == len(file_manager_integration.NEMO_INTEGRATIONS) - 1
+
+    def test_nautilus_partial_install(self, tmp_path):
+        """Test PARTIAL for Nautilus when only one of two scripts exists."""
+        local_share = tmp_path / "share"
+        # Create only the first Nautilus integration file
+        _, first_dest = file_manager_integration.NAUTILUS_INTEGRATIONS[0]
+        dest = local_share / first_dest
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text("test")
+
+        with mock.patch.object(
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
+        ):
+            status, missing = file_manager_integration._check_integration_status(
+                FileManager.NAUTILUS
+            )
+            assert status == IntegrationStatus.PARTIAL
+            assert len(missing) == 1
+
+    def test_dolphin_all_installed(self, tmp_path):
+        """Test INSTALLED for Dolphin when both desktop files exist."""
+        local_share = tmp_path / "share"
+        for _, dest_rel in file_manager_integration.DOLPHIN_INTEGRATIONS:
+            dest = local_share / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text("test")
+
+        with mock.patch.object(
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
+        ):
+            status, missing = file_manager_integration._check_integration_status(
+                FileManager.DOLPHIN
+            )
+            assert status == IntegrationStatus.INSTALLED
+            assert missing == []
+
+
 class TestCheckIntegrationInstalled:
-    """Tests for _check_integration_installed() function."""
+    """Tests for _check_integration_installed() backward-compat wrapper."""
 
-    def test_check_nemo_integration_installed(self):
-        """Test Nemo integration detected when action file exists."""
-        with mock.patch.object(
-            file_manager_integration,
-            "_get_local_share_dir",
-            return_value=Path("/home/user/.local/share"),
-        ):
-            with mock.patch.object(Path, "exists", return_value=True):
-                result = file_manager_integration._check_integration_installed(FileManager.NEMO)
-                assert result is True
+    def test_returns_true_when_all_installed(self, tmp_path):
+        """Test returns True when all files exist (INSTALLED status)."""
+        local_share = tmp_path / "share"
+        for _, dest_rel in file_manager_integration.NEMO_INTEGRATIONS:
+            dest = local_share / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text("test")
 
-    def test_check_nemo_integration_not_installed(self):
-        """Test Nemo integration not detected when action file missing."""
         with mock.patch.object(
-            file_manager_integration,
-            "_get_local_share_dir",
-            return_value=Path("/home/user/.local/share"),
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
         ):
-            with mock.patch.object(Path, "exists", return_value=False):
-                result = file_manager_integration._check_integration_installed(FileManager.NEMO)
-                assert result is False
+            result = file_manager_integration._check_integration_installed(FileManager.NEMO)
+            assert result is True
+
+    def test_returns_false_when_partial(self, tmp_path):
+        """Test returns False when only some files exist (PARTIAL status)."""
+        local_share = tmp_path / "share"
+        # Create only the first file
+        _, first_dest = file_manager_integration.NEMO_INTEGRATIONS[0]
+        dest = local_share / first_dest
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text("test")
+
+        with mock.patch.object(
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
+        ):
+            result = file_manager_integration._check_integration_installed(FileManager.NEMO)
+            assert result is False
+
+    def test_returns_false_when_none_installed(self, tmp_path):
+        """Test returns False when no files exist."""
+        local_share = tmp_path / "share"
+        local_share.mkdir()
+
+        with mock.patch.object(
+            file_manager_integration, "_get_local_share_dir", return_value=local_share
+        ):
+            result = file_manager_integration._check_integration_installed(FileManager.NEMO)
+            assert result is False
+
+
+class TestIntegrationLists:
+    """Tests for integration list completeness."""
+
+    def test_nautilus_has_scan_and_virustotal(self):
+        """Test Nautilus integration list contains both ClamUI scan and VirusTotal."""
+        assert len(file_manager_integration.NAUTILUS_INTEGRATIONS) == 2
+        source_names = [s for s, _ in file_manager_integration.NAUTILUS_INTEGRATIONS]
+        assert "clamui-scan-nautilus.sh" in source_names
+        assert "clamui-virustotal-nautilus.sh" in source_names
+
+    def test_dolphin_has_scan_and_virustotal(self):
+        """Test Dolphin integration list contains both ClamUI scan and VirusTotal."""
+        assert len(file_manager_integration.DOLPHIN_INTEGRATIONS) == 2
+        source_names = [s for s, _ in file_manager_integration.DOLPHIN_INTEGRATIONS]
+        assert "io.github.linx_systems.ClamUI.desktop" in source_names
+        assert "io.github.linx_systems.ClamUI-virustotal.desktop" in source_names
+
+    def test_nemo_has_scan_and_virustotal(self):
+        """Test Nemo integration list contains both ClamUI scan and VirusTotal."""
+        assert len(file_manager_integration.NEMO_INTEGRATIONS) == 2
+        source_names = [s for s, _ in file_manager_integration.NEMO_INTEGRATIONS]
+        assert "io.github.linx_systems.ClamUI.nemo_action" in source_names
+        assert "io.github.linx_systems.ClamUI-virustotal.nemo_action" in source_names
 
 
 class TestGetAvailableIntegrations:
@@ -129,14 +257,36 @@ class TestGetAvailableIntegrations:
                 ):
                     with mock.patch.object(
                         file_manager_integration,
-                        "_check_integration_installed",
-                        return_value=False,
+                        "_check_integration_status",
+                        return_value=(IntegrationStatus.NOT_INSTALLED, []),
                     ):
                         result = get_available_integrations()
                         assert len(result) == 3
                         assert any(i.file_manager == FileManager.NEMO for i in result)
                         assert any(i.file_manager == FileManager.NAUTILUS for i in result)
                         assert any(i.file_manager == FileManager.DOLPHIN for i in result)
+
+    def test_get_available_integrations_populates_status(self):
+        """Test that status and missing_files are populated correctly."""
+        missing = ["some/path"]
+        with mock.patch.object(file_manager_integration, "is_flatpak", return_value=True):
+            with mock.patch("pathlib.Path.exists", return_value=True):
+                with mock.patch.object(
+                    file_manager_integration,
+                    "_check_file_manager_available",
+                    return_value=True,
+                ):
+                    with mock.patch.object(
+                        file_manager_integration,
+                        "_check_integration_status",
+                        return_value=(IntegrationStatus.PARTIAL, missing),
+                    ):
+                        result = get_available_integrations()
+                        for integration in result:
+                            assert integration.status == IntegrationStatus.PARTIAL
+                            assert integration.missing_files == missing
+                            assert integration.is_partial is True
+                            assert integration.is_installed is False
 
 
 class TestInstallIntegration:
@@ -200,6 +350,106 @@ class TestInstallIntegration:
                             assert "Permission denied" in error
 
 
+class TestRepairIntegration:
+    """Tests for repair_integration() function."""
+
+    def test_repair_installed_is_noop(self):
+        """Test repair returns success immediately when already installed."""
+        with mock.patch.object(
+            file_manager_integration,
+            "_check_integration_status",
+            return_value=(IntegrationStatus.INSTALLED, []),
+        ):
+            success, error = repair_integration(FileManager.NEMO)
+            assert success is True
+            assert error is None
+
+    def test_repair_not_installed_delegates_to_install(self):
+        """Test repair delegates to install_integration when not installed."""
+        with mock.patch.object(
+            file_manager_integration,
+            "_check_integration_status",
+            return_value=(IntegrationStatus.NOT_INSTALLED, ["path/a", "path/b"]),
+        ):
+            with mock.patch.object(
+                file_manager_integration,
+                "install_integration",
+                return_value=(True, None),
+            ) as mock_install:
+                success, error = repair_integration(FileManager.NEMO)
+                assert success is True
+                mock_install.assert_called_once_with(FileManager.NEMO)
+
+    def test_repair_partial_copies_only_missing(self, tmp_path):
+        """Test repair only copies missing files for partial installations."""
+        source_dir = tmp_path / "source"
+        source_dir.mkdir()
+        dest_dir = tmp_path / "dest"
+
+        # Set up source files for Nautilus (2 files)
+        for source_name, _ in file_manager_integration.NAUTILUS_INTEGRATIONS:
+            (source_dir / source_name).write_text("#!/bin/bash\necho test")
+
+        # Create the first file already (simulating partial install)
+        _, first_dest = file_manager_integration.NAUTILUS_INTEGRATIONS[0]
+        first_path = dest_dir / first_dest
+        first_path.parent.mkdir(parents=True, exist_ok=True)
+        first_path.write_text("existing")
+
+        # The missing file is the second one
+        _, second_dest = file_manager_integration.NAUTILUS_INTEGRATIONS[1]
+        missing = [second_dest]
+
+        with mock.patch.object(
+            file_manager_integration,
+            "_check_integration_status",
+            return_value=(IntegrationStatus.PARTIAL, missing),
+        ):
+            with mock.patch.object(file_manager_integration, "is_flatpak", return_value=True):
+                with mock.patch.object(
+                    file_manager_integration, "INTEGRATIONS_SOURCE_DIR", source_dir
+                ):
+                    with mock.patch.object(
+                        file_manager_integration, "_get_local_share_dir", return_value=dest_dir
+                    ):
+                        success, error = repair_integration(FileManager.NAUTILUS)
+                        assert success is True
+                        assert error is None
+
+                        # The missing file should now exist
+                        assert (dest_dir / second_dest).exists()
+                        # The existing file should be untouched
+                        assert first_path.read_text() == "existing"
+
+    def test_repair_partial_permission_error(self, tmp_path):
+        """Test repair handles permission errors."""
+        source_dir = tmp_path / "source"
+        source_dir.mkdir()
+        (source_dir / "clamui-scan-nautilus.sh").write_text("test")
+
+        missing = ["nautilus/scripts/Scan with ClamUI"]
+
+        with mock.patch.object(
+            file_manager_integration,
+            "_check_integration_status",
+            return_value=(IntegrationStatus.PARTIAL, missing),
+        ):
+            with mock.patch.object(file_manager_integration, "is_flatpak", return_value=True):
+                with mock.patch.object(
+                    file_manager_integration, "INTEGRATIONS_SOURCE_DIR", source_dir
+                ):
+                    with mock.patch.object(
+                        file_manager_integration,
+                        "_get_local_share_dir",
+                        return_value=Path("/nonexistent"),
+                    ):
+                        with mock.patch("shutil.copy2", side_effect=PermissionError("denied")):
+                            with mock.patch("pathlib.Path.mkdir"):
+                                success, error = repair_integration(FileManager.NAUTILUS)
+                                assert success is False
+                                assert "Permission denied" in error
+
+
 class TestRemoveIntegration:
     """Tests for remove_integration() function."""
 
@@ -253,7 +503,7 @@ class TestInstallAllAvailable:
             display_name="Nemo",
             description="Test",
             source_files=[],
-            is_installed=True,
+            status=IntegrationStatus.INSTALLED,
             is_available=True,
         )
 
@@ -284,7 +534,7 @@ class TestCheckAnyAvailable:
             display_name="Nemo",
             description="Test",
             source_files=[],
-            is_installed=False,
+            status=IntegrationStatus.NOT_INSTALLED,
             is_available=True,
         )
 
@@ -304,7 +554,7 @@ class TestCheckAnyAvailable:
             display_name="Nemo",
             description="Test",
             source_files=[],
-            is_installed=False,
+            status=IntegrationStatus.NOT_INSTALLED,
             is_available=False,
         )
 
@@ -334,7 +584,7 @@ class TestCheckAnyNotInstalled:
             display_name="Nemo",
             description="Test",
             source_files=[],
-            is_installed=False,
+            status=IntegrationStatus.NOT_INSTALLED,
             is_available=True,
         )
 
@@ -354,7 +604,7 @@ class TestCheckAnyNotInstalled:
             display_name="Nemo",
             description="Test",
             source_files=[],
-            is_installed=True,
+            status=IntegrationStatus.INSTALLED,
             is_available=True,
         )
 
@@ -366,3 +616,64 @@ class TestCheckAnyNotInstalled:
             ):
                 result = check_any_not_installed()
                 assert result is False
+
+    def test_check_any_not_installed_with_partial(self):
+        """Test returns True when there's a partial installation."""
+        mock_integration = IntegrationInfo(
+            file_manager=FileManager.NEMO,
+            display_name="Nemo",
+            description="Test",
+            source_files=[],
+            status=IntegrationStatus.PARTIAL,
+            is_available=True,
+        )
+
+        with mock.patch.object(file_manager_integration, "is_flatpak", return_value=True):
+            with mock.patch.object(
+                file_manager_integration,
+                "get_available_integrations",
+                return_value=[mock_integration],
+            ):
+                result = check_any_not_installed()
+                assert result is True
+
+
+class TestIntegrationInfoProperties:
+    """Tests for IntegrationInfo backward-compat properties."""
+
+    def test_is_installed_true_when_installed(self):
+        """Test is_installed property returns True for INSTALLED status."""
+        info = IntegrationInfo(
+            file_manager=FileManager.NEMO,
+            display_name="Nemo",
+            description="Test",
+            source_files=[],
+            status=IntegrationStatus.INSTALLED,
+        )
+        assert info.is_installed is True
+        assert info.is_partial is False
+
+    def test_is_installed_false_when_partial(self):
+        """Test is_installed property returns False for PARTIAL status."""
+        info = IntegrationInfo(
+            file_manager=FileManager.NEMO,
+            display_name="Nemo",
+            description="Test",
+            source_files=[],
+            status=IntegrationStatus.PARTIAL,
+            missing_files=["some/file"],
+        )
+        assert info.is_installed is False
+        assert info.is_partial is True
+
+    def test_is_installed_false_when_not_installed(self):
+        """Test is_installed property returns False for NOT_INSTALLED status."""
+        info = IntegrationInfo(
+            file_manager=FileManager.NEMO,
+            display_name="Nemo",
+            description="Test",
+            source_files=[],
+            status=IntegrationStatus.NOT_INSTALLED,
+        )
+        assert info.is_installed is False
+        assert info.is_partial is False
