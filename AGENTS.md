@@ -1,134 +1,158 @@
-# AGENTS.md - ClamUI Agent Guidelines
+# AGENTS.md — ClamUI Project Knowledge Base
 
-This document provides project-specific guidance for AI agents working on the ClamUI codebase.
+**Commit:** 8ae29a6 | **Branch:** master
+
+## Overview
+
+GTK4/libadwaita ClamAV GUI for Linux. Python 3.10+, PyGObject, Adwaita. Packages as Flatpak, Debian, AppImage.
+
+Full architecture reference: [`CLAUDE.md`](./CLAUDE.md) (1000+ lines).
+
+## Structure
+
+```
+src/
+├── main.py              # Entry point — CLI args, GTK init, i18n setup
+├── app.py               # Adw.Application — lifecycle, views, tray (1478 lines)
+├── core/                # Business logic (28 modules) → see core/AGENTS.md
+│   ├── scanner.py       # Scan orchestration (auto/daemon/clamscan backends)
+│   ├── quarantine/      # SQLite quarantine subsystem → see quarantine/AGENTS.md
+│   ├── sanitize.py      # Input sanitization (ANSI, bidi, control chars)
+│   ├── path_validation.py # Path + symlink safety
+│   ├── flatpak.py       # Flatpak detection, host command wrapping
+│   └── i18n.py          # Gettext setup
+├── ui/                  # GTK4/Adwaita widgets (29 modules) → see ui/AGENTS.md
+│   ├── scan/            # Scan workflow (coordinator pattern) → see scan/AGENTS.md
+│   ├── preferences/     # Modular settings (13 pages) → see preferences/AGENTS.md
+│   ├── tray_manager.py  # Subprocess tray (GIO D-Bus/SNI)
+│   └── view_helpers.py  # Shared UI utilities
+├── profiles/            # ScanProfile dataclass + CRUD + JSON persistence
+├── cli/                 # scheduled_scan.py — headless scan for cron/systemd
+└── locale/              # Gettext translations (de/)
+```
+
+## Where to Look
+
+| Task | Location | Notes |
+|------|----------|-------|
+| Add a view | `ui/` + `app.py` | Register in `_setup_actions()`, add nav button in `window.py` |
+| Add core feature | `core/` | Dataclass results, enum statuses, sync+async methods |
+| Add preference page | `ui/preferences/` | Static factory pattern, see `scanner_page.py` as template |
+| Add scan profile | `profiles/` | Modify `ProfileManager.DEFAULT_PROFILES` |
+| Modify packaging | `debian/`, `flathub/`, `appimage/` | Update ALL three when adding deps |
+| Security review | `core/sanitize.py`, `core/path_validation.py` | Defense-in-depth required |
+| Tray integration | `ui/tray_*.py` | Subprocess architecture, see `docs/architecture/tray-subprocess.md` |
+| Translations | `po/`, `core/i18n.py` | Run `./scripts/update-pot.sh` after changes |
+| Flatpak-specific | `core/flatpak.py` | `wrap_host_command()`, `is_flatpak()`, DB path helpers |
 
 ## Required Setup
 
-**Before making any commits**, ensure git hooks are installed:
-
 ```bash
-./scripts/hooks/install-hooks.sh
+uv sync --dev
+./scripts/hooks/install-hooks.sh   # REQUIRED — blocks absolute src.* imports
 ```
 
-This installs the **pre-commit hook** which checks for absolute `src.*` imports. These imports break when ClamUI is installed as a Debian package (installed as `clamui`, not `src`).
+## Commands
 
-**What the hook checks:**
+```bash
+# Run
+uv run clamui
 
-- Blocks commits with `from src.` or `import src.` in `src/` files
-- Suggests using relative imports instead (`from ..core.module import X`)
-- The AppImage build script also validates this during packaging
+# Test
+pytest --cov=src --cov-report=term-missing
 
-## Project-Specific Agent Notes
+# Lint
+uv run ruff check src/ tests/ --fix
+uv run ruff format src/ tests/
 
-### Security Reviews
+# Build
+./debian/build-deb.sh              # Debian package
+./appimage/build-appimage.sh       # AppImage (bundles Python+GTK4)
+```
 
-When performing security reviews on ClamUI code:
+## Anti-Patterns (THIS PROJECT)
 
-- **Input Sanitization**: Always check for proper use of `sanitize_log_line()` and `sanitize_log_text()` for any user-controlled or external input before logging
-- **Command Execution**: Verify `shlex.quote()` usage in subprocess commands, especially in `scheduler.py` and any code building shell commands
-- **Path Validation**: Ensure `validate_path()` and `check_symlink_safety()` are used before file operations with user-provided paths
-- **File Permissions**: New files containing sensitive data should use `chmod(0o600)` for owner-only access
+### Import Restriction (CRITICAL)
+**NEVER** use `from src.` or `import src.` inside `src/`. Package installs as `clamui`, not `src`.
+- Enforced by: pre-commit hook, CI lint, AppImage build script
+- Use: `from ..core.module import X` (relative imports)
 
-### GTK4/Adwaita Changes
+### libadwaita Version Ceiling (CRITICAL)
+Target: **libadwaita 1.0+** (Ubuntu 22.04 baseline = 1.1.x)
 
-When modifying UI code:
-
-- **Use `Adw.Window` (1.0+)**, NOT `Adw.Dialog` (1.5+) - required for Ubuntu 22.04 compatibility
-- **Always use `GLib.idle_add()`** for UI updates from background threads
-- **Use `resolve_icon_name()`** wrapper when creating icons for fallback support
-- **Standard Adwaita icons only** - never use application-specific or KDE icons
-- **gi.require_version()** must be called before importing from `gi.repository`
-
-### Packaging Changes
-
-When modifying dependencies:
-
-- **Update BOTH** `flathub/requirements-runtime.txt` AND `debian/DEBIAN/control` when adding Python dependencies
-- **Regenerate** `flathub/python3-runtime-deps.json` after Flatpak dependency changes using `req2flatpak`
-- **Version constraints** should match `pyproject.toml` in packaging files
-- **Test on Ubuntu 22.04** baseline for compatibility (libadwaita 1.1.x)
-
-**AppImage builds:**
-
-- Require NO absolute `src.*` imports - the build script validates this
-- Run `./appimage/build-appimage.sh` to test AppImage packaging locally
-- AppImage bundles Python + GTK4 but requires host ClamAV installation
-
-### Testing Requirements
-
-When writing or modifying code:
-
-- Run `pytest --cov=src` for coverage verification
-- **Minimum 50% coverage** required (`fail_under` in `pyproject.toml`)
-- **Target 80%+ coverage** for `src/core`, 70%+ for `src/ui`
-- Use `mock_gi_modules` fixture from `tests/conftest.py` for UI tests
-- Test files mirror source structure: `src/core/foo.py` → `tests/core/test_foo.py`
+| Forbidden (1.2+) | Use Instead (1.0+) |
+|---|---|
+| `Adw.Dialog`, `Adw.AlertDialog` (1.5+) | `Adw.Window` |
+| `Adw.PasswordEntryRow` (1.2+) | `create_password_entry_row()` from `ui/preferences/base.py` |
+| `Adw.SpinRow` (1.2+) | `create_spin_row()` — returns `(row, spin_button)` tuple |
+| `Adw.EntryRow` (1.2+) | `create_entry_row()` from `ui/compat.py` |
+| `Adw.SwitchRow` (1.4+) | `create_switch_row()` from `ui/compat.py` |
+| `Adw.ToolbarView` (1.4+) | `create_toolbar_view()` from `ui/compat.py` |
 
 ### Thread Safety
+- **NEVER** update UI from background threads — always `GLib.idle_add(callback)`
+- **ALWAYS** use `threading.Lock()` for shared state in manager classes
+- **ALWAYS** reset loading state in `finally` blocks (prevents stuck spinners)
 
-ClamUI is a GTK4 application with background operations:
+### Security
+- **ALWAYS** sanitize before logging: `sanitize_log_line()` / `sanitize_log_text()`
+- **ALWAYS** validate paths: `validate_path()`, `check_symlink_safety()`
+- **ALWAYS** quote shell args: `shlex.quote()` for user paths in subprocess commands
+- **ALWAYS** restrict permissions: `chmod(0o600)` for files with sensitive data
 
-- **Never update UI from background threads** - always use `GLib.idle_add(callback)`
-- **Use `threading.Lock()`** for shared state in manager classes
-- **Check existing patterns** in `scanner.py`, `quarantine/manager.py` for async operation examples
+### i18n
+- **NEVER** `_(f"...")` — f-strings in gettext break extraction. Use `_("text {v}").format(v=val)`
+- **NEVER** translate: logger messages, exception messages, CSS classes, settings keys
+- **ALWAYS** `ngettext()` for count-dependent strings
+- After changes: `./scripts/update-pot.sh`
 
-### Flatpak Considerations
+### Icons
+- **ONLY** standard Adwaita symbolic icons — no app-specific or KDE icons
+- **ALWAYS** use `resolve_icon_name()` wrapper from `ui/utils.py` for fallback support
 
-When working with file operations:
+### Flatpak
+- **ALWAYS** `wrap_host_command()` for commands executing on host
+- **ALWAYS** check `is_flatpak()` when behavior differs
+- Database paths differ — use `get_clamav_database_dir()`
 
-- **Use `wrap_host_command()`** from `src/core/flatpak.py` for commands that execute on host
-- **Check `is_flatpak()`** when behavior differs between native and Flatpak installations
-- **Database paths** differ in Flatpak - see `get_clamav_database_dir()` for correct paths
+## Conventions
 
-### Code Style
+- **Error returns**: `(success: bool, error_or_value: Optional[str])` tuples
+- **Structured data**: `@dataclass` with `@property` for computed values
+- **Type hints**: Required throughout
+- **GI imports**: `gi.require_version()` BEFORE `from gi.repository import ...`
+- **Ruff**: Line length 100, double quotes, 4-space indent, isort enabled
+- **Coverage**: 50% minimum (enforced), 80%+ target for core, 70%+ for ui
+- **Test structure**: mirrors source — `src/core/foo.py` → `tests/core/test_foo.py`
+- **UI tests**: use `mock_gi_modules` fixture from `tests/conftest.py`
 
-Follow the project conventions:
+## Packaging Checklist
 
-- **Relative imports** within `src/` package (not absolute `src.*` imports)
-- **Dataclasses** for structured data with computed `@property` methods
-- **Type hints** throughout the codebase
-- **Docstrings** for public methods and classes
-- Run `uv run ruff check --fix` and `uv run ruff format` before committing
+When adding a Python dependency:
+1. Update `pyproject.toml`
+2. Update `flathub/requirements-runtime.txt`
+3. Update `debian/DEBIAN/control`
+4. Regenerate `flathub/python3-runtime-deps.json` via `req2flatpak`
+5. Test on Ubuntu 22.04 baseline
 
-### Internationalization (i18n)
+## Agent Workflows
 
-All user-facing strings MUST be wrapped with translation functions:
+### Bug Fix
+1. Read code → check existing tests → write failing test → fix → run suite → check for similar issues
 
-- **`_("text")`** for simple strings
-- **`_("text {var}").format(var=val)`** for strings with variables (NEVER `_(f"..."`)
-- **`ngettext("singular", "plural", count)`** for count-dependent strings
-- **`N_("text")`** for module-level constants (translate with `_()` at display time)
-- Import from: `from ..core.i18n import _, ngettext` (or `N_`, `pgettext` as needed)
+### New Feature
+1. Check `CLAUDE.md` for patterns → review similar features → implement with thread safety → test → update docs
 
-**Ruff INT rules** are enabled to catch f-strings in gettext calls at lint time.
+### Security Change
+1. Review `sanitize.py` + `path_validation.py` → apply defense-in-depth → test with malicious inputs → verify permissions → check subprocess calls
 
-When adding new strings, update `po/POTFILES.in` if the file is not already listed,
-then run `./scripts/update-pot.sh`.
+## Hierarchy
 
-## Agent Workflow Recommendations
-
-### For Bug Fixes
-
-1. Read relevant code to understand the issue
-2. Check for existing tests
-3. Write a failing test first (TDD approach)
-4. Implement the fix
-5. Run full test suite
-6. Check for similar issues elsewhere in codebase
-
-### For New Features
-
-1. Check `CLAUDE.md` for architecture patterns
-2. Review existing similar features for patterns
-3. Plan the implementation (UI, core logic, tests)
-4. Implement with proper thread safety
-5. Add comprehensive tests
-6. Update documentation if needed
-
-### For Security Changes
-
-1. Review `src/core/sanitize.py` and `src/core/path_validation.py` for patterns
-2. Apply defense-in-depth (sanitize at multiple layers)
-3. Test with malicious inputs (ANSI escapes, Unicode bidi, newlines)
-4. Verify file permissions for sensitive data
-5. Check subprocess calls for injection vulnerabilities
+```
+./AGENTS.md                      ← you are here (project root)
+├── src/core/AGENTS.md           ← business logic conventions
+│   └── src/core/quarantine/AGENTS.md ← quarantine subsystem
+└── src/ui/AGENTS.md             ← UI layer patterns
+    ├── src/ui/preferences/AGENTS.md  ← preferences page recipe
+    └── src/ui/scan/AGENTS.md         ← scan workflow coordination
+```
