@@ -10,14 +10,14 @@ Single responsibility:
 
 import logging
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
+from gi.repository import Adw, Gdk, GObject, Gtk
 
 from ...core.i18n import _
 from ...core.utils import format_scan_path, validate_dropped_files

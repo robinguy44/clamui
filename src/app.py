@@ -37,21 +37,16 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk
 
+from .app_lifecycle import AppLifecycleManager
+from .core.i18n import _
 from .core.notification_manager import NotificationManager
 from .core.settings_manager import SettingsManager
+from .notification_dispatcher import NotificationDispatcher
 from .profiles.models import ScanProfile
 from .profiles.profile_manager import ProfileManager
-
-# Tray manager - uses subprocess to avoid GTK3/GTK4 version conflict
-from .ui.tray_manager import TrayManager
-from .ui.utils import resolve_icon_name
+from .tray_integration import TrayIntegration
 from .ui.window import MainWindow
-
-# NOTE: View module imports (ScanView, UpdateView, LogsView, ComponentsView,
-# StatisticsView, QuarantineView, PreferencesWindow) are intentionally deferred
-# into their respective @property methods / handler methods. This avoids loading
-# heavy modules (e.g. matplotlib via statistics_view) at application startup,
-# completing the lazy-loading strategy that the @property pattern began.
+from .view_coordinator import ViewCoordinator
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +57,24 @@ class ClamUIApp(Adw.Application):
 
     This is the main application class that handles application lifecycle,
     window management, and global application state.
+
+    Main Methods (30 methods):
+    - Lifecycle: __init__, app_name, version, do_activate, do_startup, do_shutdown
+    - View access: scan_view, update_view, logs_view, components_view,
+                   statistics_view, quarantine_view
+    - View switching: _on_show_scan, _on_show_update, _on_show_logs,
+                      _on_show_components, _on_show_statistics, _on_show_quarantine
+    - Actions: _on_start_scan, _on_start_update, _on_scan_file, _on_scan_system,
+               _on_quit, _on_preferences, _on_about
+    - Tray: _on_tray_quick_scan, _on_tray_full_scan, _on_tray_update,
+            _on_tray_quit, _on_tray_window_toggle, _on_tray_profile_select
+    - Quick scan: _on_statistics_quick_scan, _do_tray_quick_scan
+    - Settings: _get_quick_scan_profile, switch_to_view, set_initial_scan_paths
+
+    Collaboration:
+    - AppLifecycleManager: Handles shutdown, device monitor, database dir
+    - NotificationDispatcher: Manages desktop notifications
+    - TrayIntegration: Handles tray menu actions and device events
     """
 
     def __init__(self):
@@ -80,7 +93,6 @@ class ClamUIApp(Adw.Application):
         self._notification_manager = NotificationManager(self._settings_manager)
 
         # Profile management
-        # Use XDG config directory (same location as settings)
         xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
         config_dir = Path(xdg_config_home).expanduser() / "clamui"
         self._profile_manager = ProfileManager(config_dir)
@@ -100,7 +112,7 @@ class ClamUIApp(Adw.Application):
         # Track first activation for start-minimized functionality
         self._first_activation = True
 
-        # Initial scan paths from CLI (e.g., from file manager context menu)
+        # Initial scan paths from CLI
         self._initial_scan_paths: list[str] = []
         self._initial_use_virustotal: bool = False
 
@@ -113,8 +125,14 @@ class ClamUIApp(Adw.Application):
         # Device monitor (initialized in do_startup)
         self._device_monitor = None
 
-        # Scan state tracking (for close confirmation)
+        # Scan state tracking
         self._is_scan_active = False
+
+        # Collaborator objects
+        self._lifecycle_manager = AppLifecycleManager(self)
+        self._notification_dispatcher = NotificationDispatcher(self)
+        self._tray_integration = TrayIntegration(self)
+        self._view_coordinator = ViewCoordinator(self, logger)  # Init early for tests
 
     @property
     def app_name(self) -> str:
@@ -155,12 +173,6 @@ class ClamUIApp(Adw.Application):
     def quarantine_manager(self):
         """
         Get the shared QuarantineManager instance, creating it lazily if needed.
-
-        A single QuarantineManager is shared between ScanView and QuarantineView
-        to avoid creating duplicate SQLite connection pools for the same database.
-
-        Returns:
-            The shared QuarantineManager instance.
         """
         if self._quarantine_manager is None:
             from .core.quarantine import QuarantineManager
@@ -171,9 +183,6 @@ class ClamUIApp(Adw.Application):
     def _preinit_quarantine_async(self) -> None:
         """
         Pre-initialize quarantine manager asynchronously in a background thread.
-
-        This pre-warms the quarantine manager so it's ready when the user
-        first navigates to the quarantine view, avoiding the first-time lag.
         """
         import threading
 
@@ -189,14 +198,7 @@ class ClamUIApp(Adw.Application):
         thread.start()
 
     def _preinit_quarantine_view(self) -> bool:
-        """
-        Pre-create the quarantine view widget after the manager is ready.
-
-        Called on the main thread after QuarantineManager is initialized.
-
-        Returns:
-            False to prevent GLib.idle_add from repeating.
-        """
+        """Pre-create the quarantine view widget after the manager is ready."""
         try:
             _ = self.quarantine_view
             logger.debug("QuarantineView pre-created in background")
@@ -204,33 +206,9 @@ class ClamUIApp(Adw.Application):
             logger.warning("Failed to pre-create QuarantineView: %s", e)
         return False
 
-    # Lazy View Loading Strategy:
-    # Why: Views are expensive to create (GTK widget trees, signal connections, layouts)
-    # How: @property methods return cached instances, creating only on first access
-    # Benefit:
-    #   - Startup time: ~30-40% faster (only scan_view created, others deferred)
-    #   - Memory: ~10-15MB saved initially (logs/quarantine views have large models)
-    #   - Responsiveness: App window shows faster (critical for perceived performance)
-    # Example: User never opens quarantine? quarantine_view is never created.
-    #
-    # Trade-off: First access to a view has slight delay (~50-100ms), but this
-    # is acceptable since it happens after the app is fully loaded and responsive.
-    #
-    # Lazy-loaded view properties
-    # Views are only instantiated when first accessed, reducing startup time
-    # and memory usage for unused views.
-
     @property
     def scan_view(self):
-        """
-        Get the scan view instance, creating it lazily if needed.
-
-        The scan view is the primary view for running virus scans.
-        It requires the settings manager for configuration.
-
-        Returns:
-            The ScanView instance.
-        """
+        """Get the scan view instance, creating it lazily if needed."""
         if self._scan_view is None:
             from .ui.scan_view import ScanView
 
@@ -238,20 +216,12 @@ class ClamUIApp(Adw.Application):
                 settings_manager=self._settings_manager,
                 quarantine_manager=self.quarantine_manager,
             )
-            # Connect scan state callback for tray integration
             self._scan_view.set_scan_state_changed_callback(self._on_scan_state_changed)
         return self._scan_view
 
     @property
     def update_view(self):
-        """
-        Get the update view instance, creating it lazily if needed.
-
-        The update view handles ClamAV database updates via freshclam.
-
-        Returns:
-            The UpdateView instance.
-        """
+        """Get the update view instance, creating it lazily if needed."""
         if self._update_view is None:
             from .ui.update_view import UpdateView
 
@@ -260,14 +230,7 @@ class ClamUIApp(Adw.Application):
 
     @property
     def logs_view(self):
-        """
-        Get the logs view instance, creating it lazily if needed.
-
-        The logs view displays scan history and log entries.
-
-        Returns:
-            The LogsView instance.
-        """
+        """Get the logs view instance, creating it lazily if needed."""
         if self._logs_view is None:
             from .ui.logs_view import LogsView
 
@@ -276,14 +239,7 @@ class ClamUIApp(Adw.Application):
 
     @property
     def components_view(self):
-        """
-        Get the components view instance, creating it lazily if needed.
-
-        The components view shows the status of ClamAV components.
-
-        Returns:
-            The ComponentsView instance.
-        """
+        """Get the components view instance, creating it lazily if needed."""
         if self._components_view is None:
             from .ui.components_view import ComponentsView
 
@@ -292,32 +248,16 @@ class ClamUIApp(Adw.Application):
 
     @property
     def statistics_view(self):
-        """
-        Get the statistics view instance, creating it lazily if needed.
-
-        The statistics view displays scan statistics and charts.
-
-        Returns:
-            The StatisticsView instance.
-        """
+        """Get the statistics view instance, creating it lazily if needed."""
         if self._statistics_view is None:
             from .ui.statistics_view import StatisticsView
 
             self._statistics_view = StatisticsView()
-            # Connect statistics view quick scan callback
-            self._statistics_view.set_quick_scan_callback(self._on_statistics_quick_scan)
         return self._statistics_view
 
     @property
     def quarantine_view(self):
-        """
-        Get the quarantine view instance, creating it lazily if needed.
-
-        The quarantine view manages quarantined files.
-
-        Returns:
-            The QuarantineView instance.
-        """
+        """Get the quarantine view instance, creating it lazily if needed."""
         if self._quarantine_view is None:
             from .ui.quarantine_view import QuarantineView
 
@@ -327,448 +267,129 @@ class ClamUIApp(Adw.Application):
         return self._quarantine_view
 
     def do_activate(self):
-        """
-        Handle application activation.
-
-        This method is called when the application is activated (launched).
-        It creates and presents the main window with the scan interface.
-
-        If start_minimized is enabled and tray indicator is available,
-        the window is created but not presented on first activation,
-        allowing the app to run in the tray without showing a window.
-        """
-        # Get existing window or create new one
+        """Activate the application, creating the main window."""
         win = self.props.active_window
-        is_new_window = win is None
-
         if not win:
-            # Create the main window
-            win = MainWindow(application=self)
+            win = MainWindow(self)
 
-            # Set the scan view as the default content (lazy-loaded via property)
-            # Other views are only instantiated when accessed, reducing startup
-            # time and memory usage for unused views.
+        # Set scan view as the default content on first activation
+        if self._first_activation:
             win.set_content_view(self.scan_view)
             win.set_active_view("scan")
             self._current_view = "scan"
 
-            # Sync profiles to tray menu
-            self._sync_profiles_to_tray()
+        win.present()
 
-        # Check if we should start minimized (only on first activation)
-        # BUT: If we have a pending VirusTotal scan, we need the window for dialogs
-        has_pending_vt_scan = self._initial_scan_paths and self._initial_use_virustotal
-        start_minimized = (
-            self._first_activation
-            and is_new_window
-            and self._settings_manager.get("start_minimized", False)
-            and self._tray_indicator is not None
-            and not has_pending_vt_scan  # Force window for VT scans
-        )
+        if self._first_activation:
+            self._first_activation = False
+            start_minimized = self.settings_manager.get("start_minimized", False)
+            if start_minimized:
+                if self._tray_indicator:
+                    win.hide()
+                else:
+                    logger.warning("start_minimized enabled but tray not available, showing window")
 
-        if start_minimized:
-            # First activation with start_minimized enabled - don't show window
-            # The tray indicator is already active from do_startup
-            logger.info("Starting minimized to system tray")
-        else:
-            win.present()
+        if self._initial_scan_paths:
+            self._process_initial_scan_paths()
 
-        # Mark first activation as complete
-        self._first_activation = False
+    def _preinit_heavy_resources(self) -> None:
+        """Pre-initialize heavy resources in the background."""
+        self._lifecycle_manager.preinit_heavy_resources()
 
-        # Show file manager integration dialog on first Flatpak run
-        if is_new_window:
-            self._maybe_show_file_manager_integration_dialog(win)
-
-        # Process any initial scan paths from CLI (e.g., from context menu)
-        self._process_initial_scan_paths()
-
-        # Pre-initialize heavy resources in background after UI is shown
-        # This avoids the first-time lag when navigating to quarantine view
-        if is_new_window:
-            GLib.idle_add(self._preinit_heavy_resources)
-
-    def _preinit_heavy_resources(self) -> bool:
-        """
-        Pre-initialize heavy resources in the background after UI is shown.
-
-        This reduces the perceived lag when navigating to views like
-        Quarantine that have significant initialization overhead (SQLite
-        connection pools, database schema creation, etc.).
-
-        Returns:
-            False to prevent GLib.idle_add from repeating.
-        """
-        self._preinit_quarantine_async()
-        return False  # Don't repeat
-
-    def do_command_line(self, command_line: Gio.ApplicationCommandLine) -> int:
-        """
-        Handle command line arguments for both new and existing instances.
-
-        This method is called by GTK when:
-        1. The application is first launched with arguments
-        2. A second instance is launched (arguments forwarded to first instance)
-
-        This enables file manager integration to work even when ClamUI is
-        already running - the new arguments are forwarded via D-Bus IPC.
-
-        Args:
-            command_line: The command line object containing arguments.
-
-        Returns:
-            Exit code (0 for success).
-        """
-        # Import parse_arguments lazily to avoid circular imports
-        # (main.py imports ClamUIApp from app.py)
+    def do_command_line(self, command_line):
+        """Handle command line arguments."""
         from .main import parse_arguments
 
-        args = command_line.get_arguments()
-        logger.debug(f"do_command_line received: {args}")
+        file_paths, use_virustotal, _unknown = parse_arguments(command_line.get_arguments())
 
-        # Parse file paths from arguments
-        file_paths, use_virustotal, _ = parse_arguments(args)
+        self._initial_scan_paths = file_paths
+        self._initial_use_virustotal = use_virustotal
 
-        if file_paths:
-            self._initial_scan_paths = file_paths
-            self._initial_use_virustotal = use_virustotal
-            logger.info(f"Command line: {len(file_paths)} path(s), virustotal={use_virustotal}")
-
-        # Activate the application (shows window, processes paths)
         self.activate()
 
         return 0
 
     def do_startup(self):
-        """
-        Handle application startup.
-
-        This method is called when the application first starts.
-        It's used for one-time initialization that should happen
-        before any windows are created.
-        """
+        """Initialize the application during startup."""
         Adw.Application.do_startup(self)
 
-        # Set application reference for notification manager
-        self._notification_manager.set_application(self)
+        self._lifecycle_manager.ensure_clamav_database_dir()
+        self._lifecycle_manager.setup_device_monitor()
 
-        # Set up application actions
+        if self._tray_indicator is None:
+            self._setup_tray_indicator()
+
         self._setup_actions()
 
-        # Initialize tray indicator if available
-        self._setup_tray_indicator()
+        self._preinit_heavy_resources()
 
-        # Start device monitor for auto-scanning connected devices
-        self._setup_device_monitor()
+    def _ensure_clamav_database_dir(self) -> None:
+        """Ensure the ClamAV database directory exists."""
+        self._lifecycle_manager.ensure_clamav_database_dir()
 
-        # Ensure ClamAV database directory exists in Flatpak
-        self._ensure_clamav_database_dir()
+    def _setup_device_monitor(self) -> None:
+        """Setup device monitor for auto-scanning."""
+        self._lifecycle_manager.setup_device_monitor()
 
-    def _ensure_clamav_database_dir(self):
-        """
-        Ensure ClamAV database directory exists in Flatpak.
-
-        In Flatpak, the ClamAV databases need to be stored in a user-writable
-        location since /app is read-only. This method creates the database
-        directory on first run.
-        """
-        # Only run in Flatpak environment
-        if not os.path.exists("/.flatpak-info"):
-            return
-
-        from .core.flatpak import ensure_clamav_database_dir
-
-        db_dir = ensure_clamav_database_dir()
-        if db_dir is not None:
-            logger.info(f"ClamAV database directory: {db_dir}")
-
-    def _setup_device_monitor(self):
-        """
-        Initialize the device monitor for auto-scanning connected devices.
-
-        Uses lazy imports to avoid loading device_monitor at app startup
-        when the feature is disabled.
-        """
-        if not self._settings_manager.get("device_auto_scan_enabled", False):
-            logger.debug("Device auto-scan disabled, skipping monitor setup")
-            return
-
-        try:
-            from .core.device_monitor import DeviceMonitor
-            from .core.scanner import Scanner
-
-            scanner = Scanner(settings_manager=self._settings_manager)
-
-            # Get quarantine manager if auto-quarantine is enabled
-            quarantine_mgr = None
-            if self._settings_manager.get("device_auto_scan_auto_quarantine", False):
-                quarantine_mgr = self.quarantine_manager
-
-            self._device_monitor = DeviceMonitor(
-                settings_manager=self._settings_manager,
-                scanner=scanner,
-                notification_callback=self._on_device_scan_event,
-                quarantine_manager=quarantine_mgr,
-            )
-            self._device_monitor.start()
-        except Exception as e:
-            logger.warning("Failed to start device monitor: %s", e)
-
-    def _on_device_scan_event(self, event_type: str, info: dict):
-        """
-        Handle device scan events from the DeviceMonitor.
-
-        Routes events to the notification manager.
-
-        Args:
-            event_type: "scan_started" or "scan_complete"
-            info: Event details dict
-        """
-        if event_type == "scan_started":
-            self._notification_manager.notify_device_scan_started(
-                device_name=info["device_name"],
-                mount_point=info["mount_point"],
-            )
-        elif event_type == "scan_complete":
-            self._notification_manager.notify_device_scan_complete(
-                device_name=info["device_name"],
-                is_clean=info["is_clean"],
-                infected_count=info.get("infected_count", 0),
-                scanned_count=info.get("scanned_count", 0),
-                quarantined_count=info.get("quarantined_count", 0),
-            )
-
-    def _maybe_show_file_manager_integration_dialog(self, win: "MainWindow"):
-        """
-        Show file manager integration dialog on first Flatpak run.
-
-        Checks if:
-        1. Running as Flatpak
-        2. Any partial installations exist (always re-show for repair)
-        3. Not already prompted (stored in settings)
-        4. At least one file manager integration is available but not installed
-
-        If conditions are met, shows the integration dialog.
-        """
-        from .core.file_manager_integration import (
-            IntegrationStatus,
-            get_available_integrations,
-        )
-        from .core.flatpak import is_flatpak
-
-        # Only show in Flatpak
-        if not is_flatpak():
-            return
-
-        # Check for partial (bugged) installations - always re-show for repair
-        integrations = get_available_integrations()
-        has_partial = any(
-            i.is_available and i.status == IntegrationStatus.PARTIAL for i in integrations
-        )
-        if has_partial:
-            from .ui.file_manager_integration_dialog import FileManagerIntegrationDialog
-
-            dialog = FileManagerIntegrationDialog(
-                settings_manager=self._settings_manager,
-            )
-            dialog.set_transient_for(win)
-            dialog.present()
-            logger.info("Showing file manager integration dialog (partial install detected)")
-            return
-
-        # Check if already prompted
-        if self._settings_manager.get("file_manager_integration_prompted", False):
-            return
-
-        # Check if any integrations are available but not installed
-        has_not_installed = any(i.is_available and not i.is_installed for i in integrations)
-        if not has_not_installed:
-            # Either no file managers detected or all already integrated
-            # Mark as prompted so we don't keep checking
-            self._settings_manager.set("file_manager_integration_prompted", True)
-            return
-
-        # Show the integration dialog
-        from .ui.file_manager_integration_dialog import FileManagerIntegrationDialog
-
-        dialog = FileManagerIntegrationDialog(
-            settings_manager=self._settings_manager,
-        )
-        dialog.set_transient_for(win)
-        dialog.present()
-        logger.info("Showing file manager integration dialog")
+    def _on_device_scan_event(self, event_type: str, info: dict) -> None:
+        """Handle device scan events from the device monitor."""
+        self._tray_integration.handle_device_scan_event(event_type, info)
 
     def _setup_actions(self):
-        """Set up application-level actions."""
-        # Quit action
-        quit_action = Gio.SimpleAction.new("quit", None)
-        quit_action.connect("activate", self._on_quit)
-        self.add_action(quit_action)
-        self.set_accels_for_action("app.quit", ["<Control>q"])
+        """Set up application-level actions for view switching."""
+        self._view_coordinator.setup_actions()
 
-        # About action
-        about_action = Gio.SimpleAction.new("about", None)
-        about_action.connect("activate", self._on_about)
-        self.add_action(about_action)
-
-        # Preferences action
-        preferences_action = Gio.SimpleAction.new("preferences", None)
-        preferences_action.connect("activate", self._on_preferences)
-        self.add_action(preferences_action)
-        self.set_accels_for_action("app.preferences", ["<Control>comma"])
-
-        # View switching actions
-        show_scan_action = Gio.SimpleAction.new("show-scan", None)
-        show_scan_action.connect("activate", self._on_show_scan)
-        self.add_action(show_scan_action)
-        self.set_accels_for_action("app.show-scan", ["<Control>1"])
-
-        show_update_action = Gio.SimpleAction.new("show-update", None)
-        show_update_action.connect("activate", self._on_show_update)
-        self.add_action(show_update_action)
-        self.set_accels_for_action("app.show-update", ["<Control>2"])
-
-        show_logs_action = Gio.SimpleAction.new("show-logs", None)
-        show_logs_action.connect("activate", self._on_show_logs)
-        self.add_action(show_logs_action)
-        self.set_accels_for_action("app.show-logs", ["<Control>3"])
-
-        show_components_action = Gio.SimpleAction.new("show-components", None)
-        show_components_action.connect("activate", self._on_show_components)
-        self.add_action(show_components_action)
-        self.set_accels_for_action("app.show-components", ["<Control>4"])
-
-        show_quarantine_action = Gio.SimpleAction.new("show-quarantine", None)
-        show_quarantine_action.connect("activate", self._on_show_quarantine)
-        self.add_action(show_quarantine_action)
-        self.set_accels_for_action("app.show-quarantine", ["<Control>5"])
-
-        show_statistics_action = Gio.SimpleAction.new("show-statistics", None)
-        show_statistics_action.connect("activate", self._on_show_statistics)
-        self.add_action(show_statistics_action)
-        self.set_accels_for_action("app.show-statistics", ["<Control>6"])
-
-        # Scan action - start scan with F5
-        start_scan_action = Gio.SimpleAction.new("start-scan", None)
-        start_scan_action.connect("activate", self._on_start_scan)
-        self.add_action(start_scan_action)
-        self.set_accels_for_action("app.start-scan", ["F5"])
-
-        # Update action - start database update with F6
-        start_update_action = Gio.SimpleAction.new("start-update", None)
-        start_update_action.connect("activate", self._on_start_update)
-        self.add_action(start_update_action)
-        self.set_accels_for_action("app.start-update", ["F6"])
-
-        # Scan file action - open file picker from header bar
-        scan_file_action = Gio.SimpleAction.new("scan-file", None)
-        scan_file_action.connect("activate", self._on_scan_file)
-        self.add_action(scan_file_action)
-
-        # Scan system action - quick scan from header bar
-        scan_system_action = Gio.SimpleAction.new("scan-system", None)
-        scan_system_action.connect("activate", self._on_scan_system)
-        self.add_action(scan_system_action)
-
-    def _setup_tray_indicator(self):
-        """Initialize the system tray indicator subprocess."""
+    def _setup_tray_indicator(self) -> None:
+        """Setup the system tray indicator."""
         try:
-            self._tray_indicator = TrayManager()
+            from .ui.tray_indicator import TrayIndicator
 
-            # Connect tray menu actions to handler methods
-            self._tray_indicator.set_action_callbacks(
-                on_quick_scan=self._on_tray_quick_scan,
-                on_full_scan=self._on_tray_full_scan,
-                on_update=self._on_tray_update,
-                on_quit=self._on_tray_quit,
-            )
-
-            # Set window toggle callback
-            self._tray_indicator.set_window_toggle_callback(on_toggle=self._on_tray_window_toggle)
-
-            # Set profile selection callback
-            self._tray_indicator.set_profile_select_callback(on_select=self._on_tray_profile_select)
-
-            # Start the tray subprocess
-            if self._tray_indicator.start():
-                logger.info("Tray indicator subprocess started")
-            else:
-                logger.warning("Failed to start tray indicator subprocess")
-                self._tray_indicator = None
+            self._tray_indicator = TrayIndicator(self)
+            logger.info("Tray indicator initialized")
         except Exception as e:
             logger.warning(f"Failed to initialize tray indicator: {e}")
-            self._tray_indicator = None
 
-    def _sync_profiles_to_tray(self) -> None:
-        """
-        Sync the profile list to the tray menu.
-
-        Retrieves all profiles from the profile manager and sends them
-        to the tray indicator for display in the profiles submenu.
-        """
+    def _sync_profiles_to_tray(self, profiles: list) -> None:
+        """Sync scan profiles to the tray menu."""
         if self._tray_indicator is None:
             return
 
+        profile_data = [(p.id, p.name, p.description) for p in profiles]
+
+        current_profile_id = None
+        if self._scan_view is not None:
+            current_profile = self._scan_view.get_selected_profile()
+            if current_profile:
+                current_profile_id = current_profile.id
+
         try:
-            profiles = self._profile_manager.list_profiles()
-
-            # Format profiles for tray (list of dicts with id, name, is_default)
-            profile_data = [
-                {
-                    "id": p.id,
-                    "name": p.name,
-                    "is_default": p.is_default,
-                }
-                for p in profiles
-            ]
-
-            # Get current profile ID from scan view if available
-            current_profile_id = None
-            if self._scan_view:
-                selected_profile = self._scan_view.get_selected_profile()
-                if selected_profile:
-                    current_profile_id = selected_profile.id
-
-            self._tray_indicator.update_profiles(profile_data, current_profile_id)
-            logger.debug(f"Synced {len(profile_data)} profiles to tray menu")
-
+            self._tray_indicator.set_profiles(profile_data, current_profile_id)
         except Exception as e:
             logger.warning(f"Failed to sync profiles to tray: {e}")
 
     def _get_quick_scan_profile(self) -> ScanProfile | None:
-        """
-        Retrieve the Quick Scan profile by name.
-
-        Returns the Quick Scan profile if it exists, or None if not found.
-        This allows graceful fallback behavior when the profile is unavailable.
-
-        Returns:
-            The Quick Scan ScanProfile if found, None otherwise.
-        """
+        """Get the Quick Scan profile from the profile manager."""
         return self._profile_manager.get_profile_by_name("Quick Scan")
 
     def _on_quit(self, action, param):
-        """Handle quit action."""
+        """Handle the quit action."""
         self.quit()
 
     def _on_preferences(self, action, param):
-        """Handle preferences action - show preferences window."""
-        from .ui.preferences import PreferencesWindow
+        """Handle the preferences action."""
+        from .ui.preferences.window import PreferencesWindow
 
         win = self.props.active_window
         if win:
             preferences = PreferencesWindow(
-                transient_for=win,
                 settings_manager=self._settings_manager,
                 tray_available=self._tray_indicator is not None,
+                transient_for=win,
             )
             preferences.present()
 
     def _on_show_scan(self, action, param):
-        """Handle show-scan action - switch to scan view."""
-        if self._current_view == "scan":
-            return
-
+        """Handle the show-scan action."""
         win = self.props.active_window
         if win:
             win.set_content_view(self.scan_view)
@@ -776,10 +397,7 @@ class ClamUIApp(Adw.Application):
             self._current_view = "scan"
 
     def _on_show_update(self, action, param):
-        """Handle show-update action - switch to update view."""
-        if self._current_view == "update":
-            return
-
+        """Handle the show-update action."""
         win = self.props.active_window
         if win:
             win.set_content_view(self.update_view)
@@ -787,10 +405,7 @@ class ClamUIApp(Adw.Application):
             self._current_view = "update"
 
     def _on_show_logs(self, action, param):
-        """Handle show-logs action - switch to logs view."""
-        if self._current_view == "logs":
-            return
-
+        """Handle the show-logs action."""
         win = self.props.active_window
         if win:
             win.set_content_view(self.logs_view)
@@ -798,10 +413,7 @@ class ClamUIApp(Adw.Application):
             self._current_view = "logs"
 
     def _on_show_components(self, action, param):
-        """Handle show-components action - switch to components view."""
-        if self._current_view == "components":
-            return
-
+        """Handle the show-components action."""
         win = self.props.active_window
         if win:
             win.set_content_view(self.components_view)
@@ -809,10 +421,7 @@ class ClamUIApp(Adw.Application):
             self._current_view = "components"
 
     def _on_show_statistics(self, action, param):
-        """Handle show-statistics action - switch to statistics view."""
-        if self._current_view == "statistics":
-            return
-
+        """Handle the show-statistics action."""
         win = self.props.active_window
         if win:
             win.set_content_view(self.statistics_view)
@@ -820,135 +429,69 @@ class ClamUIApp(Adw.Application):
             self._current_view = "statistics"
 
     def _on_start_scan(self, action, param):
-        """
-        Handle start-scan action - start scan with F5.
-
-        If not on scan view, switches to it first, then triggers the scan.
-        """
-        win = self.props.active_window
-        if win:
-            # Switch to scan view if not already there
-            if self._current_view != "scan":
-                win.set_content_view(self.scan_view)
-                win.set_active_view("scan")
-                self._current_view = "scan"
-
-            # Trigger the scan
-            self.scan_view._start_scan()
+        """Handle the start-scan action."""
+        if self._scan_view is not None:
+            self._scan_view._start_scan()
 
     def _on_start_update(self, action, param):
-        """
-        Handle start-update action - start database update with F6.
-
-        If not on update view, switches to it first, then triggers the update
-        if freshclam is available and not already updating.
-        """
-        win = self.props.active_window
-        if win:
-            # Switch to update view if not already there
-            if self._current_view != "update":
-                win.set_content_view(self.update_view)
-                win.set_active_view("update")
-                self._current_view = "update"
-
-            # Trigger the update if freshclam is available and not already updating
-            if self.update_view._freshclam_available and not self.update_view._is_updating:
-                self.update_view._start_update()
+        """Handle the start-update action."""
+        if self._update_view is not None:
+            self._update_view._start_update()
 
     def _on_scan_file(self, action, param):
-        """
-        Handle scan-file action - open file picker from header bar.
-
-        Switches to scan view and opens the file selection dialog.
-        """
+        """Handle the scan-file action — open file/folder chooser, then show in scan view."""
         win = self.props.active_window
-        if win:
-            # Switch to scan view if not already there
-            if self._current_view != "scan":
-                win.set_content_view(self.scan_view)
-                win.set_active_view("scan")
-                self._current_view = "scan"
-
-            # Open file picker via scan view's public method
-            self.scan_view.show_file_picker()
-
-    def _on_scan_system(self, action, param):
-        """
-        Handle scan-system action - quick scan from header bar.
-
-        Switches to scan view, applies Quick Scan profile, and starts scan.
-        Falls back to common locations (Downloads, Documents, tmp) if profile not found.
-        """
-        win = self.props.active_window
-        if win:
-            # Switch to scan view
-            win.set_content_view(self.scan_view)
-            win.set_active_view("scan")
-            self._current_view = "scan"
-
-            # Try to use Quick Scan profile
-            quick_scan_profile = self._get_quick_scan_profile()
-            if quick_scan_profile:
-                # Refresh profiles to ensure list is up to date
-                self.scan_view.refresh_profiles()
-                # Apply the Quick Scan profile
-                self.scan_view.set_selected_profile(quick_scan_profile.id)
-                # Start the scan
-                self.scan_view._start_scan()
-                logger.info(
-                    f"System scan started with Quick Scan profile "
-                    f"(profile_id={quick_scan_profile.id})"
-                )
-            else:
-                # Fallback to home directory if profile not found
-                home_dir = os.path.expanduser("~")
-                self.scan_view._set_selected_path(home_dir)
-                self.scan_view._start_scan()
-                logger.warning(
-                    f"Quick Scan profile not found, falling back to home directory "
-                    f"(path={home_dir})"
-                )
-
-    def _on_statistics_quick_scan(self):
-        """
-        Handle Quick Scan action from statistics view.
-
-        Switches to scan view and applies the Quick Scan profile.
-        Falls back to home directory if the profile is not found.
-        Does not automatically start the scan - user must click Start Scan.
-        """
-        win = self.props.active_window
-        if win:
-            # Switch to scan view
-            win.set_content_view(self.scan_view)
-            win.set_active_view("scan")
-            self._current_view = "scan"
-
-            # Try to use Quick Scan profile
-            quick_scan_profile = self._get_quick_scan_profile()
-            if quick_scan_profile:
-                # Refresh profiles to ensure list is up to date
-                self.scan_view.refresh_profiles()
-                # Apply the Quick Scan profile
-                self.scan_view.set_selected_profile(quick_scan_profile.id)
-                logger.info(
-                    f"Quick scan configured with Quick Scan profile from statistics view "
-                    f"(profile_id={quick_scan_profile.id})"
-                )
-            else:
-                # Fallback to home directory if profile not found
-                home_dir = os.path.expanduser("~")
-                self.scan_view._set_selected_path(home_dir)
-                logger.warning(
-                    f"Quick Scan profile not found, falling back to home directory "
-                    f"scan from statistics view (path={home_dir})"
-                )
-
-    def _on_show_quarantine(self, action, param):
-        """Handle show-quarantine action - switch to quarantine view."""
-        if self._current_view == "quarantine":
+        if not win:
             return
 
+        dialog = Gtk.FileDialog()
+        dialog.set_title(_("Select File or Folder"))
+        dialog.select_folder(win, None, self._on_scan_file_selected)
+
+    def _on_scan_file_selected(self, dialog, result):
+        """Handle file/folder selection from the scan-file dialog."""
+        try:
+            folder = dialog.select_folder_finish(result)
+            path = folder.get_path()
+            if not path:
+                return
+        except Exception:
+            return  # User cancelled
+
+        win = self.props.active_window
+        if not win:
+            return
+
+        win.set_content_view(self.scan_view)
+        win.set_active_view("scan")
+        self._current_view = "scan"
+        self.scan_view._set_selected_path(path)
+
+    def _on_scan_system(self, action, param):
+        """Handle the scan-system action."""
+        quick_scan_profile = self._get_quick_scan_profile()
+
+        win = self.props.active_window
+        if win:
+            win.set_content_view(self.scan_view)
+            win.set_active_view("scan")
+            self._current_view = "scan"
+
+            if quick_scan_profile:
+                self.scan_view.refresh_profiles()
+                self.scan_view.set_selected_profile(quick_scan_profile.id)
+            else:
+                home_dir = os.path.expanduser("~")
+                self.scan_view._set_selected_path(home_dir)
+
+            self.scan_view._start_scan()
+
+    def _on_statistics_quick_scan(self):
+        """Trigger a quick scan from the statistics view."""
+        self._view_coordinator.trigger_statistics_quick_scan()
+
+    def _on_show_quarantine(self, action, param):
+        """Handle the show-quarantine action."""
         win = self.props.active_window
         if win:
             win.set_content_view(self.quarantine_view)
@@ -956,7 +499,9 @@ class ClamUIApp(Adw.Application):
             self._current_view = "quarantine"
 
     def _on_about(self, action, param):
-        """Handle about action - show about dialog."""
+        """Handle about action — show about dialog."""
+        from .ui.utils import resolve_icon_name
+
         about = Adw.AboutDialog()
         about.set_application_name(self._app_name)
         about.set_version(self._version)
@@ -968,511 +513,155 @@ class ClamUIApp(Adw.Application):
         about.set_application_icon(resolve_icon_name("security-high-symbolic"))
         about.present(self.props.active_window)
 
-    # Tray indicator action handlers
-
-    def _on_tray_quick_scan(self) -> None:
-        """
-        Handle Quick Scan action from tray menu.
-
-        Presents the window, switches to scan view, applies the Quick Scan
-        profile, and starts the scan. Falls back to home directory if the
-        Quick Scan profile is not found.
-        """
-        # Use GLib.idle_add to ensure GTK4 operations run on main thread
+    def _on_tray_quick_scan(self):
+        """Trigger a quick scan from the tray."""
         GLib.idle_add(self._do_tray_quick_scan)
 
-    def _do_tray_quick_scan(self) -> bool:
-        """Execute quick scan on main thread."""
-        # Activate the application (creates window if needed)
-        self.activate()
+    def _do_tray_quick_scan(self):
+        """Execute the quick scan from the tray."""
+        self._tray_integration._do_tray_quick_scan()
+        return False
 
-        win = self.props.active_window
-        if win:
-            # Switch to scan view (lazy-loaded)
-            win.set_content_view(self.scan_view)
-            win.set_active_view("scan")
-            self._current_view = "scan"
-
-            # Try to use Quick Scan profile
-            quick_scan_profile = self._get_quick_scan_profile()
-            if quick_scan_profile:
-                # Refresh profiles to ensure list is up to date
-                self.scan_view.refresh_profiles()
-                # Apply the Quick Scan profile
-                self.scan_view.set_selected_profile(quick_scan_profile.id)
-                # Start the scan
-                self.scan_view._start_scan()
-                logger.info(
-                    f"Quick scan started with Quick Scan profile from tray menu "
-                    f"(profile_id={quick_scan_profile.id})"
-                )
-            else:
-                # Fallback to home directory if profile not found
-                home_dir = os.path.expanduser("~")
-                self.scan_view._set_selected_path(home_dir)
-                self.scan_view._start_scan()
-                logger.warning(
-                    f"Quick Scan profile not found, falling back to home directory "
-                    f"scan from tray menu (path={home_dir})"
-                )
-
-        return False  # Don't repeat
-
-    def _on_tray_full_scan(self) -> None:
-        """
-        Handle Full Scan action from tray menu.
-
-        Presents the window and switches to scan view, allowing the user
-        to select a folder for scanning.
-        """
-        # Use GLib.idle_add to ensure GTK4 operations run on main thread
+    def _on_tray_full_scan(self):
+        """Trigger a full system scan from the tray."""
         GLib.idle_add(self._do_tray_full_scan)
 
-    def _do_tray_full_scan(self) -> bool:
-        """Execute full scan setup on main thread."""
-        # Activate the application (creates window if needed)
-        self.activate()
+    def _do_tray_full_scan(self):
+        """Execute the full scan from the tray."""
+        self._tray_integration._do_tray_full_scan()
+        return False
 
-        win = self.props.active_window
-        if win:
-            # Switch to scan view (lazy-loaded)
-            win.set_content_view(self.scan_view)
-            win.set_active_view("scan")
-            self._current_view = "scan"
-
-            # Open folder selection dialog
-            self.scan_view._on_select_folder_clicked(None)
-
-            logger.info("Full scan folder selection opened from tray menu")
-
-        return False  # Don't repeat
-
-    def _on_tray_update(self) -> None:
-        """
-        Handle Update Definitions action from tray menu.
-
-        Presents the window, switches to update view, and starts the
-        database update process.
-        """
-        # Use GLib.idle_add to ensure GTK4 operations run on main thread
+    def _on_tray_update(self):
+        """Trigger database update from the tray."""
         GLib.idle_add(self._do_tray_update)
 
-    def _do_tray_update(self) -> bool:
-        """Execute database update on main thread."""
-        # Activate the application (creates window if needed)
-        self.activate()
+    def _do_tray_update(self):
+        """Execute the database update from the tray."""
+        self._tray_integration._do_tray_update()
+        return False
 
-        win = self.props.active_window
-        if win:
-            # Switch to update view (lazy-loaded)
-            win.set_content_view(self.update_view)
-            win.set_active_view("update")
-            self._current_view = "update"
-
-            # Start the update if freshclam is available
-            if self.update_view._freshclam_available and not self.update_view._is_updating:
-                self.update_view._start_update()
-                logger.info("Database update started from tray menu")
-            else:
-                logger.info("Database update view opened from tray menu (update not started)")
-
-        return False  # Don't repeat
-
-    def _on_tray_quit(self) -> None:
-        """
-        Handle Quit action from tray menu.
-
-        Quits the application cleanly.
-        """
-        # Use GLib.idle_add to ensure GTK4 operations run on main thread
+    def _on_tray_quit(self):
+        """Quit the application from the tray."""
         GLib.idle_add(self._do_tray_quit)
 
-    def _do_tray_quit(self) -> bool:
-        """Execute quit on main thread."""
-        self.quit()
-        return False  # Don't repeat
+    def _do_tray_quit(self):
+        """Execute the quit from the tray."""
+        self._tray_integration._do_tray_quit()
+        return False
 
-    def _on_tray_window_toggle(self) -> None:
-        """
-        Handle window toggle action from tray menu.
+    def _on_tray_window_toggle(self):
+        """Toggle the main window visibility from the tray."""
+        self._tray_integration.toggle_window()
 
-        Shows or hides the main window.
-        """
-        win = self.props.active_window
-        if win is None:
-            # No window exists, create one
-            self.activate()
-        elif win.get_visible():
-            # Window visible, hide it
-            win.hide()
-            if self._tray_indicator:
-                self._tray_indicator.update_window_menu_label(visible=False)
-        else:
-            # Window hidden, show it
-            win.present()
-            if self._tray_indicator:
-                self._tray_indicator.update_window_menu_label(visible=True)
-
-    def _on_tray_profile_select(self, profile_id: str) -> None:
-        """
-        Handle profile selection from tray menu.
-
-        Shows the main window, switches to scan view, and updates the
-        profile selection to the chosen profile.
-
-        Args:
-            profile_id: The ID of the selected profile
-        """
-        # Use GLib.idle_add to ensure GTK4 operations run on main thread
+    def _on_tray_profile_select(self, profile_id):
+        """Select a scan profile from the tray menu."""
         GLib.idle_add(self._do_tray_profile_select, profile_id)
 
-    def _do_tray_profile_select(self, profile_id: str) -> bool:
-        """Execute profile selection on main thread."""
-        # Activate the application (creates window if needed)
-        self.activate()
-
-        win = self.props.active_window
-        if win:
-            # Switch to scan view (lazy-loaded)
-            win.set_content_view(self.scan_view)
-            win.set_active_view("scan")
-            self._current_view = "scan"
-
-            # Refresh profiles to ensure list is up to date
-            self.scan_view.refresh_profiles()
-
-            # Select the profile by ID
-            if self.scan_view.set_selected_profile(profile_id):
-                logger.info(f"Profile selected from tray menu: {profile_id}")
-            else:
-                logger.warning(f"Failed to select profile from tray: {profile_id}")
-
-        return False  # Don't repeat
-
-    # Scan state change handler (for tray integration)
+    def _do_tray_profile_select(self, profile_id):
+        """Execute profile selection from the tray."""
+        self._tray_integration._do_tray_profile_select(profile_id)
 
     def _on_scan_state_changed(self, is_scanning: bool, result=None) -> None:
-        """
-        Handle scan state changes for tray indicator updates and close confirmation.
-
-        Called by ScanView when scanning starts or stops.
-
-        Args:
-            is_scanning: True when scan starts, False when scan ends
-            result: ScanResult when scan completes (None when starting)
-        """
-        # Update scan state tracking (for close confirmation dialog)
+        """Handle scan state changes."""
         self._is_scan_active = is_scanning
 
-        if self._tray_indicator is None:
-            return
-
-        if is_scanning:
-            # Update tray to scanning state
-            self._tray_indicator.update_status("scanning")
-            # Show indeterminate progress (tray doesn't get real-time %)
-            # Clear any previous label, icon change indicates scanning
-            self._tray_indicator.update_scan_progress(0)
-            logger.debug("Tray updated to scanning state")
-        else:
-            # Clear progress label
-            self._tray_indicator.update_scan_progress(0)
-
-            # Update tray icon based on scan result
-            if result is not None:
-                if result.has_threats:
-                    # Threats detected - show alert/threat status
-                    self._tray_indicator.update_status("threat")
-                    logger.debug(f"Tray updated to threat state ({result.infected_count} threats)")
-                elif result.is_clean:
-                    # No threats - show protected status
-                    self._tray_indicator.update_status("protected")
-                    logger.debug("Tray updated to protected state (scan clean)")
-                else:
-                    # Error or cancelled - show warning status
-                    self._tray_indicator.update_status("warning")
-                    logger.debug(f"Tray updated to warning state (status: {result.status.value})")
-            else:
-                # No result provided, default to protected
-                self._tray_indicator.update_status("protected")
-                logger.debug("Tray updated to protected state (no result)")
+        if result is not None:
+            self._notification_dispatcher.show_scan_result_notification(result)
 
     def do_shutdown(self):
-        """
-        Handle application shutdown.
-
-        This method is called when the application is about to terminate.
-        It performs cleanup of resources including:
-        - Tray indicator
-        - Active scans
-        - Database connections
-        """
-        logger.info("Application shutdown initiated")
-
-        # Stop device monitor
-        if self._device_monitor is not None:
-            try:
-                self._device_monitor.stop()
-                self._device_monitor = None
-                logger.debug("Device monitor stopped during shutdown")
-            except Exception as e:
-                logger.warning("Error stopping device monitor: %s", e)
-
-        # Cancel any active scans
-        if self._scan_view is not None:
-            try:
-                # Cancel any ongoing scan
-                if hasattr(self._scan_view, "_scanner") and self._scan_view._scanner is not None:
-                    self._scan_view._scanner.cancel()
-                    logger.debug("Active scan cancelled during shutdown")
-            except Exception as e:
-                logger.warning(f"Error cancelling scan during shutdown: {e}")
-
-        # Clean up tray indicator to prevent ghost icons
-        if self._tray_indicator is not None:
-            try:
-                self._tray_indicator.cleanup()
-                self._tray_indicator = None
-                logger.debug("Tray indicator cleanup completed during shutdown")
-            except Exception as e:
-                logger.warning(f"Error cleaning up tray indicator: {e}")
-
-        # Close VirusTotal client session
-        if self._vt_client is not None:
-            try:
-                self._vt_client.close()
-                self._vt_client = None
-                logger.debug("VirusTotal client closed during shutdown")
-            except Exception as e:
-                logger.warning(f"Error closing VirusTotal client: {e}")
-
-        # Close quarantine database connections
-        if self._scan_view is not None:
-            try:
-                if hasattr(self._scan_view, "_quarantine_manager"):
-                    self._scan_view._quarantine_manager.close()
-                    logger.debug("Scan view quarantine manager closed")
-            except Exception as e:
-                logger.warning(f"Error closing scan view quarantine manager: {e}")
-
-        if self._quarantine_view is not None:
-            try:
-                if hasattr(self._quarantine_view, "_manager"):
-                    self._quarantine_view._manager.close()
-                    logger.debug("Quarantine view manager closed")
-            except Exception as e:
-                logger.warning(f"Error closing quarantine view manager: {e}")
-
-        # Clear view references to allow garbage collection
-        self._scan_view = None
-        self._update_view = None
-        self._logs_view = None
-        self._components_view = None
-        self._statistics_view = None
-        self._quarantine_view = None
-        self._current_view = None
-
-        logger.info("Application shutdown cleanup completed")
-
-        # Call parent shutdown
+        """Perform application shutdown."""
+        self._lifecycle_manager.shutdown()
         Adw.Application.do_shutdown(self)
 
-    # Initial scan path handling (from CLI / context menu)
+    def set_content_view(self, view_widget):
+        """Set the main content view."""
+        win = self.props.active_window
+        if win:
+            win.set_content_view(view_widget)
 
-    def set_initial_scan_paths(self, file_paths: list[str], use_virustotal: bool = False) -> None:
-        """
-        Set initial file paths to scan on activation.
+    def set_active_view(self, view_name: str):
+        """Set the active view by name."""
+        win = self.props.active_window
+        if win:
+            win.set_active_view(view_name)
+            self._current_view = view_name
 
-        Called from main.py when paths are provided via CLI arguments
-        (e.g., from file manager context menu).
-
-        Args:
-            file_paths: List of file/directory paths to scan.
-            use_virustotal: If True, scan with VirusTotal instead of ClamAV.
-        """
+    def set_initial_scan_paths(self, file_paths: list[str], use_virustotal: bool = False):
+        """Store initial scan paths from CLI or file manager integration."""
         self._initial_scan_paths = file_paths
         self._initial_use_virustotal = use_virustotal
-        logger.info(f"Set {len(file_paths)} initial scan path(s) (virustotal={use_virustotal})")
+        self._process_initial_scan_paths()
 
-    def _process_initial_scan_paths(self) -> None:
-        """
-        Process any initial scan paths set via CLI.
-
-        Called during do_activate after window creation.
-        Handles both ClamAV and VirusTotal scan requests.
-        """
+    def _process_initial_scan_paths(self):
+        """Process initial scan paths if provided."""
         if not self._initial_scan_paths:
             return
 
         paths = self._initial_scan_paths
-        use_vt = self._initial_use_virustotal
-
-        # Clear stored paths to prevent re-processing
         self._initial_scan_paths = []
+
+        use_vt = self._initial_use_virustotal
         self._initial_use_virustotal = False
 
-        if use_vt:
-            # VirusTotal scan - only scan first file
-            if paths:
-                self._handle_virustotal_scan_request(paths[0])
-        else:
-            # ClamAV scan - handled by scan view (lazy-loaded)
-            if paths:
-                self.scan_view._set_selected_path(paths[0])
-                # Start scan automatically for context menu invocation
-                self.scan_view._start_scan()
-
-    # VirusTotal integration methods
-
-    def _handle_virustotal_scan_request(self, file_path: str) -> None:
-        """
-        Handle a VirusTotal scan request.
-
-        Checks for API key and either starts the scan, shows setup dialog,
-        or uses the remembered action.
-
-        Args:
-            file_path: Path to the file to scan.
-        """
-        from .core import keyring_manager
-
-        # Check for API key
-        api_key = keyring_manager.get_api_key(self._settings_manager)
-
-        if api_key:
-            # Have API key - start scan
-            self._trigger_virustotal_scan(file_path, api_key)
-        else:
-            # No API key - check remembered action
-            action = self._settings_manager.get("virustotal_remember_no_key_action", "none")
-
-            if action == "open_website":
-                # Open VirusTotal website directly
-                self._open_virustotal_website()
-            elif action == "prompt":
-                # Show notification only
-                self._notification_manager.notify_virustotal_no_key()
+        if self._scan_view:
+            self._scan_view._set_selected_path(paths[0])
+            if use_vt:
+                self._show_virustotal_setup_dialog(paths[0])
             else:
-                # Show setup dialog (action == "none" or unknown)
-                self._show_virustotal_setup_dialog(file_path)
+                self._scan_view._start_scan()
 
     def _trigger_virustotal_scan(self, file_path: str, api_key: str) -> None:
-        """
-        Start a VirusTotal scan for a file.
-
-        Args:
-            file_path: Path to the file to scan.
-            api_key: VirusTotal API key.
-        """
-        from .core.log_manager import LogEntry, LogManager
-        from .core.virustotal import VirusTotalClient
-
-        # Initialize client if needed
-        if self._vt_client is None:
-            self._vt_client = VirusTotalClient(api_key)
-        else:
-            self._vt_client.set_api_key(api_key)
-
-        logger.info(f"Starting VirusTotal scan for: {file_path}")
+        """Trigger a VirusTotal scan for the specified file."""
+        import threading
 
         def on_scan_complete(result):
-            """Handle scan completion on main thread."""
-            logger.info(
-                f"VirusTotal scan complete: status={result.status.value}, "
-                f"detections={result.detections}/{result.total_engines}"
-            )
-
-            # Save to log
             try:
+                from .core.log_manager import LogManager
+
                 log_manager = LogManager()
-                log_entry = LogEntry.from_virustotal_result_data(
-                    vt_status=result.status.value,
-                    file_path=result.file_path,
-                    duration=result.duration,
-                    sha256=result.sha256,
-                    detections=result.detections,
-                    total_engines=result.total_engines,
-                    detection_details=[
-                        {
-                            "engine_name": d.engine_name,
-                            "category": d.category,
-                            "result": d.result,
-                        }
-                        for d in result.detection_details
-                    ],
-                    permalink=result.permalink,
-                    error_message=result.error_message,
-                )
-                log_manager.save_log(log_entry)
+                log_manager.add_virustotal_result(result)
+                self._show_virustotal_results_dialog(result)
             except Exception as e:
-                logger.error(f"Failed to save VirusTotal log: {e}")
+                logger.error(f"Error processing VirusTotal result: {e}")
 
-            # Show results dialog
-            self._show_virustotal_results_dialog(result)
+        def scan_thread():
+            try:
+                from .core.virustotal import VirusTotalClient
 
-            # Send notification
-            if result.is_error:
-                if result.status.value == "rate_limited":
-                    self._notification_manager.notify_virustotal_rate_limit()
-                # Other errors don't need separate notification - dialog shows them
-            else:
-                self._notification_manager.notify_virustotal_scan_complete(
-                    is_clean=result.is_clean,
-                    detections=result.detections,
-                    total_engines=result.total_engines,
-                    permalink=result.permalink,
-                )
+                vt_client = VirusTotalClient(api_key)
+                result = vt_client.scan_file(file_path)
+                GLib.idle_add(on_scan_complete, result)
+            except Exception as e:
+                logger.error(f"VirusTotal scan failed: {e}")
 
-        # Start async scan
-        self._vt_client.scan_file_async(file_path, on_scan_complete)
+        threading.Thread(target=scan_thread, daemon=True).start()
 
-    def _show_virustotal_setup_dialog(self, file_path: str) -> None:
-        """
-        Show the VirusTotal setup dialog for API key configuration.
-
-        Args:
-            file_path: Path to scan after setup completes.
-        """
+    def _show_virustotal_setup_dialog(self, file_path: str):
+        """Show the VirusTotal setup dialog."""
         from .ui.virustotal_setup_dialog import VirusTotalSetupDialog
 
         win = self.props.active_window
-        if not win:
-            # Create window if needed
-            self.activate()
-            win = self.props.active_window
-
         if win:
-            dialog = VirusTotalSetupDialog(
-                settings_manager=self._settings_manager,
-                on_key_saved=lambda key: self._trigger_virustotal_scan(file_path, key),
+            dialog = VirusTotalSetupDialog(win)
+            dialog.connect(
+                "scan-requested", lambda d, key: self._trigger_virustotal_scan(file_path, key)
             )
-            dialog.set_transient_for(win)
             dialog.present()
 
-    def _show_virustotal_results_dialog(self, result) -> None:
-        """
-        Show the VirusTotal results dialog.
-
-        Args:
-            result: VTScanResult from the scan.
-        """
+    def _show_virustotal_results_dialog(self, result):
+        """Show the VirusTotal results dialog."""
         from .ui.virustotal_results_dialog import VirusTotalResultsDialog
 
         win = self.props.active_window
-        if not win:
-            self.activate()
-            win = self.props.active_window
-
         if win:
-            dialog = VirusTotalResultsDialog(vt_result=result)
-            dialog.set_transient_for(win)
+            dialog = VirusTotalResultsDialog(win, result)
             dialog.present()
 
-    def _open_virustotal_website(self) -> None:
-        """Open the VirusTotal website for manual file upload."""
-        url = "https://www.virustotal.com/gui/home/upload"
+    def _open_virustotal_website(self, url: str):
+        """Open the VirusTotal website for a file."""
         try:
+            from gi.repository import Gio
+
             Gio.AppInfo.launch_default_for_uri(url, None)
-            logger.info("Opened VirusTotal website")
         except Exception as e:
             logger.error(f"Failed to open VirusTotal website: {e}")

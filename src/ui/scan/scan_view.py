@@ -19,16 +19,15 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, GLib, Gtk
+from gi.repository import Adw, Gdk, Gtk
 
 from ...core.i18n import _
 from ...core.quarantine import QuarantineManager
-from ...core.scanner import ScanResult, ScanStatus, Scanner
+from ...core.scanner import Scanner, ScanResult, ScanStatus
 from ...core.settings_manager import SettingsManager
 from ...core.utils import format_scan_path, is_flatpak
 from ..compat import create_banner
 from ..scan_results_dialog import ScanResultsDialog
-from ..utils import resolve_icon_name
 from ..view_helpers import StatusLevel, set_status_class
 from .profile_selector import ProfileSelector
 from .scan_controller import ScanController, ScanState

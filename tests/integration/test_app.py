@@ -79,6 +79,7 @@ def mock_gtk_modules():
             "src.ui.logs_view": mock.MagicMock(),
             "src.ui.components_view": mock.MagicMock(),
             "src.ui.preferences": mock.MagicMock(),
+            "src.ui.preferences.window": mock.MagicMock(),
             "src.ui.statistics_view": mock.MagicMock(),
         },
     ):
@@ -833,7 +834,7 @@ class TestClamUIAppQuickScanFallback:
         app._profile_manager.get_profile_by_name.return_value = None
 
         # Call the handler and verify logging
-        with mock.patch("src.app.logger") as mock_logger:
+        with mock.patch("src.view_coordinator.logger") as mock_logger:
             app._on_statistics_quick_scan()
 
             # Verify warning was logged about fallback

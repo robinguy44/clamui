@@ -7,7 +7,7 @@ Single responsibility:
 - Toggle between clean/infected styling
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 import gi
 

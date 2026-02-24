@@ -12,17 +12,18 @@ Single responsibility:
 import logging
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from gi.repository import GLib
 
-from ...core.scanner import ScanProgress, ScanResult, ScanStatus, Scanner
+from ...core.scanner import Scanner, ScanProgress, ScanResult, ScanStatus
 from ...core.settings_manager import SettingsManager
 
 if TYPE_CHECKING:
-    from ...profiles.models import ScanProfile
+    pass
 
 logger = logging.getLogger(__name__)
 

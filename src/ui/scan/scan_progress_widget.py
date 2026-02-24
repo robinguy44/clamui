@@ -8,7 +8,6 @@ Single responsibility:
 - Display stats (files scanned, threats found)
 """
 
-import time
 from pathlib import Path
 
 import gi
