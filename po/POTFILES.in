@@ -53,3 +53,8 @@ src/ui/view_helpers.py
 src/ui/virustotal_results_dialog.py
 src/ui/virustotal_setup_dialog.py
 src/ui/window.py
+src/ui/scan/profile_selector.py
+src/ui/scan/scan_progress_widget.py
+src/ui/scan/scan_results_widget.py
+src/ui/scan/scan_view.py
+src/ui/scan/target_selector.py
