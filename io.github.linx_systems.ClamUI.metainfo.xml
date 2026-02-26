@@ -1,158 +1,172 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>io.github.linx_systems.ClamUI</id>
-  <name>ClamUI</name>
-  <summary>GUI for ClamAV</summary>
-  <metadata_license>CC0-1.0</metadata_license>
-  <project_license>MIT</project_license>
+    <id>io.github.linx_systems.ClamUI</id>
+    <name>ClamUI</name>
+    <summary>GUI for ClamAV</summary>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>MIT</project_license>
 
-  <developer id="io.github.linx_systems">
-    <name>ClamUI Contributors</name>
-  </developer>
+    <developer id="io.github.linx_systems">
+        <name>ClamUI Contributors</name>
+    </developer>
 
-  <description>
-    <p>
-      ClamUI is a modern Linux desktop application that provides a user-friendly
-      graphical interface for the ClamAV antivirus command-line tool. Built with
-      GTK4 and libadwaita for a native GNOME appearance.
-    </p>
-    <p>Features:</p>
-    <ul>
-      <li>Select files or directories to scan using the native file dialog</li>
-      <li>Background scanning keeps the UI responsive during long scans</li>
-      <li>Clear, readable display of scan results</li>
-      <li>Graceful handling when ClamAV is not installed</li>
-      <li>Modern Adwaita styling with proper GNOME integration</li>
-    </ul>
-  </description>
-
-  <launchable type="desktop-id">io.github.linx_systems.ClamUI.desktop</launchable>
-
-  <screenshots>
-    <screenshot type="default">
-      <caption>Main application window</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/main_view.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Scan results display</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/main_view_with_scan_result.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Analysis view</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/analysis_view.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Components view</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/components_view.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Configuration settings</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.1/screenshots/config_view.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Scan history</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/history_view.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Profile management</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/profile_management.png</image>
-    </screenshot>
-    <screenshot>
-      <caption>Quarantine management</caption>
-      <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/quarantine_view.png</image>
-    </screenshot>
-  </screenshots>
-
-  <url type="homepage">https://github.com/linx-systems/clamui</url>
-  <url type="bugtracker">https://github.com/linx-systems/clamui/issues</url>
-  <url type="vcs-browser">https://github.com/linx-systems/clamui</url>
-
-  <provides>
-    <binary>clamui</binary>
-  </provides>
-
-  <requires>
-    <display_length compare="ge">360</display_length>
-  </requires>
-
-  <recommends>
-    <control>keyboard</control>
-    <control>pointing</control>
-  </recommends>
-
-  <categories>
-    <category>System</category>
-    <category>Security</category>
-    <category>Utility</category>
-  </categories>
-
-  <keywords>
-    <keyword>virus</keyword>
-    <keyword>antivirus</keyword>
-    <keyword>scanner</keyword>
-    <keyword>clamav</keyword>
-    <keyword>security</keyword>
-    <keyword>malware</keyword>
-  </keywords>
-
-  <releases>
-    <release version="0.1.3" date="2026-02-07">
-      <description>
-        <p>Feature and stability improvements</p>
+    <description>
+        <p>
+            ClamUI is a modern Linux desktop application that provides a user-friendly
+            graphical interface for the ClamAV antivirus command-line tool. Built with
+            GTK4 and libadwaita for a native GNOME appearance.
+        </p>
+        <p>Features:</p>
         <ul>
-          <li>Live scan progress with real-time file display</li>
-          <li>Navigation sidebar and AppImage support</li>
-          <li>Debug logging and daemon log export</li>
-          <li>Flatpak and libadwaita 1.0 compatibility fixes</li>
-          <li>Security hardening and documentation overhaul</li>
+            <li>Select files or directories to scan using the native file dialog</li>
+            <li>Background scanning keeps the UI responsive during long scans</li>
+            <li>Clear, readable display of scan results</li>
+            <li>Graceful handling when ClamAV is not installed</li>
+            <li>Modern Adwaita styling with proper GNOME integration</li>
         </ul>
-      </description>
-    </release>
-    <release version="0.1.2" date="2026-01-20">
-      <description>
-        <p>Flatpak Improvements</p>
-        <ul>
-          <li>Fixed bugs related to Flatpak installation and execution</li>
-          <li>Improved Flatpak integration with host system</li>
-          <li>Enhanced Flatpak support for tray icon, keyring and notifications</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.1.1b" date="2026-01-17">
-      <description>
-        <p>Bug fix release</p>
-        <ul>
-          <li>Fixed bugs related to Ubuntu Desktop Xorg and Wayland not being able to maximize</li>
-          <li>Fixed bugs related to ClamAV configuration file permissions</li>
-          <li>Added back the Tray Icon</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.1.1" date="2026-01-13">
-      <description>
-        <p>Bug fix release</p>
-        <ul>
-          <li>Fix screenshot URLs in AppStream metadata for Flathub compliance</li>
-        </ul>
-      </description>
-    </release>
-    <release version="0.1.0" date="2026-01-07">
-      <description>
-        <p>Initial release of ClamUI</p>
-        <ul>
-          <li>File and directory scanning via ClamAV</li>
-          <li>Native GTK4/Adwaita user interface</li>
-          <li>Background scanning with responsive UI</li>
-          <li>Clear result display with status indicators</li>
-        </ul>
-      </description>
-    </release>
-  </releases>
+    </description>
 
-  <content_rating type="oars-1.1"/>
+    <launchable type="desktop-id">io.github.linx_systems.ClamUI.desktop</launchable>
 
-  <branding>
-    <color type="primary" scheme_preference="light">#a8c9b0</color>
-    <color type="primary" scheme_preference="dark">#3d7a4e</color>
-  </branding>
+    <screenshots>
+        <screenshot type="default">
+            <caption>Main application window</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/main_view.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Scan results display</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/main_view_with_scan_result.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Analysis view</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/analysis_view.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Components view</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/components_view.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Configuration settings</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.1/screenshots/config_view.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Scan history</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/history_view.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Profile management</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/profile_management.png</image>
+        </screenshot>
+        <screenshot>
+            <caption>Quarantine management</caption>
+            <image>https://github.com/linx-systems/clamui/raw/v0.1.4/screenshots/quarantine_view.png</image>
+        </screenshot>
+    </screenshots>
+
+    <url type="homepage">https://github.com/linx-systems/clamui</url>
+    <url type="bugtracker">https://github.com/linx-systems/clamui/issues</url>
+    <url type="vcs-browser">https://github.com/linx-systems/clamui</url>
+
+    <provides>
+        <binary>clamui</binary>
+    </provides>
+
+    <requires>
+        <display_length compare="ge">360</display_length>
+    </requires>
+
+    <recommends>
+        <control>keyboard</control>
+        <control>pointing</control>
+    </recommends>
+
+    <categories>
+        <category>System</category>
+        <category>Security</category>
+        <category>Utility</category>
+    </categories>
+
+    <keywords>
+        <keyword>virus</keyword>
+        <keyword>antivirus</keyword>
+        <keyword>scanner</keyword>
+        <keyword>clamav</keyword>
+        <keyword>security</keyword>
+        <keyword>malware</keyword>
+    </keywords>
+
+    <releases>
+        <release version="0.1.4" date="2026-02-26">
+            <description>
+                <p>Internationalization, auto-scan on device mount, and multi-distro support</p>
+                <ul>
+                    <li>Full internationalization support with German translation</li>
+                    <li>Automatic scanning of USB drives and external devices on mount</li>
+                    <li>Auto-detect ClamAV config paths for Fedora, RHEL, and other distros</li>
+                    <li>Moved blocking subprocess calls to background threads for faster startup</li>
+                    <li>Eliminated quarantine view first-switch lag with pre-initialized resources</li>
+                    <li>Fixed file manager integration with tri-state detection and removal support</li>
+                    <li>Improved test coverage from 69% to 71%</li>
+                </ul>
+            </description>
+        </release>
+        <release version="0.1.3" date="2026-02-07">
+            <description>
+                <p>Feature and stability improvements</p>
+                <ul>
+                    <li>Live scan progress with real-time file display</li>
+                    <li>Navigation sidebar and AppImage support</li>
+                    <li>Debug logging and daemon log export</li>
+                    <li>Flatpak and libadwaita 1.0 compatibility fixes</li>
+                    <li>Security hardening and documentation overhaul</li>
+                </ul>
+            </description>
+        </release>
+        <release version="0.1.2" date="2026-01-20">
+            <description>
+                <p>Flatpak Improvements</p>
+                <ul>
+                    <li>Fixed bugs related to Flatpak installation and execution</li>
+                    <li>Improved Flatpak integration with host system</li>
+                    <li>Enhanced Flatpak support for tray icon, keyring and notifications</li>
+                </ul>
+            </description>
+        </release>
+        <release version="0.1.1b" date="2026-01-17">
+            <description>
+                <p>Bug fix release</p>
+                <ul>
+                    <li>Fixed bugs related to Ubuntu Desktop Xorg and Wayland not being able to maximize</li>
+                    <li>Fixed bugs related to ClamAV configuration file permissions</li>
+                    <li>Added back the Tray Icon</li>
+                </ul>
+            </description>
+        </release>
+        <release version="0.1.1" date="2026-01-13">
+            <description>
+                <p>Bug fix release</p>
+                <ul>
+                    <li>Fix screenshot URLs in AppStream metadata for Flathub compliance</li>
+                </ul>
+            </description>
+        </release>
+        <release version="0.1.0" date="2026-01-07">
+            <description>
+                <p>Initial release of ClamUI</p>
+                <ul>
+                    <li>File and directory scanning via ClamAV</li>
+                    <li>Native GTK4/Adwaita user interface</li>
+                    <li>Background scanning with responsive UI</li>
+                    <li>Clear result display with status indicators</li>
+                </ul>
+            </description>
+        </release>
+    </releases>
+
+    <content_rating type="oars-1.1"/>
+
+    <branding>
+        <color type="primary" scheme_preference="light">#a8c9b0</color>
+        <color type="primary" scheme_preference="dark">#3d7a4e</color>
+    </branding>
 </component>
