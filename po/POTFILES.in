@@ -1,6 +1,7 @@
 # List of source files containing translatable strings.
 # This file is used by xgettext to extract strings for translation.
 # Update this list when adding new files with translatable strings.
+src/app.py
 src/main.py
 src/cli/scheduled_scan.py
 src/core/clamav_detection.py
@@ -36,6 +37,11 @@ src/ui/preferences/virustotal_page.py
 src/ui/preferences/window.py
 src/ui/profile_dialogs.py
 src/ui/quarantine_view.py
+src/ui/scan/profile_selector.py
+src/ui/scan/scan_progress_widget.py
+src/ui/scan/scan_results_widget.py
+src/ui/scan/scan_view.py
+src/ui/scan/target_selector.py
 src/ui/scan_in_progress_dialog.py
 src/ui/scan_results_dialog.py
 src/ui/scan_view.py

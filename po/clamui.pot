@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ClamUI 0.1.3\n"
 "Report-Msgid-Bugs-To: https://github.com/linx-systems/clamui/issues\n"
-"POT-Creation-Date: 2026-02-24 18:59+0100\n"
+"POT-Creation-Date: 2026-02-26 14:05+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,10 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: src/app.py:448
+msgid "Select File or Folder"
+msgstr ""
 
 #: src/cli/scheduled_scan.py:105
 msgid "ClamUI Scheduled Scan - Headless antivirus scanning"
@@ -886,7 +890,8 @@ msgstr ""
 
 #: src/core/virustotal.py:254 src/core/virustotal.py:308
 #: src/core/virustotal.py:450 src/core/virustotal.py:543
-#: src/core/virustotal.py:551 src/ui/scan_view.py:1806
+#: src/core/virustotal.py:551 src/ui/scan/scan_view.py:257
+#: src/ui/scan_view.py:1806
 msgid "Scan cancelled"
 msgstr ""
 
@@ -1027,8 +1032,8 @@ msgstr ""
 #: src/ui/file_manager_integration_dialog.py:261 src/ui/logs_view.py:104
 #: src/ui/preferences/virustotal_page.py:359 src/ui/profile_dialogs.py:112
 #: src/ui/profile_dialogs.py:701 src/ui/profile_dialogs.py:847
-#: src/ui/profile_dialogs.py:968 src/ui/scan_view.py:1067
-#: src/ui/scan_view.py:1517 src/ui/update_view.py:142
+#: src/ui/profile_dialogs.py:968 src/ui/scan/scan_view.py:170
+#: src/ui/scan_view.py:1067 src/ui/scan_view.py:1517 src/ui/update_view.py:142
 msgid "Cancel"
 msgstr ""
 
@@ -1353,6 +1358,7 @@ msgid ""
 msgstr ""
 
 #: src/ui/logs_view.py:109 src/ui/logs_view.py:287
+#: src/ui/scan/target_selector.py:109
 msgid "Clear All"
 msgstr ""
 
@@ -1754,7 +1760,8 @@ msgid "_Select"
 msgstr ""
 
 #: src/ui/preferences/database_page.py:308
-#: src/ui/preferences/scanner_page.py:202 src/ui/scan_view.py:878
+#: src/ui/preferences/scanner_page.py:202 src/ui/scan/target_selector.py:192
+#: src/ui/scan_view.py:878
 msgid "_Cancel"
 msgstr ""
 
@@ -2993,6 +3000,7 @@ msgid "Description"
 msgstr ""
 
 #: src/ui/profile_dialogs.py:181 src/ui/profile_dialogs.py:569
+#: src/ui/scan/target_selector.py:80 src/ui/scan/target_selector.py:270
 #: src/ui/scan_view.py:683 src/ui/scan_view.py:1023
 msgid "Scan Targets"
 msgstr ""
@@ -3046,7 +3054,8 @@ msgstr ""
 msgid "Name must be {max_length} characters or less"
 msgstr ""
 
-#: src/ui/profile_dialogs.py:360
+#: src/ui/profile_dialogs.py:360 src/ui/scan/target_selector.py:161
+#: src/ui/scan/target_selector.py:188
 msgid "Select Folders"
 msgstr ""
 
@@ -3054,7 +3063,8 @@ msgstr ""
 msgid "Select Folder"
 msgstr ""
 
-#: src/ui/profile_dialogs.py:362
+#: src/ui/profile_dialogs.py:362 src/ui/scan/target_selector.py:161
+#: src/ui/scan/target_selector.py:188
 msgid "Select Files"
 msgstr ""
 
@@ -3074,7 +3084,8 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: src/ui/profile_dialogs.py:567 src/ui/scan_view.py:1029
+#: src/ui/profile_dialogs.py:567 src/ui/scan/target_selector.py:276
+#: src/ui/scan_view.py:1029
 #, python-brace-format
 msgid "Scan Targets ({count})"
 msgstr ""
@@ -3311,6 +3322,146 @@ msgstr ""
 msgid "Failed to delete file"
 msgstr ""
 
+#: src/ui/scan/profile_selector.py:50 src/ui/scan_view.py:483
+msgid "Scan Profile"
+msgstr ""
+
+#: src/ui/scan/profile_selector.py:61 src/ui/scan_view.py:488
+msgid "Profile"
+msgstr ""
+
+#: src/ui/scan/profile_selector.py:65 src/ui/scan/profile_selector.py:103
+#: src/ui/scan_view.py:494 src/ui/scan_view.py:578
+msgid "No Profile (Manual)"
+msgstr ""
+
+#: src/ui/scan/profile_selector.py:75 src/ui/scan_view.py:506
+msgid "Manage profiles"
+msgstr ""
+
+#: src/ui/scan/scan_progress_widget.py:45 src/ui/scan/scan_view.py:286
+#: src/ui/scan_view.py:1094
+msgid "Scanning..."
+msgstr ""
+
+#: src/ui/scan/scan_progress_widget.py:111
+#, python-brace-format
+msgid "Target {current} of {total} — {pct}%"
+msgstr ""
+
+#: src/ui/scan/scan_progress_widget.py:116 src/ui/scan_view.py:1223
+#, python-brace-format
+msgid "Scanning... {pct}%"
+msgstr ""
+
+#: src/ui/scan/scan_progress_widget.py:125
+msgid "Scanned {scanned:,} / {total:,} files"
+msgstr ""
+
+#: src/ui/scan/scan_progress_widget.py:130
+msgid "Scanned {count:,} files"
+msgstr ""
+
+#: src/ui/scan/scan_progress_widget.py:134
+#, python-brace-format
+msgid "Found {n} threat(s)"
+msgstr ""
+
+#: src/ui/scan/scan_results_widget.py:44
+#, python-brace-format
+msgid "View Results ({n})"
+msgstr ""
+
+#: src/ui/scan/scan_results_widget.py:48 src/ui/scan_view.py:1339
+#: src/ui/scan_view.py:1364
+msgid "View Results"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:156 src/ui/scan_view.py:1048
+msgid "Start Scan"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:162 src/ui/scan_view.py:1057
+msgid "EICAR Test"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:164 src/ui/scan_view.py:1059
+msgid "Run a scan with EICAR test file to verify antivirus detection"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:187 src/ui/scan_view.py:1887
+#, python-brace-format
+msgid "Backend: {name}"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:203 src/ui/scan/target_selector.py:137
+msgid "Cannot add targets while scanning"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:246 src/ui/scan_view.py:1787
+#, python-brace-format
+msgid "Scan complete - {count} threat(s) detected"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:250 src/ui/scan_view.py:1801
+msgid "Scan complete - No threats found"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:252 src/ui/scan_view.py:1796
+#, python-brace-format
+msgid "Scan complete - No threats found ({count} file(s) not accessible)"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:260
+#, python-brace-format
+msgid "Scan error: {error}"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:273 src/ui/scan_view.py:1402
+msgid "Please select a file or folder to scan"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:300 src/ui/scan_view.py:1738
+#, python-brace-format
+msgid "Target {current} of {total}: {path}"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:305 src/ui/scan_view.py:1541
+#: src/ui/scan_view.py:1735
+#, python-brace-format
+msgid "Scanning {path}"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:328 src/ui/scan_view.py:1490
+#, python-brace-format
+msgid "Failed to create EICAR test file: {error}"
+msgstr ""
+
+#: src/ui/scan/target_selector.py:81 src/ui/scan/target_selector.py:271
+#: src/ui/scan_view.py:684 src/ui/scan_view.py:1024
+msgid "Drop files here or click Add"
+msgstr ""
+
+#: src/ui/scan/target_selector.py:96 src/ui/scan_view.py:693
+msgid "Add files"
+msgstr ""
+
+#: src/ui/scan/target_selector.py:103 src/ui/scan_view.py:701
+msgid "Add folders"
+msgstr ""
+
+#: src/ui/scan/target_selector.py:122
+msgid "No targets selected"
+msgstr ""
+
+#: src/ui/scan/target_selector.py:191 src/ui/scan_view.py:877
+msgid "_Open"
+msgstr ""
+
+#: src/ui/scan/target_selector.py:273 src/ui/scan_view.py:1026
+msgid "Scan Target (1)"
+msgstr ""
+
 #: src/ui/scan_in_progress_dialog.py:65
 msgid "Scan in Progress"
 msgstr ""
@@ -3533,37 +3684,9 @@ msgstr ""
 msgid "Unable to accept dropped files"
 msgstr ""
 
-#: src/ui/scan_view.py:483
-msgid "Scan Profile"
-msgstr ""
-
-#: src/ui/scan_view.py:488
-msgid "Profile"
-msgstr ""
-
-#: src/ui/scan_view.py:494 src/ui/scan_view.py:578
-msgid "No Profile (Manual)"
-msgstr ""
-
-#: src/ui/scan_view.py:506
-msgid "Manage profiles"
-msgstr ""
-
 #: src/ui/scan_view.py:625
 #, python-brace-format
 msgid "Profile '{name}' has no valid targets"
-msgstr ""
-
-#: src/ui/scan_view.py:684 src/ui/scan_view.py:1024
-msgid "Drop files here or click Add"
-msgstr ""
-
-#: src/ui/scan_view.py:693
-msgid "Add files"
-msgstr ""
-
-#: src/ui/scan_view.py:701
-msgid "Add folders"
 msgstr ""
 
 #: src/ui/scan_view.py:709
@@ -3582,46 +3705,17 @@ msgstr ""
 msgid "Select Folders to Scan"
 msgstr ""
 
-#: src/ui/scan_view.py:877
-msgid "_Open"
-msgstr ""
-
-#: src/ui/scan_view.py:1026
-msgid "Scan Target (1)"
-msgstr ""
-
-#: src/ui/scan_view.py:1048
-msgid "Start Scan"
-msgstr ""
-
 #: src/ui/scan_view.py:1049
 msgid "Start Scan (F5)"
-msgstr ""
-
-#: src/ui/scan_view.py:1057
-msgid "EICAR Test"
-msgstr ""
-
-#: src/ui/scan_view.py:1059
-msgid "Run a scan with EICAR test file to verify antivirus detection"
 msgstr ""
 
 #: src/ui/scan_view.py:1068 src/ui/scan_view.py:1518
 msgid "Cancel the current scan"
 msgstr ""
 
-#: src/ui/scan_view.py:1094
-msgid "Scanning..."
-msgstr ""
-
 #: src/ui/scan_view.py:1216
 #, python-brace-format
 msgid "Target {current} of {total} \\u2014 {pct}%"
-msgstr ""
-
-#: src/ui/scan_view.py:1223
-#, python-brace-format
-msgid "Scanning... {pct}%"
 msgstr ""
 
 #: src/ui/scan_view.py:1237
@@ -3651,25 +3745,12 @@ msgid_plural "Found {n} threats"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/ui/scan_view.py:1339 src/ui/scan_view.py:1364
-msgid "View Results"
-msgstr ""
-
 #: src/ui/scan_view.py:1356
 #, python-brace-format
 msgid "View Results ({n} Threat)"
 msgid_plural "View Results ({n} Threats)"
 msgstr[0] ""
 msgstr[1] ""
-
-#: src/ui/scan_view.py:1402
-msgid "Please select a file or folder to scan"
-msgstr ""
-
-#: src/ui/scan_view.py:1490
-#, python-brace-format
-msgid "Failed to create EICAR test file: {error}"
-msgstr ""
 
 #: src/ui/scan_view.py:1514
 msgid "Cancel All"
@@ -3684,11 +3765,6 @@ msgstr ""
 msgid "Scanning {path} \\u2014 File count pending"
 msgstr ""
 
-#: src/ui/scan_view.py:1541 src/ui/scan_view.py:1735
-#, python-brace-format
-msgid "Scanning {path}"
-msgstr ""
-
 #: src/ui/scan_view.py:1545
 #, python-brace-format
 msgid "Scanning {count} items \\u2014 File count pending"
@@ -3699,25 +3775,6 @@ msgstr ""
 msgid "Scanning {count} items"
 msgstr ""
 
-#: src/ui/scan_view.py:1738
-#, python-brace-format
-msgid "Target {current} of {total}: {path}"
-msgstr ""
-
-#: src/ui/scan_view.py:1787
-#, python-brace-format
-msgid "Scan complete - {count} threat(s) detected"
-msgstr ""
-
-#: src/ui/scan_view.py:1796
-#, python-brace-format
-msgid "Scan complete - No threats found ({count} file(s) not accessible)"
-msgstr ""
-
-#: src/ui/scan_view.py:1801
-msgid "Scan complete - No threats found"
-msgstr ""
-
 #: src/ui/scan_view.py:1812 src/ui/scan_view.py:1854
 #, python-brace-format
 msgid "Scan error: {detail}"
@@ -3726,11 +3783,6 @@ msgstr ""
 #: src/ui/scan_view.py:1821
 #, python-brace-format
 msgid "Scan completed with status: {status}"
-msgstr ""
-
-#: src/ui/scan_view.py:1887
-#, python-brace-format
-msgid "Backend: {name}"
 msgstr ""
 
 #: src/ui/scan_view.py:1892
