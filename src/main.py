@@ -4,15 +4,19 @@
 Main entry point for the ClamUI application.
 
 This module provides the entry point for launching the ClamUI GTK4/Adwaita
-desktop application. It handles path setup, CLI argument parsing for file
-scanning, and initializes the GTK main loop.
+desktop application and the CLI subcommand router. It handles path setup,
+CLI argument parsing, and routes to either the graphical interface or
+headless CLI commands.
 
 Usage:
-    python src/main.py
-    python src/main.py /path/to/file.txt             # Scan a single file
-    python src/main.py /path/to/folder               # Scan a folder
-    python src/main.py file1.txt folder1 ...         # Scan multiple items
-    python src/main.py --virustotal /path/to/file    # Scan with VirusTotal
+    clamui                                        # Launch GUI
+    clamui /path/to/file.txt                      # GUI scan
+    clamui --virustotal /path/to/file              # GUI VirusTotal scan
+    clamui scan /path/to/file                      # Headless CLI scan
+    clamui quarantine list                         # Manage quarantine
+    clamui profile list                            # Manage profiles
+    clamui status                                  # ClamAV health check
+    clamui history                                 # View scan history
 """
 
 import os
@@ -63,11 +67,8 @@ def _configure_logging():
 # Configure logging before other imports
 _configure_logging()
 
-# Import the application class
-# Note: Tray indicator is handled by app.py with graceful degradation
-# GTK3/GTK4 cannot coexist in the same process, so tray is disabled
-# when running with GTK4 (which is required for the main UI)
-from .app import ClamUIApp
+# NOTE: ClamUIApp (GTK4) import is deferred to main() to allow CLI
+# subcommands to run without initializing GTK.
 
 
 def uri_to_path(uri: str) -> str:
@@ -171,14 +172,24 @@ def main():
     """
     Application entry point.
 
-    Creates a ClamUIApp instance and passes all arguments to it.
-    The app's do_command_line() method handles argument parsing,
-    enabling file manager integration to work even when ClamUI
-    is already running (arguments are forwarded via D-Bus IPC).
+    Routes to CLI subcommands if the first argument is a recognized
+    command name (scan, quarantine, profile, status, history).
+    Otherwise launches the GTK4 graphical interface.
 
     Returns:
         int: Exit code from the application (0 for success).
     """
+    # Route to CLI if first argument is a known subcommand
+    from .cli.router import CLI_SUBCOMMANDS
+
+    if len(sys.argv) > 1 and sys.argv[1] in CLI_SUBCOMMANDS:
+        from .cli.router import cli_main
+
+        return cli_main()
+
+    # Import GTK application class (deferred to avoid GTK init for CLI)
+    from .app import ClamUIApp
+
     # Create application instance
     app = ClamUIApp()
 
