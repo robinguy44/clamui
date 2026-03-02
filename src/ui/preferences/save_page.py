@@ -20,7 +20,7 @@ from gi.repository import Adw, GLib, Gtk
 from ...core.clamav_config import (
     backup_config,
     validate_config,
-    write_config_with_elevation,
+    write_configs_with_elevation,
 )
 from ...core.i18n import _
 from ..compat import create_toolbar_view, safe_set_subtitle_lines, safe_set_title_lines
@@ -218,8 +218,13 @@ class SavePage(PreferencesPageMixin):
         manual_save_row = Adw.ActionRow()
         manual_save_row.set_title(_("Manual Save Required"))
         safe_set_title_lines(manual_save_row, 1)
-        manual_save_row.set_subtitle(_("Database Updates, Scanner, On-Access, Scheduled Scans"))
-        safe_set_subtitle_lines(manual_save_row, 1)
+        manual_save_row.set_subtitle(
+            _(
+                "Database Updates, Scanner, On-Access, Scheduled Scans. "
+                "When needed, you will be asked for administrator permission once."
+            )
+        )
+        safe_set_subtitle_lines(manual_save_row, 2)
         lock_icon = Gtk.Image.new_from_icon_name(resolve_icon_name("system-lock-screen-symbolic"))
         lock_icon.add_css_class("warning")
         manual_save_row.add_prefix(lock_icon)
@@ -234,6 +239,8 @@ class SavePage(PreferencesPageMixin):
         # Save button row - using ActionRow to properly contain the button
         save_action_row = Adw.ActionRow()
         save_action_row.set_title(_("Save Configuration"))
+        save_action_row.set_subtitle(_("Apply all pending changes at once."))
+        safe_set_subtitle_lines(save_action_row, 1)
 
         # Create the save button
         self._save_button = Gtk.Button()
@@ -359,6 +366,8 @@ class SavePage(PreferencesPageMixin):
             if self._clamd_available:
                 backup_config(self._clamd_conf_path)
 
+            configs_to_write = []
+
             # Save freshclam.conf
             if freshclam_updates and self._window._freshclam_config:
                 # Apply updates to config using set_value (or add_value for lists)
@@ -370,10 +379,7 @@ class SavePage(PreferencesPageMixin):
                             self._window._freshclam_config.add_value(key, v)
                     else:
                         self._window._freshclam_config.set_value(key, value)
-
-                success, error = write_config_with_elevation(self._window._freshclam_config)
-                if not success:
-                    raise Exception(f"Failed to save freshclam.conf: {error}")
+                configs_to_write.append(self._window._freshclam_config)
 
             # Save clamd.conf (includes both scanner settings and On-Access settings)
             if (clamd_updates or onaccess_updates) and self._window._clamd_config:
@@ -395,9 +401,12 @@ class SavePage(PreferencesPageMixin):
                             self._window._clamd_config.add_value(key, v)
                     else:
                         self._window._clamd_config.set_value(key, value)
-                success, error = write_config_with_elevation(self._window._clamd_config)
+                configs_to_write.append(self._window._clamd_config)
+
+            if configs_to_write:
+                success, error = write_configs_with_elevation(configs_to_write)
                 if not success:
-                    raise Exception(f"Failed to save clamd.conf: {error}")
+                    raise Exception(f"Failed to save configuration files: {error}")
 
             # Save scheduled scan settings
             if scheduled_updates:

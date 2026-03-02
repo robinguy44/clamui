@@ -7,6 +7,7 @@ Supports reading and modifying freshclam.conf and clamd.conf files.
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -692,6 +693,192 @@ def backup_config(file_path: str) -> None:
         pass
 
 
+def _path_needs_elevation(file_path: Path) -> bool:
+    """
+    Check whether a config path requires elevated permissions for writing.
+
+    Args:
+        file_path: Target configuration file path
+
+    Returns:
+        True if elevation is required, False otherwise
+    """
+    parent_dir = file_path.parent
+
+    try:
+        # Test if directory is writable
+        if parent_dir.exists():
+            # Check write permission on existing directory
+            test_file = parent_dir / f".write_test_{os.getpid()}"
+            try:
+                test_file.touch()
+                test_file.unlink()
+            except (PermissionError, OSError):
+                return True
+        else:
+            # Directory doesn't exist - check if we can create it
+            try:
+                parent_dir.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                return True
+    except Exception:
+        # If we can't determine, assume elevation is needed
+        return True
+
+    return False
+
+
+def _write_config_direct(file_path: Path, content: str) -> tuple[bool, str | None]:
+    """
+    Write config content directly without privilege elevation.
+
+    Args:
+        file_path: Target path to write
+        content: Serialized configuration content
+
+    Returns:
+        Tuple of (success, error_message)
+    """
+    try:
+        file_path.write_text(content, encoding="utf-8")
+        # Set reasonable permissions for user files
+        file_path.chmod(0o644)
+        return (True, None)
+    except Exception as e:
+        return (False, f"Failed to write config: {str(e)}")
+
+
+def _get_privileged_writer_path() -> str | None:
+    """
+    Resolve the privileged helper command path for pkexec.
+
+    Returns:
+        Executable path for clamui-apply-preferences, or None if not found
+    """
+    helper_name = "clamui-apply-preferences"
+
+    # Prefer helper in the active Python environment (venv/system install).
+    python_bin_dir = Path(sys.executable).resolve().parent
+    helper_path = python_bin_dir / helper_name
+    if helper_path.is_file() and os.access(helper_path, os.X_OK):
+        return str(helper_path)
+
+    return shutil.which(helper_name)
+
+
+def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str | None]:
+    """
+    Write one or more configuration files, requesting elevation at most once.
+
+    Automatically detects whether each file needs privilege elevation:
+    - User-writable paths (e.g., ~/.config/clamav/ in Flatpak): write directly
+    - System paths (e.g., /etc/clamav/): write via a single pkexec invocation
+
+    Args:
+        configs: Configuration objects to write
+
+    Returns:
+        Tuple of (success, error_message):
+        - (True, None) on success
+        - (False, error_message) on failure
+    """
+    if not configs:
+        return (True, None)
+
+    try:
+        pending_writes: list[tuple[Path, str]] = []
+        for config in configs:
+            if not config.file_path:
+                return (False, "No file path specified in config object")
+            pending_writes.append((Path(config.file_path), config.to_string()))
+
+        direct_writes: list[tuple[Path, str]] = []
+        elevated_writes: list[tuple[Path, str]] = []
+        for file_path, content in pending_writes:
+            if _path_needs_elevation(file_path):
+                elevated_writes.append((file_path, content))
+            else:
+                direct_writes.append((file_path, content))
+
+        for file_path, content in direct_writes:
+            success, error = _write_config_direct(file_path, content)
+            if not success:
+                return (False, error)
+
+        if not elevated_writes:
+            return (True, None)
+
+        temp_paths: list[str] = []
+        try:
+            script_args: list[str] = []
+            for file_path, content in elevated_writes:
+                with tempfile.NamedTemporaryFile(
+                    mode="w",
+                    suffix=".conf",
+                    delete=False,
+                    encoding="utf-8",
+                ) as tmp:
+                    tmp.write(content)
+                    tmp_path = tmp.name
+                temp_paths.append(tmp_path)
+                script_args.extend([tmp_path, str(file_path)])
+
+            helper_path = _get_privileged_writer_path()
+            if helper_path:
+                # Preferred path: dedicated helper keeps pkexec prompt concise and readable.
+                result = subprocess.run(
+                    ["pkexec", helper_path, *script_args],
+                    capture_output=True,
+                    text=True,
+                )
+            else:
+                # Fallback: keep functionality if helper command isn't installed.
+                script = """
+set -e
+while [ "$#" -gt 0 ]; do
+    src="$1"
+    dst="$2"
+    cp "$src" "$dst"
+    chmod 644 "$dst"
+    shift 2
+done
+"""
+                result = subprocess.run(
+                    ["pkexec", "sh", "-c", script, "clamui-config-write", *script_args],
+                    capture_output=True,
+                    text=True,
+                )
+
+            if result.returncode != 0:
+                if result.returncode == 126:
+                    return (
+                        False,
+                        "Authentication was canceled. Configuration changes were not applied.",
+                    )
+                if result.returncode == 127:
+                    return (
+                        False,
+                        "Authorization failed. Administrator permission is required to apply these changes.",
+                    )
+                error_msg = result.stderr.strip() if result.stderr else "Unknown error"
+                return (False, f"Failed to write config: {error_msg}")
+
+            return (True, None)
+
+        finally:
+            # Clean up temp files
+            for tmp_path in temp_paths:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+
+    except FileNotFoundError:
+        return (False, "pkexec not found - cannot elevate privileges")
+    except Exception as e:
+        return (False, f"Unexpected error: {str(e)}")
+
+
 def write_config_with_elevation(config: ClamAVConfig) -> tuple[bool, str | None]:
     """
     Write a configuration file with elevated privileges if needed.
@@ -708,80 +895,4 @@ def write_config_with_elevation(config: ClamAVConfig) -> tuple[bool, str | None]
         - (True, None) on success
         - (False, error_message) on failure
     """
-    if not config.file_path:
-        return (False, "No file path specified in config object")
-
-    try:
-        content = config.to_string()
-        file_path = Path(config.file_path)
-
-        # Check if we can write to the directory without elevation
-        parent_dir = file_path.parent
-        needs_elevation = False
-
-        try:
-            # Test if directory is writable
-            if parent_dir.exists():
-                # Check write permission on existing directory
-                test_file = parent_dir / f".write_test_{os.getpid()}"
-                try:
-                    test_file.touch()
-                    test_file.unlink()
-                except (PermissionError, OSError):
-                    needs_elevation = True
-            else:
-                # Directory doesn't exist - check if we can create it
-                try:
-                    parent_dir.mkdir(parents=True, exist_ok=True)
-                except (PermissionError, OSError):
-                    needs_elevation = True
-        except Exception:
-            # If we can't determine, assume elevation is needed
-            needs_elevation = True
-
-        # Try direct write for user-writable paths
-        if not needs_elevation:
-            try:
-                file_path.write_text(content, encoding="utf-8")
-                # Set reasonable permissions for user files
-                file_path.chmod(0o644)
-                return (True, None)
-            except Exception as e:
-                return (False, f"Failed to write config: {str(e)}")
-
-        # System path - need elevation via pkexec
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".conf", delete=False) as tmp:
-            tmp.write(content)
-            tmp_path = tmp.name
-
-        try:
-            # Use pkexec to copy the temp file to the target location
-            result = subprocess.run(
-                ["pkexec", "cp", tmp_path, str(config.file_path)],
-                capture_output=True,
-                text=True,
-            )
-
-            if result.returncode != 0:
-                error_msg = result.stderr.strip() if result.stderr else "Unknown error"
-                return (False, f"Failed to write config: {error_msg}")
-
-            # Set proper permissions
-            subprocess.run(
-                ["pkexec", "chmod", "644", str(config.file_path)],
-                capture_output=True,
-            )
-
-            return (True, None)
-
-        finally:
-            # Clean up temp file
-            try:
-                os.unlink(tmp_path)
-            except OSError:
-                pass
-
-    except FileNotFoundError:
-        return (False, "pkexec not found - cannot elevate privileges")
-    except Exception as e:
-        return (False, f"Unexpected error: {str(e)}")
+    return write_configs_with_elevation([config])

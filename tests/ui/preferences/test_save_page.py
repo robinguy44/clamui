@@ -652,7 +652,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config") as mock_backup:
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -670,7 +670,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ) as mock_write:
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -691,7 +691,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ) as mock_write:
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -705,6 +705,35 @@ class TestSavePageSaveConfigsThread:
                     # Should write clamd config
                     mock_write.assert_called()
 
+    def test_save_configs_thread_writes_both_configs_in_single_call(
+        self, mock_gi_modules, save_page
+    ):
+        """Test _save_configs_thread batches freshclam and clamd writes into one call."""
+        mock_button = mock.MagicMock()
+        freshclam_updates = {"DatabaseDirectory": "/var/lib/clamav"}
+        clamd_updates = {"MaxFileSize": "100M"}
+
+        with mock.patch("src.ui.preferences.save_page.backup_config"):
+            with mock.patch(
+                "src.ui.preferences.save_page.write_configs_with_elevation",
+                return_value=(True, None),
+            ) as mock_write:
+                with mock.patch("src.ui.preferences.save_page.GLib"):
+                    save_page._save_configs_thread(
+                        freshclam_updates,
+                        clamd_updates,
+                        {},
+                        {},
+                        mock_button,
+                    )
+
+                    mock_write.assert_called_once()
+                    written_configs = mock_write.call_args.args[0]
+                    assert written_configs == [
+                        save_page._window._freshclam_config,
+                        save_page._window._clamd_config,
+                    ]
+
     def test_save_configs_thread_saves_onaccess_settings(self, mock_gi_modules, save_page):
         """Test _save_configs_thread saves on-access settings to clamd.conf."""
         mock_button = mock.MagicMock()
@@ -712,7 +741,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -731,7 +760,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ) as mock_write:
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -765,7 +794,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -793,7 +822,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -818,7 +847,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -834,7 +863,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 save_page._save_configs_thread({}, {}, {}, {}, mock_button)
@@ -854,7 +883,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(False, "Permission denied"),
             ):
                 save_page._save_configs_thread(freshclam_updates, {}, {}, {}, mock_button)
@@ -887,7 +916,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 save_page._save_configs_thread({}, {}, {}, scheduled_updates, mock_button)
@@ -920,7 +949,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 save_page._save_configs_thread({}, {}, {}, scheduled_updates, mock_button)
@@ -939,7 +968,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 save_page._save_configs_thread({}, {}, {}, {}, mock_button)
@@ -954,7 +983,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(False, "Error"),
             ):
                 save_page._save_configs_thread({}, {}, {}, {}, mock_button)
@@ -969,7 +998,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -985,7 +1014,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(False, "Error"),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -1003,7 +1032,7 @@ class TestSavePageSaveConfigsThread:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(False, "Write failed"),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):
@@ -1159,7 +1188,7 @@ class TestSavePageWindowConfigAccess:
 
         with mock.patch("src.ui.preferences.save_page.backup_config"):
             with mock.patch(
-                "src.ui.preferences.save_page.write_config_with_elevation",
+                "src.ui.preferences.save_page.write_configs_with_elevation",
                 return_value=(True, None),
             ):
                 with mock.patch("src.ui.preferences.save_page.GLib"):

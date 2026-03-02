@@ -116,6 +116,7 @@ ICON_DIR_128="$SHARE_DIR/icons/hicolor/128x128/apps"
 NEMO_ACTION_DIR="$SHARE_DIR/nemo/actions"
 NAUTILUS_SCRIPTS_DIR="$HOME/.local/share/nautilus/scripts"
 DOLPHIN_SERVICES_DIR="$SHARE_DIR/kservices5/ServiceMenus"
+POLKIT_ACTION_DIR="/usr/share/polkit-1/actions"
 
 # Get script directory (where install.sh is located)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -467,6 +468,22 @@ install_xdg_files() {
 	else
 		log_warning "AppStream metainfo file not found: $SCRIPT_DIR/data/io.github.linx_systems.ClamUI.metainfo.xml"
 		log_warning "Application may not appear in software centers"
+	fi
+
+	# Install Polkit policy for friendlier authentication prompts (system installs only)
+	if [ "$SYSTEM_INSTALL" = "1" ]; then
+		if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.policy" ]; then
+			log_info "Installing Polkit policy to $POLKIT_ACTION_DIR..."
+			mkdir -p "$POLKIT_ACTION_DIR"
+			cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.policy" "$POLKIT_ACTION_DIR/"
+			chmod 644 "$POLKIT_ACTION_DIR/io.github.linx_systems.ClamUI.policy"
+			log_success "Polkit policy installed"
+		else
+			log_warning "Polkit policy file not found: $SCRIPT_DIR/data/io.github.linx_systems.ClamUI.policy"
+			log_warning "Authentication dialogs may show technical command details"
+		fi
+	else
+		log_info "Skipping Polkit policy install for user-local installation"
 	fi
 
 	# Update desktop database if available

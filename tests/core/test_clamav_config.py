@@ -7,11 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from src.core import clamav_config as clamav_config_module
 from src.core.clamav_config import (
     ClamAVConfig,
     ClamAVConfigValue,
     parse_config,
     write_config_with_elevation,
+    write_configs_with_elevation,
 )
 
 
@@ -852,3 +854,123 @@ class TestWriteConfigWithElevation:
         assert "# Comment line" in content
         assert "LogVerbose yes" in content
         assert "DatabaseDirectory /var/lib/clamav" in content
+
+
+class TestWriteConfigsWithElevation:
+    """Tests for write_configs_with_elevation function."""
+
+    def test_write_multiple_user_writable_configs(self, tmp_path):
+        """Test writing multiple configs in user-writable paths."""
+        config_file_a = tmp_path / "freshclam.conf"
+        config_file_b = tmp_path / "clamd.conf"
+
+        config_a = ClamAVConfig(file_path=config_file_a)
+        config_a.set_value("DatabaseDirectory", "/var/lib/clamav")
+
+        config_b = ClamAVConfig(file_path=config_file_b)
+        config_b.set_value("LogVerbose", "yes")
+
+        success, error = write_configs_with_elevation([config_a, config_b])
+
+        assert success is True
+        assert error is None
+        assert "DatabaseDirectory /var/lib/clamav" in config_file_a.read_text()
+        assert "LogVerbose yes" in config_file_b.read_text()
+
+    def test_write_multiple_elevated_configs_uses_single_pkexec_call(self, monkeypatch):
+        """Test elevated writes use a single pkexec invocation for all files."""
+        config_a = ClamAVConfig(file_path=Path("/etc/clamav/freshclam.conf"))
+        config_a.set_value("DatabaseDirectory", "/var/lib/clamav")
+
+        config_b = ClamAVConfig(file_path=Path("/etc/clamav/clamd.conf"))
+        config_b.set_value("LogVerbose", "yes")
+
+        monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _path: True)
+        monkeypatch.setattr(
+            clamav_config_module,
+            "_get_privileged_writer_path",
+            lambda: "/usr/bin/clamui-apply-preferences",
+        )
+
+        run_calls = []
+
+        def _fake_run(cmd, **kwargs):
+            run_calls.append((cmd, kwargs))
+
+            class _Result:
+                returncode = 0
+                stderr = ""
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, error = write_configs_with_elevation([config_a, config_b])
+
+        assert success is True
+        assert error is None
+        assert len(run_calls) == 1
+
+        cmd, kwargs = run_calls[0]
+        assert cmd[0:2] == ["pkexec", "/usr/bin/clamui-apply-preferences"]
+        # Two (temp, destination) pairs for two configs
+        assert len(cmd[2:]) == 4
+        assert str(config_a.file_path) in cmd[3::2]
+        assert str(config_b.file_path) in cmd[3::2]
+        assert kwargs["capture_output"] is True
+        assert kwargs["text"] is True
+
+    def test_write_elevated_config_returns_friendly_error_on_auth_cancel(self, monkeypatch):
+        """Test auth cancellation returns a user-friendly message."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/freshclam.conf"))
+        config.set_value("DatabaseDirectory", "/var/lib/clamav")
+
+        monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _path: True)
+        monkeypatch.setattr(
+            clamav_config_module,
+            "_get_privileged_writer_path",
+            lambda: "/usr/bin/clamui-apply-preferences",
+        )
+
+        def _fake_run(_cmd, **_kwargs):
+            class _Result:
+                returncode = 126
+                stderr = "Not authorized"
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, error = write_configs_with_elevation([config])
+
+        assert success is False
+        assert error == "Authentication was canceled. Configuration changes were not applied."
+
+    def test_write_elevated_config_returns_friendly_error_on_auth_denied(self, monkeypatch):
+        """Test auth denial returns a user-friendly message."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/freshclam.conf"))
+        config.set_value("DatabaseDirectory", "/var/lib/clamav")
+
+        monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _path: True)
+        monkeypatch.setattr(
+            clamav_config_module,
+            "_get_privileged_writer_path",
+            lambda: "/usr/bin/clamui-apply-preferences",
+        )
+
+        def _fake_run(_cmd, **_kwargs):
+            class _Result:
+                returncode = 127
+                stderr = "Not authorized"
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, error = write_configs_with_elevation([config])
+
+        assert success is False
+        assert (
+            error
+            == "Authorization failed. Administrator permission is required to apply these changes."
+        )

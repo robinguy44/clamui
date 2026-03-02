@@ -50,6 +50,7 @@ dev = [
 [project.scripts]
 clamui = "src.main:main"
 clamui-scheduled-scan = "src.cli.scheduled_scan:main"
+clamui-apply-preferences = "src.cli.apply_preferences:main"
 
 [project.urls]
 Homepage = "https://github.com/linx-systems/clamui"

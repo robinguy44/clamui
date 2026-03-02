@@ -295,6 +295,10 @@ create_package_structure() {
 	log_info "Creating usr/share/metainfo/ for AppStream data..."
 	mkdir -p "$BUILD_DIR/usr/share/metainfo"
 
+	# Create /usr/share/polkit-1/actions/ for Polkit policy files
+	log_info "Creating usr/share/polkit-1/actions/ for Polkit policy..."
+	mkdir -p "$BUILD_DIR/usr/share/polkit-1/actions"
+
 	# Create /usr/share/icons/hicolor/128x128/apps/ for PNG icon
 	log_info "Creating usr/share/icons/hicolor/128x128/apps/ for PNG icon..."
 	mkdir -p "$BUILD_DIR/usr/share/icons/hicolor/128x128/apps"
@@ -324,6 +328,7 @@ create_package_structure() {
 	log_info "  - usr/share/icons/hicolor/scalable/apps/"
 	log_info "  - usr/share/icons/hicolor/128x128/apps/"
 	log_info "  - usr/share/metainfo/"
+	log_info "  - usr/share/polkit-1/actions/"
 	log_info "  - usr/share/nemo/actions/"
 	log_info "  - usr/share/clamui/integrations/"
 	log_info "  - usr/share/kservices5/ServiceMenus/"
@@ -423,6 +428,40 @@ LAUNCHER
 	return 0
 }
 
+# Create the privileged helper script in /usr/bin/
+create_privileged_helper_script() {
+	log_info "=== Creating Privileged Helper Script ==="
+	echo
+
+	HELPER_PATH="$BUILD_DIR/usr/bin/clamui-apply-preferences"
+
+	log_info "Creating privileged helper script: $HELPER_PATH"
+
+	cat >"$HELPER_PATH" <<'HELPER'
+#!/usr/bin/env python3
+"""ClamUI privileged helper for applying configuration files."""
+import sys
+
+from clamui.cli.apply_preferences import main
+
+sys.exit(main())
+HELPER
+
+	# Make executable (755)
+	chmod 755 "$HELPER_PATH"
+
+	# Verify helper was created
+	if [ ! -x "$HELPER_PATH" ]; then
+		log_error "Failed to create privileged helper script"
+		return 1
+	fi
+
+	log_success "Privileged helper script created successfully"
+	log_info "Installed to: /usr/bin/clamui-apply-preferences"
+
+	return 0
+}
+
 # Compile and install locale files for i18n
 compile_locales() {
 	log_info "=== Compiling Locale Files ==="
@@ -508,6 +547,18 @@ copy_desktop_files() {
 	else
 		log_warning "Metainfo file not found: $METAINFO_FILE"
 		log_warning "Package may not appear in software centers"
+	fi
+
+	# Copy Polkit policy for friendlier authentication prompts
+	POLICY_FILE="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI.policy"
+	if [ -f "$POLICY_FILE" ]; then
+		log_info "Copying Polkit policy..."
+		cp "$POLICY_FILE" "$BUILD_DIR/usr/share/polkit-1/actions/"
+		chmod 644 "$BUILD_DIR/usr/share/polkit-1/actions/io.github.linx_systems.ClamUI.policy"
+		log_success "Polkit policy installed"
+	else
+		log_warning "Polkit policy not found: $POLICY_FILE"
+		log_warning "Authentication dialogs may show technical command details"
 	fi
 
 	# Copy Nemo file manager actions
@@ -743,6 +794,15 @@ main() {
 	# Create the launcher script
 	if ! create_launcher_script; then
 		log_error "Failed to create launcher script."
+		cleanup_build_dir
+		exit 1
+	fi
+
+	echo
+
+	# Create privileged helper script used by pkexec save flow
+	if ! create_privileged_helper_script; then
+		log_error "Failed to create privileged helper script."
 		cleanup_build_dir
 		exit 1
 	fi
