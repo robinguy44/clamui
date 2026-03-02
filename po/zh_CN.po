@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ClamUI 0.1.3\n"
 "Report-Msgid-Bugs-To: https://github.com/linx-systems/clamui/issues\n"
-"POT-Creation-Date: 2026-02-19 16:59+0100\n"
+"POT-Creation-Date: 2026-02-26 14:05+0100\n"
 "PO-Revision-Date: 2026-02-25 15:25+0800\n"
 "Last-Translator: Markson Hosben <marksonhosben@proton.me>\n"
 "Language-Team: Chinese <>\n"
@@ -16,6 +16,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Lokalize 23.08.5\n"
+
+#: src/app.py:448
+#, fuzzy
+msgid "Select File or Folder"
+msgstr "扫描文件或文件夹"
 
 #: src/cli/scheduled_scan.py:105
 msgid "ClamUI Scheduled Scan - Headless antivirus scanning"
@@ -35,7 +40,8 @@ msgstr ""
 "用法示例:\n"
 "  %(prog)s                                    # 使用配置中的设置\n"
 "  %(prog)s --target /home/user/Documents      # 扫描指定的目录\n"
-"  %(prog)s --skip-on-battery --auto-quarantine # 电池供电时跳过，自动隔离威胁\n"
+"  %(prog)s --skip-on-battery --auto-quarantine # 电池供电时跳过，自动隔离威"
+"胁\n"
 
 #: src/cli/scheduled_scan.py:120
 msgid "Skip scan if running on battery power"
@@ -625,7 +631,9 @@ msgstr "无法将隔离记录写入数据库。文件已还原至原始位置。
 msgid ""
 "Failed to record quarantine entry in database. Rollback also failed: "
 "{error}. File may be orphaned at: {path}"
-msgstr "无法将隔离记录写入数据库，回滚操作也失败：{error}。文件可能处于孤立状态，位置：{path}"
+msgstr ""
+"无法将隔离记录写入数据库，回滚操作也失败：{error}。文件可能处于孤立状态，位"
+"置：{path}"
 
 #: src/core/quarantine/manager.py:268 src/core/quarantine/manager.py:373
 #: src/core/quarantine/manager.py:545
@@ -777,8 +785,8 @@ msgid ""
 "Could not trigger freshclam service update. Try restarting the service: sudo "
 "systemctl restart clamav-freshclam"
 msgstr ""
-"无法触发 freshclam 服务更新。请尝试重启服务：sudo "
-"systemctl restart clamav-freshclam"
+"无法触发 freshclam 服务更新。请尝试重启服务：sudo systemctl restart clamav-"
+"freshclam"
 
 #: src/core/updater.py:420
 msgid "Backup failed"
@@ -794,8 +802,8 @@ msgid ""
 "Another freshclam instance is running (PID {pid}). Stop it first: sudo "
 "systemctl stop clamav-freshclam"
 msgstr ""
-"另一个 freshclam 实例正在运行（PID {pid}）。请先终止它：sudo "
-"systemctl stop clamav-freshclam"
+"另一个 freshclam 实例正在运行（PID {pid}）。请先终止它：sudo systemctl stop "
+"clamav-freshclam"
 
 #: src/core/updater.py:546
 msgid "Update timed out after 10 minutes"
@@ -891,7 +899,8 @@ msgstr "未知错误"
 
 #: src/core/virustotal.py:254 src/core/virustotal.py:308
 #: src/core/virustotal.py:450 src/core/virustotal.py:543
-#: src/core/virustotal.py:551 src/ui/scan_view.py:1806
+#: src/core/virustotal.py:551 src/ui/scan/scan_view.py:257
+#: src/ui/scan_view.py:1806
 msgid "Scan cancelled"
 msgstr "已取消扫描"
 
@@ -1032,8 +1041,8 @@ msgstr "记住我的选择"
 #: src/ui/file_manager_integration_dialog.py:261 src/ui/logs_view.py:104
 #: src/ui/preferences/virustotal_page.py:359 src/ui/profile_dialogs.py:112
 #: src/ui/profile_dialogs.py:701 src/ui/profile_dialogs.py:847
-#: src/ui/profile_dialogs.py:968 src/ui/scan_view.py:1067
-#: src/ui/scan_view.py:1517 src/ui/update_view.py:142
+#: src/ui/profile_dialogs.py:968 src/ui/scan/scan_view.py:170
+#: src/ui/scan_view.py:1067 src/ui/scan_view.py:1517 src/ui/update_view.py:142
 msgid "Cancel"
 msgstr "取消"
 
@@ -1070,8 +1079,8 @@ msgid ""
 "clamdscan is a client for the clamd daemon, providing faster scanning. "
 "Requires clamd daemon to be running."
 msgstr ""
-"clamdscan 是 clamd 守护进程的客户端，提供更快的扫描速度。"
-"需要 clamd 守护进程处于运行状态。"
+"clamdscan 是 clamd 守护进程的客户端，提供更快的扫描速度。需要 clamd 守护进程"
+"处于运行状态。"
 
 #: src/ui/components_view.py:66
 msgid "clamd Daemon Setup"
@@ -1109,7 +1118,9 @@ msgstr "组件状态"
 msgid ""
 "clamscan and freshclam are bundled with the Flatpak. Daemon components run "
 "on the host system via flatpak-spawn."
-msgstr "clamscan 和 freshclam 已随 Flatpak 捆绑提供。守护进程组件通过 flatpak-spawn 在主机系统上运行。"
+msgstr ""
+"clamscan 和 freshclam 已随 Flatpak 捆绑提供。守护进程组件通过 flatpak-spawn "
+"在主机系统上运行。"
 
 #: src/ui/components_view.py:179
 msgid "Expand each component for installation instructions"
@@ -1153,7 +1164,9 @@ msgstr "clamscan 随 Flatpak 包捆绑提供。不需要安装。"
 msgid ""
 "freshclam is bundled with the Flatpak package. No installation is required. "
 "The virus database is automatically stored in the Flatpak sandbox."
-msgstr "freshscan 随 Flatpak 包捆绑提供，不需要安装。.病毒数据库将自动存储在 Flatpak 沙盒中。"
+msgstr ""
+"freshscan 随 Flatpak 包捆绑提供，不需要安装。.病毒数据库将自动存储在 Flatpak "
+"沙盒中。"
 
 #: src/ui/components_view.py:438 src/ui/preferences/scanner_page.py:300
 msgid "Refresh Status"
@@ -1227,7 +1240,8 @@ msgstr "<b>未找到病毒数据库</b>"
 msgid ""
 "ClamAV requires a virus database to scan files. The database needs to be "
 "downloaded before you can perform scans."
-msgstr "ClamAV 需要一个病毒数据库来扫描文件。在执行扫描之前，需要先下载病毒库。"
+msgstr ""
+"ClamAV 需要一个病毒数据库来扫描文件。在执行扫描之前，需要先下载病毒库。"
 
 #: src/ui/database_missing_dialog.py:137
 msgid "Download Now"
@@ -1279,7 +1293,8 @@ msgid ""
 "menu. This makes it easy to scan files and folders directly from your file "
 "browser."
 msgstr ""
-"ClamUI 可以将“使用 ClamUI 扫描”选项添加到您的文件管理器的右键菜单中。这样，您就可以直接从文件浏览器中快速扫描文件和文件夹了。"
+"ClamUI 可以将“使用 ClamUI 扫描”选项添加到您的文件管理器的右键菜单中。这样，您"
+"就可以直接从文件浏览器中快速扫描文件和文件夹了。"
 
 #: src/ui/file_manager_integration_dialog.py:143
 msgid "What gets installed?"
@@ -1361,6 +1376,7 @@ msgid ""
 msgstr "这会永久删除所有历史记录。此操作不可被撤销。"
 
 #: src/ui/logs_view.py:109 src/ui/logs_view.py:287
+#: src/ui/scan/target_selector.py:109
 msgid "Clear All"
 msgstr "清除全部"
 
@@ -1713,7 +1729,9 @@ msgstr "宏病毒、钓鱼邮件、欺诈邮件和垃圾邮件签名（每小时
 msgid ""
 "Requires 'fangfrisch' or 'clamav-unofficial-sigs' tool. Cannot be added as "
 "custom URL directly."
-msgstr "需要 ‘fangfrisch’ 或 ‘clamav-unofficial-sigs’ 工具。无法直接作为自定义 URL 添加。"
+msgstr ""
+"需要 ‘fangfrisch’ 或 ‘clamav-unofficial-sigs’ 工具。无法直接作为自定义 URL 添"
+"加。"
 
 #: src/ui/preferences/database_page.py:99
 msgid "Hash-based signatures, web shell detection, and general malware"
@@ -1766,7 +1784,8 @@ msgid "_Select"
 msgstr "选择(_S)"
 
 #: src/ui/preferences/database_page.py:308
-#: src/ui/preferences/scanner_page.py:202 src/ui/scan_view.py:878
+#: src/ui/preferences/scanner_page.py:202 src/ui/scan/target_selector.py:192
+#: src/ui/scan_view.py:878
 msgid "_Cancel"
 msgstr "取消(_C)"
 
@@ -1837,7 +1856,9 @@ msgstr "带自定义签名的数据库"
 msgid ""
 "Third-party signature URLs (e.g., SecuriteInfo). Paste URLs or config lines "
 "- 'DatabaseCustomURL' prefix auto-stripped."
-msgstr "第三方签名 URL（例如 SecuriteInfo）。粘贴 URL 或配置行 - ‘DatabaseCustomURL’ 前缀将自动去除。"
+msgstr ""
+"第三方签名 URL（例如 SecuriteInfo）。粘贴 URL 或配置行 - ‘DatabaseCustomURL’ "
+"前缀将自动去除。"
 
 #: src/ui/preferences/database_page.py:468
 msgid "Add URL(s)"
@@ -1894,7 +1915,9 @@ msgstr "提示：fangfrisch"
 msgid ""
 "For SaneSecurity and other rsync-based providers, install the 'fangfrisch' "
 "tool which handles downloading and updating signatures automatically."
-msgstr "对于 SaneSecurity 和其他基于 rsync 的提供商，安装‘fangfrisch’工具，它可以自动下载和更新签名。"
+msgstr ""
+"对于 SaneSecurity 和其他基于 rsync 的提供商，安装‘fangfrisch’工具，它可以自动"
+"下载和更新签名。"
 
 #: src/ui/preferences/database_page.py:684
 msgid "Proxy Settings"
@@ -1952,7 +1975,8 @@ msgstr "日志设置"
 msgid ""
 "Configure debug logging for troubleshooting. Higher levels produce more "
 "detailed logs but use more disk space."
-msgstr "配置调试日志以进行故障排查。级别越高，日志越详细，但占用的磁盘空间也越多。"
+msgstr ""
+"配置调试日志以进行故障排查。级别越高，日志越详细，但占用的磁盘空间也越多。"
 
 #: src/ui/preferences/debug_page.py:119
 msgid "Log Level"
@@ -2257,19 +2281,19 @@ msgstr "排除项"
 
 #: src/ui/preferences/exclusions_page.py:109
 msgid "Preset Exclusions (Auto-Saved)"
-msgstr "预设排除项（已自动保存）"
+msgstr "预设排除项（自动保存）"
 
 #: src/ui/preferences/exclusions_page.py:110
 msgid "Common patterns to exclude. Auto-saved."
-msgstr "要排除的常见模式。自动保存。"
+msgstr "要排除的常见模式。更改会自动保存。"
 
 #: src/ui/preferences/exclusions_page.py:124
 msgid "Custom Exclusions (Auto-Saved)"
-msgstr "自定义排除项（已自动保存）"
+msgstr "自定义排除项（自动保存）"
 
 #: src/ui/preferences/exclusions_page.py:125
 msgid "Your exclusion patterns. Auto-saved."
-msgstr "您的排除模式。自动保存。"
+msgstr "您的排除模式。更改会自动保存。"
 
 #: src/ui/preferences/exclusions_page.py:129
 msgid "Add Pattern (e.g., /path/to/exclude or *.tmp)"
@@ -2546,7 +2570,8 @@ msgstr "扫描后端"
 msgid ""
 "Select how ClamUI performs scans. Daemon runs on host via flatpak-spawn. "
 "Auto-saved."
-msgstr "选择 ClamUI 如何实施扫描。守护进程通过 flatpak-spawn 在主机上运行。自动保存。"
+msgstr ""
+"选择 ClamUI 如何实施扫描。守护进程通过 flatpak-spawn 在主机上运行。自动保存。"
 
 #: src/ui/preferences/scanner_page.py:250
 msgid "Select how ClamUI performs scans. Auto-saved."
@@ -2558,11 +2583,11 @@ msgstr "自动（默认守护进程）"
 
 #: src/ui/preferences/scanner_page.py:256
 msgid "ClamAV Daemon (clamd)"
-msgstr "ClamAV 守护进程（clamd）"
+msgstr "ClamAV守护进程 (clamd)"
 
 #: src/ui/preferences/scanner_page.py:257
 msgid "Standalone Scanner (clamscan)"
-msgstr "独立扫描程序（clamscan）"
+msgstr "独立扫描程序 (clamscan)"
 
 #: src/ui/preferences/scanner_page.py:282
 #: src/ui/preferences/scanner_page.py:285
@@ -2941,7 +2966,8 @@ msgstr "删除 API 密钥?"
 msgid ""
 "This will remove your VirusTotal API key. You'll need to enter it again to "
 "use VirusTotal scanning."
-msgstr "这会移除你的 VirusTotal API 密钥。使用 VirusTotal 扫描时你将需要再输入一次。"
+msgstr ""
+"这会移除你的 VirusTotal API 密钥。使用 VirusTotal 扫描时你将需要再输入一次。"
 
 #: src/ui/preferences/virustotal_page.py:369
 msgid "API key deleted"
@@ -2958,7 +2984,7 @@ msgstr "删除"
 
 #: src/ui/preferences/window.py:49 src/ui/sidebar.py:28
 msgid "Database"
-msgstr "数据流"
+msgstr "数据库"
 
 #: src/ui/preferences/window.py:50
 msgid "Scanner"
@@ -2966,7 +2992,7 @@ msgstr "扫描程序"
 
 #: src/ui/preferences/window.py:51
 msgid "Scheduled"
-msgstr "定期"
+msgstr "定期扫描"
 
 #: src/ui/preferences/window.py:53
 msgid "On-Access"
@@ -3015,6 +3041,7 @@ msgid "Description"
 msgstr "描述"
 
 #: src/ui/profile_dialogs.py:181 src/ui/profile_dialogs.py:569
+#: src/ui/scan/target_selector.py:80 src/ui/scan/target_selector.py:270
 #: src/ui/scan_view.py:683 src/ui/scan_view.py:1023
 msgid "Scan Targets"
 msgstr "扫描目标"
@@ -3068,7 +3095,8 @@ msgstr "配置名称不能为空"
 msgid "Name must be {max_length} characters or less"
 msgstr "名称长度不能超过 {max_length} 个字符"
 
-#: src/ui/profile_dialogs.py:360
+#: src/ui/profile_dialogs.py:360 src/ui/scan/target_selector.py:161
+#: src/ui/scan/target_selector.py:188
 msgid "Select Folders"
 msgstr "选择文件夹"
 
@@ -3076,7 +3104,8 @@ msgstr "选择文件夹"
 msgid "Select Folder"
 msgstr "选择文件夹"
 
-#: src/ui/profile_dialogs.py:362
+#: src/ui/profile_dialogs.py:362 src/ui/scan/target_selector.py:161
+#: src/ui/scan/target_selector.py:188
 msgid "Select Files"
 msgstr "选择文件"
 
@@ -3096,7 +3125,8 @@ msgstr "模式"
 msgid "Remove"
 msgstr "移除"
 
-#: src/ui/profile_dialogs.py:567 src/ui/scan_view.py:1029
+#: src/ui/profile_dialogs.py:567 src/ui/scan/target_selector.py:276
+#: src/ui/scan_view.py:1029
 #, python-brace-format
 msgid "Scan Targets ({count})"
 msgstr "扫描目标（{count} 个）"
@@ -3135,7 +3165,9 @@ msgstr "恢复默认配置？"
 msgid ""
 "This will reset Quick Scan, Full Scan, and Home Folder profiles to their "
 "original settings. Any changes you made to these profiles will be lost."
-msgstr "此操作将把快速扫描、完全扫描和主文件夹配置文件重置为原始设置。您对这些配置所做的任何更改都将丢失。"
+msgstr ""
+"此操作将把快速扫描、完全扫描和主文件夹配置文件重置为原始设置。您对这些配置所"
+"做的任何更改都将丢失。"
 
 #: src/ui/profile_dialogs.py:919
 msgid "Your custom profiles will not be affected."
@@ -3329,6 +3361,149 @@ msgstr "文件删除成功"
 #: src/ui/quarantine_view.py:789
 msgid "Failed to delete file"
 msgstr "无法删除文件"
+
+#: src/ui/scan/profile_selector.py:50 src/ui/scan_view.py:483
+msgid "Scan Profile"
+msgstr "扫描配置"
+
+#: src/ui/scan/profile_selector.py:61 src/ui/scan_view.py:488
+msgid "Profile"
+msgstr "配置"
+
+#: src/ui/scan/profile_selector.py:65 src/ui/scan/profile_selector.py:103
+#: src/ui/scan_view.py:494 src/ui/scan_view.py:578
+msgid "No Profile (Manual)"
+msgstr "无配置（手动）"
+
+#: src/ui/scan/profile_selector.py:75 src/ui/scan_view.py:506
+msgid "Manage profiles"
+msgstr "管理配置"
+
+#: src/ui/scan/scan_progress_widget.py:45 src/ui/scan/scan_view.py:286
+#: src/ui/scan_view.py:1094
+msgid "Scanning..."
+msgstr "正在扫描……"
+
+#: src/ui/scan/scan_progress_widget.py:111
+#, fuzzy, python-brace-format
+msgid "Target {current} of {total} — {pct}%"
+msgstr "第 {current}/{total} 个目标 — {pct}%"
+
+#: src/ui/scan/scan_progress_widget.py:116 src/ui/scan_view.py:1223
+#, python-brace-format
+msgid "Scanning... {pct}%"
+msgstr "正在扫描... {pct}%"
+
+#: src/ui/scan/scan_progress_widget.py:125
+#, fuzzy
+msgid "Scanned {scanned:,} / {total:,} files"
+msgstr "已扫描 {scanned}/{total} 个文件"
+
+#: src/ui/scan/scan_progress_widget.py:130
+#, fuzzy
+msgid "Scanned {count:,} files"
+msgstr "已扫描 {scanned} 个文件"
+
+#: src/ui/scan/scan_progress_widget.py:134
+#, fuzzy, python-brace-format
+msgid "Found {n} threat(s)"
+msgstr "发现 {n} 个威胁"
+
+#: src/ui/scan/scan_results_widget.py:44
+#, fuzzy, python-brace-format
+msgid "View Results ({n})"
+msgstr "查看结果（{n} 个威胁）"
+
+#: src/ui/scan/scan_results_widget.py:48 src/ui/scan_view.py:1339
+#: src/ui/scan_view.py:1364
+msgid "View Results"
+msgstr "查看结果"
+
+#: src/ui/scan/scan_view.py:156 src/ui/scan_view.py:1048
+msgid "Start Scan"
+msgstr "开始扫描"
+
+#: src/ui/scan/scan_view.py:162 src/ui/scan_view.py:1057
+msgid "EICAR Test"
+msgstr "EICAR 测试"
+
+#: src/ui/scan/scan_view.py:164 src/ui/scan_view.py:1059
+msgid "Run a scan with EICAR test file to verify antivirus detection"
+msgstr "使用 EICAR 测试文件运行扫描以验证防病毒检测"
+
+#: src/ui/scan/scan_view.py:187 src/ui/scan_view.py:1887
+#, python-brace-format
+msgid "Backend: {name}"
+msgstr "后端：{name}"
+
+#: src/ui/scan/scan_view.py:203 src/ui/scan/target_selector.py:137
+msgid "Cannot add targets while scanning"
+msgstr ""
+
+#: src/ui/scan/scan_view.py:246 src/ui/scan_view.py:1787
+#, python-brace-format
+msgid "Scan complete - {count} threat(s) detected"
+msgstr "扫描完成 — 发现 {count} 个威胁"
+
+#: src/ui/scan/scan_view.py:250 src/ui/scan_view.py:1801
+msgid "Scan complete - No threats found"
+msgstr "扫描完成 — 未发现威胁"
+
+#: src/ui/scan/scan_view.py:252 src/ui/scan_view.py:1796
+#, python-brace-format
+msgid "Scan complete - No threats found ({count} file(s) not accessible)"
+msgstr "扫描完成 — 未发现威胁（{count} 个文件无法访问）"
+
+#: src/ui/scan/scan_view.py:260
+#, fuzzy, python-brace-format
+msgid "Scan error: {error}"
+msgstr "  错误：{error}"
+
+#: src/ui/scan/scan_view.py:273 src/ui/scan_view.py:1402
+msgid "Please select a file or folder to scan"
+msgstr "请选择要扫描的文件或文件夹"
+
+#: src/ui/scan/scan_view.py:300 src/ui/scan_view.py:1738
+#, python-brace-format
+msgid "Target {current} of {total}: {path}"
+msgstr "第 {current}/{total} 个目标：{path}"
+
+#: src/ui/scan/scan_view.py:305 src/ui/scan_view.py:1541
+#: src/ui/scan_view.py:1735
+#, python-brace-format
+msgid "Scanning {path}"
+msgstr "正在扫描 {path}"
+
+#: src/ui/scan/scan_view.py:328 src/ui/scan_view.py:1490
+#, python-brace-format
+msgid "Failed to create EICAR test file: {error}"
+msgstr "无法创建 EICAR 测试文件：{error}"
+
+#: src/ui/scan/target_selector.py:81 src/ui/scan/target_selector.py:271
+#: src/ui/scan_view.py:684 src/ui/scan_view.py:1024
+msgid "Drop files here or click Add"
+msgstr "将文件拖放到此处，或点击添加"
+
+#: src/ui/scan/target_selector.py:96 src/ui/scan_view.py:693
+msgid "Add files"
+msgstr "添加文件"
+
+#: src/ui/scan/target_selector.py:103 src/ui/scan_view.py:701
+msgid "Add folders"
+msgstr "添加文件夹"
+
+#: src/ui/scan/target_selector.py:122
+#, fuzzy
+msgid "No targets selected"
+msgstr "未检测到威胁"
+
+#: src/ui/scan/target_selector.py:191 src/ui/scan_view.py:877
+msgid "_Open"
+msgstr "打开(_O)"
+
+#: src/ui/scan/target_selector.py:273 src/ui/scan_view.py:1026
+msgid "Scan Target (1)"
+msgstr "扫描目标 (1)"
 
 #: src/ui/scan_in_progress_dialog.py:65
 msgid "Scan in Progress"
@@ -3548,38 +3723,10 @@ msgstr "未拖入任何文件"
 msgid "Unable to accept dropped files"
 msgstr "无法接受拖入的文件"
 
-#: src/ui/scan_view.py:483
-msgid "Scan Profile"
-msgstr "扫描配置"
-
-#: src/ui/scan_view.py:488
-msgid "Profile"
-msgstr "配置"
-
-#: src/ui/scan_view.py:494 src/ui/scan_view.py:578
-msgid "No Profile (Manual)"
-msgstr "无配置（手动）"
-
-#: src/ui/scan_view.py:506
-msgid "Manage profiles"
-msgstr "管理配置"
-
 #: src/ui/scan_view.py:625
 #, python-brace-format
 msgid "Profile '{name}' has no valid targets"
 msgstr "配置“{name}”没有有效的目标"
-
-#: src/ui/scan_view.py:684 src/ui/scan_view.py:1024
-msgid "Drop files here or click Add"
-msgstr "将文件拖放到此处，或点击添加"
-
-#: src/ui/scan_view.py:693
-msgid "Add files"
-msgstr "添加文件"
-
-#: src/ui/scan_view.py:701
-msgid "Add folders"
-msgstr "添加文件夹"
 
 #: src/ui/scan_view.py:709
 msgid "Clear all"
@@ -3597,47 +3744,18 @@ msgstr "选择要扫描的文件"
 msgid "Select Folders to Scan"
 msgstr "选择要扫描的文件夹"
 
-#: src/ui/scan_view.py:877
-msgid "_Open"
-msgstr "打开(_O)"
-
-#: src/ui/scan_view.py:1026
-msgid "Scan Target (1)"
-msgstr "扫描目标 (1)"
-
-#: src/ui/scan_view.py:1048
-msgid "Start Scan"
-msgstr "开始扫描"
-
 #: src/ui/scan_view.py:1049
 msgid "Start Scan (F5)"
 msgstr "开始扫描 (F5)"
-
-#: src/ui/scan_view.py:1057
-msgid "EICAR Test"
-msgstr "EICAR 测试"
-
-#: src/ui/scan_view.py:1059
-msgid "Run a scan with EICAR test file to verify antivirus detection"
-msgstr "使用 EICAR 测试文件运行扫描以验证防病毒检测"
 
 #: src/ui/scan_view.py:1068 src/ui/scan_view.py:1518
 msgid "Cancel the current scan"
 msgstr "取消当前扫描"
 
-#: src/ui/scan_view.py:1094
-msgid "Scanning..."
-msgstr "正在扫描……"
-
 #: src/ui/scan_view.py:1216
 #, python-brace-format
 msgid "Target {current} of {total} \\u2014 {pct}%"
 msgstr "第 {current}/{total} 个目标 — {pct}%"
-
-#: src/ui/scan_view.py:1223
-#, python-brace-format
-msgid "Scanning... {pct}%"
-msgstr "正在扫描... {pct}%"
 
 #: src/ui/scan_view.py:1237
 #, python-brace-format
@@ -3665,24 +3783,11 @@ msgid "Found {n} threat"
 msgid_plural "Found {n} threats"
 msgstr[0] "发现 {n} 个威胁"
 
-#: src/ui/scan_view.py:1339 src/ui/scan_view.py:1364
-msgid "View Results"
-msgstr "查看结果"
-
 #: src/ui/scan_view.py:1356
 #, python-brace-format
 msgid "View Results ({n} Threat)"
 msgid_plural "View Results ({n} Threats)"
 msgstr[0] "查看结果（{n} 个威胁）"
-
-#: src/ui/scan_view.py:1402
-msgid "Please select a file or folder to scan"
-msgstr "请选择要扫描的文件或文件夹"
-
-#: src/ui/scan_view.py:1490
-#, python-brace-format
-msgid "Failed to create EICAR test file: {error}"
-msgstr "无法创建 EICAR 测试文件：{error}"
 
 #: src/ui/scan_view.py:1514
 msgid "Cancel All"
@@ -3697,11 +3802,6 @@ msgstr "取消全部剩下的扫描"
 msgid "Scanning {path} \\u2014 File count pending"
 msgstr "正在扫描 {path} — 等待统计文件数"
 
-#: src/ui/scan_view.py:1541 src/ui/scan_view.py:1735
-#, python-brace-format
-msgid "Scanning {path}"
-msgstr "正在扫描 {path}"
-
 #: src/ui/scan_view.py:1545
 #, python-brace-format
 msgid "Scanning {count} items \\u2014 File count pending"
@@ -3712,25 +3812,6 @@ msgstr "正在扫描 {count} 个项目 — 等待统计文件数"
 msgid "Scanning {count} items"
 msgstr "正在扫描 {count} 个项目"
 
-#: src/ui/scan_view.py:1738
-#, python-brace-format
-msgid "Target {current} of {total}: {path}"
-msgstr "第 {current}/{total} 个目标：{path}"
-
-#: src/ui/scan_view.py:1787
-#, python-brace-format
-msgid "Scan complete - {count} threat(s) detected"
-msgstr "扫描完成 — 发现 {count} 个威胁"
-
-#: src/ui/scan_view.py:1796
-#, python-brace-format
-msgid "Scan complete - No threats found ({count} file(s) not accessible)"
-msgstr "扫描完成 — 未发现威胁（{count} 个文件无法访问）"
-
-#: src/ui/scan_view.py:1801
-msgid "Scan complete - No threats found"
-msgstr "扫描完成 — 未发现威胁"
-
 #: src/ui/scan_view.py:1812 src/ui/scan_view.py:1854
 #, python-brace-format
 msgid "Scan error: {detail}"
@@ -3740,11 +3821,6 @@ msgstr "扫描错误：{detail}"
 #, python-brace-format
 msgid "Scan completed with status: {status}"
 msgstr "扫描完成，状态：{status}"
-
-#: src/ui/scan_view.py:1887
-#, python-brace-format
-msgid "Backend: {name}"
-msgstr "后端：{name}"
 
 #: src/ui/scan_view.py:1892
 msgid "Ready to scan"
@@ -3824,7 +3900,7 @@ msgstr "所选时间段的汇总指标"
 
 #: src/ui/statistics_view.py:257
 msgid "Total Scans"
-msgstr "扫描总数"
+msgstr "总扫描次数"
 
 #: src/ui/statistics_view.py:258
 msgid "Number of scans performed"
@@ -3832,7 +3908,7 @@ msgstr "总扫描次数"
 
 #: src/ui/statistics_view.py:271
 msgid "Files Scanned"
-msgstr "已扫描文件："
+msgstr "已扫描文件"
 
 #: src/ui/statistics_view.py:272
 msgid "Total files checked"
@@ -4090,7 +4166,9 @@ msgstr "强制更新"
 msgid ""
 "Force update: Backs up local databases, deletes them, then downloads fresh "
 "copies from mirrors. Automatically restores from backup if update fails."
-msgstr "强制更新：备份本地数据库、删除它们，然后从镜像站下载新副本。如果更新失败，自动从备份恢复。"
+msgstr ""
+"强制更新：备份本地数据库、删除它们，然后从镜像站下载新副本。如果更新失败，自"
+"动从备份恢复。"
 
 #: src/ui/update_view.py:159
 msgid "Update Results"
@@ -4381,7 +4459,9 @@ msgstr "需要 VirusTotal API 密钥"
 msgid ""
 "To scan files with VirusTotal, you need a free API key. You can get one by "
 "creating a free account on virustotal.com."
-msgstr "要使用VirusTotal扫描文件，您需要免费的API密钥。您可以通过在 virustotal.com 上创建一个免费帐户来获得一个。"
+msgstr ""
+"要使用VirusTotal扫描文件，您需要免费的API密钥。您可以通过在 virustotal.com 上"
+"创建一个免费帐户来获得一个。"
 
 #: src/ui/virustotal_setup_dialog.py:163
 msgid "Enter API Key"
@@ -4430,5 +4510,3 @@ msgstr "关于 ClamUI"
 #: src/ui/window.py:609
 msgid "ClamAV Desktop Scanner"
 msgstr "ClamAV 桌面扫描程序"
-
-
