@@ -283,6 +283,14 @@ ClamUI automatically manages a Flatpak-specific database directory at
 3. **Check system resources**: Ensure adequate memory and disk space
 4. **Try clamscan backend**: Switch from daemon to clamscan backend
 
+### Profile has no Valid targets
+
+**Symptom:** Unable to start the scan using the selected profile. Notification: "Profile <selected profile> has no valid targets."
+
+**Solution:**
+
+1. **Reset Scan Profile**: Return scan profiles to default values
+
 ---
 
 ## Database Update Issues
