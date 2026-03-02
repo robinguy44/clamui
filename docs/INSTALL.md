@@ -135,7 +135,7 @@ flatpak run io.github.linx_systems.ClamUI
 A separate manifest is provided for local development builds. It sources ClamUI from your working tree instead of fetching from GitHub:
 
 ```bash
-flatpak-builder --force-clean build-dir io.github.linx_systems.ClamUI.local.yml
+flatpak-builder --force-clean build-dir flathub/io.github.linx_systems.ClamUI.local.yml
 ```
 
 Use `--run` or `--user --install` the same way as above. This is useful for testing local changes before committing.
@@ -196,13 +196,13 @@ sudo apt install clamav
 > includes compiled binaries and may not require all build dependencies. On older Ubuntu versions (22.04), use
 `libgirepository1.0-dev` instead.
 
-**Quick Start (from source):** The `local-run.sh` script in the repository root automatically installs all dependencies
+**Quick Start (from source):** The `local-run.sh` script in the `scripts/` directory automatically installs all dependencies
 and runs ClamUI:
 
 ```bash
 git clone https://github.com/linx-systems/clamui.git
 cd clamui
-./local-run.sh
+./scripts/local-run.sh
 ```
 
 ### Download and Install

@@ -508,10 +508,12 @@ class Scanner:
         files_scanned = 0
         infected_count = 0
         infected_files: list[str] = []
+        infected_threats: dict[str, str] = {}
         current_file = ""
 
         def on_line(line: str) -> None:
-            nonlocal files_scanned, infected_count, infected_files, current_file
+            nonlocal files_scanned, infected_count, infected_files
+            nonlocal infected_threats, current_file
 
             # Parse verbose ClamAV output
             # Format for scanning: "Scanning /path/to/file"
@@ -530,6 +532,7 @@ class Scanner:
                     files_total=files_total,
                     infected_count=infected_count,
                     infected_files=infected_files.copy(),
+                    infected_threats=infected_threats.copy(),
                 )
                 progress_callback(progress)
 
@@ -539,8 +542,13 @@ class Scanner:
                 parts = line.rsplit(":", 1)
                 if len(parts) == 2:
                     file_path = parts[0].strip()
+                    threat_name = parts[1].strip()
+                    # Remove trailing " FOUND" from threat name
+                    if threat_name.endswith(" FOUND"):
+                        threat_name = threat_name[:-6].strip()
                     infected_count += 1
                     infected_files.append(file_path)
+                    infected_threats[file_path] = threat_name
 
                     # Send updated progress with new infection
                     progress = ScanProgress(
@@ -549,6 +557,7 @@ class Scanner:
                         files_total=files_total,
                         infected_count=infected_count,
                         infected_files=infected_files.copy(),
+                        infected_threats=infected_threats.copy(),
                     )
                     progress_callback(progress)
 

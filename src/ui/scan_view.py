@@ -14,7 +14,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from ..core.i18n import _, ngettext
 from ..core.quarantine import QuarantineManager
@@ -112,10 +112,16 @@ class ScanView(Gtk.Box):
         self._progress_label: Gtk.Label | None = None
         self._pulse_timeout_id: int | None = None
 
-        # Live progress state
-        self._file_label: Gtk.Label | None = None  # Current file being scanned
-        self._stats_label: Gtk.Label | None = None  # "Scanned X / Y files"
-        self._threat_label: Gtk.Label | None = None  # Real-time threat count
+        # Live progress Adwaita widgets
+        self._progress_group: Adw.PreferencesGroup | None = None
+        self._current_file_row: Adw.ActionRow | None = None
+        self._file_spinner: Gtk.Spinner | None = None
+        self._stats_row: Adw.ActionRow | None = None
+        self._threat_group: Adw.PreferencesGroup | None = None
+        self._live_threat_list: Gtk.ListBox | None = None
+        self._live_threat_count: int = 0
+
+        # Throttling and visibility state
         self._last_progress_update: float = 0.0  # For throttling UI updates
         self._updates_paused: bool = False  # Pause updates when view is hidden
         self._is_view_visible: bool = True  # Track view visibility
@@ -124,6 +130,7 @@ class ScanView(Gtk.Box):
         self._current_target_idx: int = 1  # Current target (1-based)
         self._total_target_count: int = 0  # Total targets being scanned
         self._cumulative_files_scanned: int = 0  # Files from completed targets
+        self._progress_session_id: int = 0  # Monotonic token to ignore stale progress callbacks
 
         # View results section state
         self._view_results_section: Gtk.Box | None = None
@@ -1077,55 +1084,81 @@ class ScanView(Gtk.Box):
         self.append(scan_group)
 
     def _create_progress_section(self):
-        """Create the progress bar section (initially hidden)."""
-        self._progress_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self._progress_section.add_css_class("progress-section")
-        self._progress_section.set_margin_start(12)
-        self._progress_section.set_margin_end(12)
+        """Create the Adwaita-styled progress section (initially hidden).
+
+        Uses Adw.PreferencesGroup with ActionRows for a polished look that
+        matches the rest of the app. The progress group contains the bar,
+        current-file row, and stats row. A separate threat group appears
+        only when infections are detected during a live scan.
+        """
+        # Container box to hold both groups
+        self._progress_section = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self._progress_section.set_visible(False)
 
-        # Progress bar (pulsing or deterministic based on file count)
+        # --- Scan Progress group ---
+        self._progress_group = Adw.PreferencesGroup()
+        self._progress_group.set_title(_("Scan Progress"))
+
+        # Progress bar inside a simple wrapper for group padding
+        bar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        bar_box.set_margin_start(12)
+        bar_box.set_margin_end(12)
+        bar_box.set_margin_top(4)
+        bar_box.set_margin_bottom(4)
         self._progress_bar = Gtk.ProgressBar()
         self._progress_bar.add_css_class("progress-bar-compact")
-        self._progress_section.append(self._progress_bar)
+        bar_box.append(self._progress_bar)
 
-        # Status label (general scan status)
+        # Status label below the bar (percentage / "Scanning...")
         self._progress_label = Gtk.Label()
         self._progress_label.set_label(_("Scanning..."))
-        self._progress_label.add_css_class("progress-status")
         self._progress_label.add_css_class("dim-label")
         self._progress_label.set_xalign(0)
-        self._progress_section.append(self._progress_label)
+        self._progress_label.set_margin_top(4)
+        bar_box.append(self._progress_label)
 
-        # File label - current file being scanned (for live progress)
-        self._file_label = Gtk.Label()
-        self._file_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
-        self._file_label.add_css_class("dim-label")
-        self._file_label.add_css_class("caption")
-        self._file_label.set_xalign(0)
-        self._file_label.set_visible(False)  # Hidden until live progress starts
-        self._progress_section.append(self._file_label)
+        self._progress_group.add(bar_box)
 
-        # Stats row - contains stats label and threat label
-        stats_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        # Currently scanning row (visible only with live progress)
+        self._current_file_row = Adw.ActionRow()
+        self._current_file_row.set_title(_("Currently scanning"))
+        self._current_file_row.set_subtitle(_("Waiting for scan data..."))
+        self._current_file_row.set_subtitle_lines(1)
+        # Spinner prefix
+        self._file_spinner = Gtk.Spinner()
+        self._file_spinner.set_spinning(True)
+        self._current_file_row.add_prefix(self._file_spinner)
+        self._current_file_row.set_visible(False)
+        self._progress_group.add(self._current_file_row)
 
-        # Stats label - "Scanned X / Y files"
-        self._stats_label = Gtk.Label()
-        self._stats_label.add_css_class("caption")
-        self._stats_label.add_css_class("dim-label")
-        self._stats_label.set_xalign(0)
-        self._stats_label.set_hexpand(True)
-        self._stats_label.set_visible(False)  # Hidden until live progress starts
-        stats_box.append(self._stats_label)
+        # Stats row (visible only with live progress)
+        self._stats_row = Adw.ActionRow()
+        self._stats_row.set_title(_("Scanned 0 files"))
+        stats_icon = Gtk.Image.new_from_icon_name(resolve_icon_name("document-open-symbolic"))
+        self._stats_row.add_prefix(stats_icon)
+        self._stats_row.set_visible(False)
+        self._progress_group.add(self._stats_row)
 
-        # Threat label - real-time infection count
-        self._threat_label = Gtk.Label()
-        self._threat_label.add_css_class("caption")
-        self._threat_label.set_xalign(1)
-        self._threat_label.set_visible(False)  # Hidden until threats found
-        stats_box.append(self._threat_label)
+        self._progress_section.append(self._progress_group)
 
-        self._progress_section.append(stats_box)
+        # --- Threats Detected group (hidden until first threat) ---
+        self._threat_group = Adw.PreferencesGroup()
+        self._threat_group.set_title(_("Threats Detected"))
+        self._threat_group.set_visible(False)
+
+        # Scrolled window with max height for the threat list
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_max_content_height(200)
+        scrolled.set_propagate_natural_height(True)
+
+        self._live_threat_list = Gtk.ListBox()
+        self._live_threat_list.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._live_threat_list.add_css_class("boxed-list")
+        scrolled.set_child(self._live_threat_list)
+
+        self._threat_group.add(scrolled)
+        self._progress_section.append(self._threat_group)
 
         self.append(self._progress_section)
 
@@ -1150,14 +1183,24 @@ class ScanView(Gtk.Box):
         if self._progress_section is not None:
             self._progress_section.set_visible(False)
 
-        # Reset live progress labels
-        if self._file_label is not None:
-            self._file_label.set_visible(False)
-        if self._stats_label is not None:
-            self._stats_label.set_visible(False)
-        if self._threat_label is not None:
-            self._threat_label.set_visible(False)
-            self._threat_label.remove_css_class("error")
+        # Stop spinner and hide live progress rows
+        if self._file_spinner is not None:
+            self._file_spinner.set_spinning(False)
+        if self._current_file_row is not None:
+            self._current_file_row.set_visible(False)
+        if self._stats_row is not None:
+            self._stats_row.set_visible(False)
+
+        # Clear and hide threat list
+        if self._live_threat_list is not None:
+            while True:
+                row = self._live_threat_list.get_row_at_index(0)
+                if row is None:
+                    break
+                self._live_threat_list.remove(row)
+        if self._threat_group is not None:
+            self._threat_group.set_visible(False)
+        self._live_threat_count = 0
 
     def _on_parent_changed(self, widget, pspec):
         """
@@ -1185,19 +1228,59 @@ class ScanView(Gtk.Box):
         self._updates_paused = False
         # Force an immediate update on next progress callback
 
-    def _update_live_progress(self, progress: ScanProgress):
+    def _update_live_progress(
+        self,
+        progress: ScanProgress,
+        scan_session_id: int | None = None,
+        target_idx: int | None = None,
+        completed_files_before_target: int | None = None,
+    ):
         """
         Update the UI with live scan progress.
 
         This is called from the scan thread via GLib.idle_add for thread safety.
-        Uses throttling to limit UI updates to ~10/second.
+        Updates Adw.ActionRow widgets for current file, stats, and threat list.
 
         Args:
             progress: The ScanProgress with current scan state
+            scan_session_id: Optional scan session token for stale callback filtering
+            target_idx: Optional target index for stale callback filtering
+            completed_files_before_target: Optional completed-file baseline for this target
         """
-        if self._updates_paused:
-            return  # Don't update UI when view is hidden
+        # Ignore stale callbacks from a previous scan session.
+        if scan_session_id is not None and scan_session_id != getattr(
+            self, "_progress_session_id", scan_session_id
+        ):
+            return False
 
+        # Ignore delayed callbacks from previous targets in a multi-target scan.
+        if target_idx is not None and target_idx != getattr(
+            self, "_current_target_idx", target_idx
+        ):
+            return False
+
+        if not getattr(self, "_is_scanning", False):
+            return False
+
+        if self._updates_paused:
+            return False  # Don't update UI when view is hidden
+
+        try:
+            self._apply_progress_updates(progress, completed_files_before_target)
+        except Exception:
+            logger.debug("Error in live progress update", exc_info=True)
+        return False
+
+    def _apply_progress_updates(
+        self,
+        progress: ScanProgress,
+        completed_files_before_target: int | None = None,
+    ):
+        """Apply progress data to the Adwaita widgets.
+
+        Separated from _update_live_progress so that any exception is caught
+        and logged instead of being silently swallowed by GLib.idle_add.
+        """
         # Update progress bar
         if self._progress_bar is not None:
             if progress.percentage is not None:
@@ -1222,58 +1305,94 @@ class ScanView(Gtk.Box):
             else:
                 self._progress_label.set_text(_("Scanning... {pct}%").format(pct=pct))
 
-        # Update file label with current file
-        if self._file_label is not None and progress.current_file:
+        # Update current file row subtitle with the file being scanned
+        if self._current_file_row is not None and progress.current_file:
             display_path = self._format_path_for_display(progress.current_file)
-            self._file_label.set_text(display_path)
-            self._file_label.set_visible(True)
+            self._current_file_row.set_subtitle(display_path)
 
-        # Update stats label with cumulative counts for multi-target scans
-        if self._stats_label is not None:
-            total_scanned = self._cumulative_files_scanned + progress.files_scanned
+        # Update stats row with cumulative counts for multi-target scans
+        if self._stats_row is not None:
+            completed_files = (
+                completed_files_before_target
+                if completed_files_before_target is not None
+                else self._cumulative_files_scanned
+            )
+            total_scanned = completed_files + progress.files_scanned
             if self._total_target_count > 1:
                 if progress.files_total:
-                    self._stats_label.set_text(
-                        _("Scanned {scanned} / {total} files ({cumulative} total)").format(
+                    self._stats_row.set_title(
+                        _("Scanned {scanned} / {total} files").format(
                             scanned=f"{progress.files_scanned:,}",
                             total=f"{progress.files_total:,}",
-                            cumulative=f"{total_scanned:,}",
                         )
                     )
                 else:
-                    self._stats_label.set_text(
-                        _("Scanned {scanned} files ({cumulative} total)").format(
+                    self._stats_row.set_title(
+                        _("Scanned {scanned} files").format(
                             scanned=f"{progress.files_scanned:,}",
-                            cumulative=f"{total_scanned:,}",
                         )
                     )
+                self._stats_row.set_subtitle(
+                    _("Target {current} of {total} ({cumulative} total)").format(
+                        current=self._current_target_idx,
+                        total=self._total_target_count,
+                        cumulative=f"{total_scanned:,}",
+                    )
+                )
             elif progress.files_total:
-                self._stats_label.set_text(
+                self._stats_row.set_title(
                     _("Scanned {scanned} / {total} files").format(
                         scanned=f"{progress.files_scanned:,}",
                         total=f"{progress.files_total:,}",
                     )
                 )
+                self._stats_row.set_subtitle("")
             else:
-                self._stats_label.set_text(
+                self._stats_row.set_title(
                     _("Scanned {scanned} files").format(
                         scanned=f"{progress.files_scanned:,}",
                     )
                 )
-            self._stats_label.set_visible(True)
+                self._stats_row.set_subtitle("")
 
-        # Update threat label if infections found
-        if self._threat_label is not None:
-            if progress.infected_count > 0:
-                self._threat_label.set_text(
-                    ngettext(
-                        "Found {n} threat",
-                        "Found {n} threats",
-                        progress.infected_count,
-                    ).format(n=progress.infected_count)
-                )
-                self._threat_label.add_css_class("error")
-                self._threat_label.set_visible(True)
+        # Append new threats to the live threat list
+        if progress.infected_count > self._live_threat_count:
+            threats = progress.infected_threats or {}
+            for file_path in progress.infected_files[self._live_threat_count :]:
+                threat_name = threats.get(file_path, _("Unknown threat"))
+                self._append_threat_row(file_path, threat_name)
+            self._live_threat_count = progress.infected_count
+
+    def _append_threat_row(self, file_path: str, threat_name: str):
+        """Append a new threat row to the live threat list.
+
+        Args:
+            file_path: Full path to the infected file
+            threat_name: ClamAV threat signature name
+        """
+        if self._live_threat_list is None or self._threat_group is None:
+            return
+
+        row = Adw.ActionRow()
+        row.set_title(Path(file_path).name)
+        row.set_subtitle(threat_name)
+        row.set_tooltip_text(file_path)
+
+        icon = Gtk.Image.new_from_icon_name(resolve_icon_name("dialog-warning-symbolic"))
+        icon.add_css_class("warning")
+        row.add_prefix(icon)
+
+        self._live_threat_list.append(row)
+
+        # Update group title with count and show
+        self._threat_group.set_title(
+            ngettext(
+                "Threats Detected ({n})",
+                "Threats Detected ({n})",
+                self._live_threat_count + 1,
+            ).format(n=self._live_threat_count + 1)
+        )
+        self._threat_group.set_visible(True)
 
     def _format_path_for_display(self, path: str) -> str:
         """
@@ -1306,24 +1425,47 @@ class ScanView(Gtk.Box):
 
         return display_path
 
-    def _create_progress_callback(self):
+    def _create_progress_callback(
+        self,
+        scan_session_id: int | None = None,
+        target_idx: int | None = None,
+        completed_files_before_target: int = 0,
+    ):
         """
         Create a throttled progress callback for the scanner.
 
         Returns:
             A callback function that schedules UI updates via GLib.idle_add
-            with throttling to limit updates to ~10/second.
+            with throttling to limit updates to ~10/second. Threat detection
+            events bypass the throttle since they are rare and important.
         """
         MIN_UPDATE_INTERVAL = 0.1  # 100ms between updates
+        last_infected_count = 0
+        last_update = 0.0
 
         def progress_callback(progress: ScanProgress):
+            nonlocal last_infected_count, last_update
             now = time.monotonic()
-            if now - self._last_progress_update < MIN_UPDATE_INTERVAL:
+
+            # Bypass throttle for new threat detections — these are rare
+            # and must reach the UI immediately
+            is_new_threat = progress.infected_count > last_infected_count
+            if is_new_threat:
+                last_infected_count = progress.infected_count
+            elif last_update > 0 and now - last_update < MIN_UPDATE_INTERVAL:
                 return  # Throttle - skip this update
+
+            last_update = now
             self._last_progress_update = now
 
             # Schedule UI update on main thread
-            GLib.idle_add(self._update_live_progress, progress)
+            GLib.idle_add(
+                self._update_live_progress,
+                progress,
+                scan_session_id,
+                target_idx,
+                completed_files_before_target,
+            )
 
         return progress_callback
 
@@ -1496,6 +1638,7 @@ class ScanView(Gtk.Box):
         """Start the scanning process."""
         self._is_scanning = True
         self._cancel_all_requested = False
+        self._progress_session_id = getattr(self, "_progress_session_id", 0) + 1
         self._scan_button.set_sensitive(False)
         self._eicar_button.set_sensitive(False)
         self._selection_group.set_sensitive(False)
@@ -1507,6 +1650,7 @@ class ScanView(Gtk.Box):
         self._current_target_idx = 1
         self._total_target_count = len(self._selected_paths)
         self._cumulative_files_scanned = 0
+        self._live_threat_count = 0
 
         # Update cancel button text based on number of targets
         path_count = len(self._selected_paths)
@@ -1550,6 +1694,28 @@ class ScanView(Gtk.Box):
                     self._progress_label.set_label(
                         _("Scanning {count} items").format(count=path_count)
                     )
+
+            # Show/hide live progress rows based on setting
+            if self._current_file_row is not None:
+                self._current_file_row.set_visible(show_live_progress)
+                self._current_file_row.set_subtitle(_("Waiting for scan data..."))
+            if self._file_spinner is not None:
+                self._file_spinner.set_spinning(show_live_progress)
+            if self._stats_row is not None:
+                self._stats_row.set_visible(show_live_progress)
+                self._stats_row.set_title(_("Scanned 0 files"))
+                self._stats_row.set_subtitle("")
+
+            # Clear any leftover threat rows
+            if self._live_threat_list is not None:
+                while True:
+                    row = self._live_threat_list.get_row_at_index(0)
+                    if row is None:
+                        break
+                    self._live_threat_list.remove(row)
+            if self._threat_group is not None:
+                self._threat_group.set_visible(False)
+
             self._progress_section.set_visible(True)
             self._start_progress_pulse()
 
@@ -1599,8 +1765,7 @@ class ScanView(Gtk.Box):
             if self._settings_manager is not None:
                 show_live_progress = self._settings_manager.get("show_live_progress", True)
 
-            # Create progress callback if live progress is enabled
-            progress_callback = self._create_progress_callback() if show_live_progress else None
+            scan_session_id = getattr(self, "_progress_session_id", 0)
 
             # Get profile exclusions if a profile is selected
             profile_exclusions = None
@@ -1631,8 +1796,26 @@ class ScanView(Gtk.Box):
                     final_status = ScanStatus.CANCELLED
                     break
 
+                completed_files_before_target = total_scanned_files
+
                 # Update progress to show current target
-                GLib.idle_add(self._update_scan_progress, idx, target_count, target_path)
+                GLib.idle_add(
+                    self._update_scan_progress,
+                    idx,
+                    target_count,
+                    target_path,
+                    scan_session_id,
+                    completed_files_before_target,
+                )
+
+                # Create target-scoped callback so stale updates are ignored
+                progress_callback = None
+                if show_live_progress:
+                    progress_callback = self._create_progress_callback(
+                        scan_session_id,
+                        idx,
+                        completed_files_before_target,
+                    )
 
                 # Scan this target with progress callback if enabled
                 result = self._scanner.scan_sync(
@@ -1652,9 +1835,6 @@ class ScanView(Gtk.Box):
                     all_threat_details.extend(result.threat_details)
                     final_status = ScanStatus.CANCELLED
                     break
-
-                # Track cumulative file count for multi-target progress display
-                self._cumulative_files_scanned += result.scanned_files
 
                 # Aggregate results
                 total_scanned_files += result.scanned_files
@@ -1708,7 +1888,14 @@ class ScanView(Gtk.Box):
             logger.error(f"Scan error: {e}")
             GLib.idle_add(self._on_scan_error, str(e))
 
-    def _update_scan_progress(self, current_idx: int, total_count: int, current_path: str):
+    def _update_scan_progress(
+        self,
+        current_idx: int,
+        total_count: int,
+        current_path: str,
+        scan_session_id: int | None = None,
+        completed_files_before_target: int | None = None,
+    ):
         """
         Update the progress display with current scan target.
 
@@ -1719,12 +1906,26 @@ class ScanView(Gtk.Box):
             current_idx: Current target index (1-based)
             total_count: Total number of targets
             current_path: Path currently being scanned
+            scan_session_id: Optional scan session token for stale callback filtering
+            completed_files_before_target: Optional completed-file baseline for this target
         """
+        if scan_session_id is not None and scan_session_id != getattr(
+            self, "_progress_session_id", scan_session_id
+        ):
+            return False
+
+        if not getattr(self, "_is_scanning", False):
+            return False
+
         if self._progress_label is None:
-            return
+            return False
 
         self._current_target_idx = current_idx
         self._total_target_count = total_count
+        if completed_files_before_target is not None:
+            self._cumulative_files_scanned = completed_files_before_target
+        # Ensure first progress update for a new target is not throttled.
+        self._last_progress_update = 0.0
 
         # Format path for display
         display_path = format_scan_path(current_path)
@@ -1745,6 +1946,7 @@ class ScanView(Gtk.Box):
         if self._progress_bar is not None:
             self._progress_bar.set_fraction(0.0)
         self._start_progress_pulse()
+        return False
 
     def _on_scan_complete(self, result: ScanResult):
         """

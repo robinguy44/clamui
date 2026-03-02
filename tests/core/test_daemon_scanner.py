@@ -188,6 +188,102 @@ Infected files: 1
         assert result.status == scan_status_class.ERROR
         assert result.error_message is not None
 
+    def test_parse_results_permission_denied_file_path_check_failure_is_warning(
+        self, daemon_scanner_class, scan_status_class
+    ):
+        """Test newer clamdscan permission warnings are treated as skipped files."""
+        scanner = daemon_scanner_class()
+
+        stdout = """
+/home/user/a.txt: File path check failure: Permission denied. ERROR
+/home/user/b.txt: File path check failure: Permission denied. ERROR
+"""
+        result = scanner._parse_results("/home/user", stdout, "", 2, file_count=2, dir_count=0)
+
+        assert result.status == scan_status_class.CLEAN
+        assert result.infected_count == 0
+        assert result.skipped_count == 2
+        assert result.warning_message is not None
+
+    def test_parse_results_deduplicates_repeated_skipped_file_lines(
+        self, daemon_scanner_class, scan_status_class
+    ):
+        """Test duplicated warning lines do not inflate skipped_count."""
+        scanner = daemon_scanner_class()
+
+        stdout = """
+/home/user/a.txt: File path check failure: Permission denied. ERROR
+/home/user/a.txt: File path check failure: Permission denied. ERROR
+"""
+        result = scanner._parse_results("/home/user", stdout, "", 2, file_count=1, dir_count=0)
+
+        assert result.status == scan_status_class.CLEAN
+        assert result.skipped_count == 1
+        assert result.skipped_files == ["/home/user/a.txt"]
+
+
+class TestDaemonScannerProgressParsing:
+    """Tests for DaemonScanner._scan_with_progress parsing behavior."""
+
+    def test_scan_with_progress_counts_permission_errors_as_processed(self, daemon_scanner_class):
+        """Permission-denied ERROR lines should advance files_scanned progress."""
+        scanner = daemon_scanner_class()
+        progress_events = []
+        lines = [
+            "/home/user/a.txt: File path check failure: Permission denied. ERROR",
+            "/home/user/a.txt: File path check failure: Permission denied. ERROR",
+            "/home/user/b.txt: Failed to open file ERROR",
+        ]
+
+        def fake_stream(process, is_cancelled, on_line):
+            for line in lines:
+                on_line(line)
+            return ("\n".join(lines), "", False)
+
+        with patch("src.core.daemon_scanner.stream_process_output", side_effect=fake_stream):
+            stdout, stderr, was_cancelled, files_scanned, infected_count, infected_files = (
+                scanner._scan_with_progress(
+                    process=MagicMock(),
+                    progress_callback=progress_events.append,
+                    files_total=10,
+                )
+            )
+
+        assert was_cancelled is False
+        assert stderr == ""
+        assert stdout
+        assert files_scanned == 2
+        assert infected_count == 0
+        assert infected_files == []
+        assert len(progress_events) == 2
+        assert progress_events[-1].files_scanned == 2
+
+    def test_scan_with_progress_deduplicates_duplicate_found_lines(self, daemon_scanner_class):
+        """Duplicate FOUND lines should not inflate counters."""
+        scanner = daemon_scanner_class()
+        progress_events = []
+        lines = [
+            "/home/user/malware.exe: Win.Trojan.Agent FOUND",
+            "/home/user/malware.exe: Win.Trojan.Agent FOUND",
+        ]
+
+        def fake_stream(process, is_cancelled, on_line):
+            for line in lines:
+                on_line(line)
+            return ("\n".join(lines), "", False)
+
+        with patch("src.core.daemon_scanner.stream_process_output", side_effect=fake_stream):
+            _, _, _, files_scanned, infected_count, infected_files = scanner._scan_with_progress(
+                process=MagicMock(),
+                progress_callback=progress_events.append,
+                files_total=10,
+            )
+
+        assert files_scanned == 1
+        assert infected_count == 1
+        assert infected_files == ["/home/user/malware.exe"]
+        assert len(progress_events) == 1
+
 
 class TestDaemonScannerThreatClassification:
     """Tests for threat classification functions."""
@@ -562,7 +658,7 @@ class TestDaemonScannerCountTargets:
         ):
             mock_installed.return_value = (True, "ClamAV 1.0.0")
             mock_connection.return_value = (True, "PONG")
-            mock_count.return_value = (1, 1)
+            mock_count.return_value = (1, 1, None)
 
             mock_process = MagicMock()
             mock_process.communicate.return_value = ("", "")
@@ -1040,7 +1136,7 @@ class TestDaemonScannerCancelFlagReset:
         def counting_that_gets_cancelled(*args, **kwargs):
             # Simulate cancel during counting
             scanner._cancel_event.set()
-            return (0, 0)
+            return (0, 0, None)
 
         with (
             patch("src.core.daemon_scanner.check_clamdscan_installed") as mock_installed,

@@ -463,7 +463,7 @@ copy_desktop_files() {
 	echo
 
 	# Copy desktop entry
-	DESKTOP_FILE="$PROJECT_ROOT/io.github.linx_systems.ClamUI.desktop"
+	DESKTOP_FILE="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI.desktop"
 	if [ -f "$DESKTOP_FILE" ]; then
 		log_info "Copying desktop entry..."
 		cp "$DESKTOP_FILE" "$BUILD_DIR/usr/share/applications/"
@@ -499,7 +499,7 @@ copy_desktop_files() {
 	fi
 
 	# Copy AppStream metainfo
-	METAINFO_FILE="$PROJECT_ROOT/io.github.linx_systems.ClamUI.metainfo.xml"
+	METAINFO_FILE="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI.metainfo.xml"
 	if [ -f "$METAINFO_FILE" ]; then
 		log_info "Copying AppStream metainfo..."
 		cp "$METAINFO_FILE" "$BUILD_DIR/usr/share/metainfo/"
@@ -511,7 +511,7 @@ copy_desktop_files() {
 	fi
 
 	# Copy Nemo file manager actions
-	NEMO_ACTION="$PROJECT_ROOT/io.github.linx_systems.ClamUI.nemo_action"
+	NEMO_ACTION="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI.nemo_action"
 	if [ -f "$NEMO_ACTION" ]; then
 		log_info "Copying Nemo action..."
 		cp "$NEMO_ACTION" "$BUILD_DIR/usr/share/nemo/actions/"
@@ -523,7 +523,7 @@ copy_desktop_files() {
 	fi
 
 	# Copy VirusTotal Nemo action
-	NEMO_VT_ACTION="$PROJECT_ROOT/io.github.linx_systems.ClamUI-virustotal.nemo_action"
+	NEMO_VT_ACTION="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI-virustotal.nemo_action"
 	if [ -f "$NEMO_VT_ACTION" ]; then
 		log_info "Copying VirusTotal Nemo action..."
 		cp "$NEMO_VT_ACTION" "$BUILD_DIR/usr/share/nemo/actions/"
@@ -556,7 +556,7 @@ copy_desktop_files() {
 	fi
 
 	# Copy Dolphin service menus
-	DOLPHIN_SCAN_SERVICE="$PROJECT_ROOT/io.github.linx_systems.ClamUI.service.desktop"
+	DOLPHIN_SCAN_SERVICE="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI.service.desktop"
 	if [ -f "$DOLPHIN_SCAN_SERVICE" ]; then
 		log_info "Copying Dolphin scan service menu..."
 		cp "$DOLPHIN_SCAN_SERVICE" "$BUILD_DIR/usr/share/kservices5/ServiceMenus/"
@@ -566,7 +566,7 @@ copy_desktop_files() {
 		log_warning "Dolphin scan service file not found: $DOLPHIN_SCAN_SERVICE"
 	fi
 
-	DOLPHIN_VT_SERVICE="$PROJECT_ROOT/io.github.linx_systems.ClamUI-virustotal.desktop"
+	DOLPHIN_VT_SERVICE="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI-virustotal.desktop"
 	if [ -f "$DOLPHIN_VT_SERVICE" ]; then
 		log_info "Copying Dolphin VirusTotal service menu..."
 		cp "$DOLPHIN_VT_SERVICE" "$BUILD_DIR/usr/share/kservices5/ServiceMenus/"

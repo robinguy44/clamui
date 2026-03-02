@@ -80,6 +80,10 @@ def mock_scan_view(scan_view_class):
     view._normalized_paths = set()
     view._is_scanning = False
     view._cancel_all_requested = False
+    view._progress_session_id = 0
+    view._current_target_idx = 1
+    view._total_target_count = 1
+    view._cumulative_files_scanned = 0
 
     # Mock UI elements
     view._path_label = mock.MagicMock()
@@ -91,6 +95,18 @@ def mock_scan_view(scan_view_class):
     view._progress_section = mock.MagicMock()
     view._progress_bar = mock.MagicMock()
     view._progress_label = mock.MagicMock()
+
+    # Live progress Adwaita widgets (used by _stop_progress_pulse, _update_live_progress)
+    view._progress_group = mock.MagicMock()
+    view._current_file_row = mock.MagicMock()
+    view._file_spinner = mock.MagicMock()
+    view._stats_row = mock.MagicMock()
+    view._threat_group = mock.MagicMock()
+    view._live_threat_list = mock.MagicMock()
+    # Return None so the while-loop in _stop_progress_pulse exits immediately
+    view._live_threat_list.get_row_at_index.return_value = None
+    view._live_threat_count = 0
+
     view._view_results_section = mock.MagicMock()
     view._view_results_button = mock.MagicMock()
     view._profile_dropdown = mock.MagicMock()
@@ -1382,6 +1398,26 @@ class TestProgressUpdates:
         """Helper to set up mocks for progress tests."""
         mock_scan_view._selection_group = mock.MagicMock()
         mock_scan_view._pulse_timeout_id = None
+        mock_scan_view._is_scanning = True
+
+    def _make_progress(
+        self,
+        files_scanned: int = 1,
+        files_total: int | None = None,
+        infected_count: int = 0,
+        current_file: str = "/tmp/file.txt",
+        percentage: float | None = None,
+    ):
+        """Create a lightweight progress object for UI update tests."""
+        progress = mock.MagicMock()
+        progress.files_scanned = files_scanned
+        progress.files_total = files_total
+        progress.infected_count = infected_count
+        progress.infected_files = []
+        progress.infected_threats = {}
+        progress.current_file = current_file
+        progress.percentage = percentage
+        return progress
 
     def test_start_progress_pulse_creates_timeout(self, mock_scan_view):
         """Test that starting progress pulse creates a GLib timeout."""
@@ -1459,6 +1495,117 @@ class TestProgressUpdates:
         label = mock_scan_view._progress_label.set_label.call_args[0][0]
         # Label should be truncated (contains "...")
         assert "..." in label or len(label) < len(long_path) + 20
+
+    def test_update_scan_progress_sets_cumulative_baseline(self, mock_scan_view):
+        """Test that target progress update stores completed-file baseline."""
+        self._setup_progress_mocks(mock_scan_view)
+        mock_scan_view._progress_session_id = 7
+
+        with mock.patch("src.ui.scan_view.format_scan_path", return_value="/test/path"):
+            mock_scan_view._update_scan_progress(
+                2,
+                3,
+                "/test/path",
+                scan_session_id=7,
+                completed_files_before_target=42,
+            )
+
+        assert mock_scan_view._cumulative_files_scanned == 42
+        assert mock_scan_view._last_progress_update == 0.0
+
+    def test_update_live_progress_ignores_stale_session(self, mock_scan_view):
+        """Test stale session callbacks do not mutate UI."""
+        self._setup_progress_mocks(mock_scan_view)
+        mock_scan_view._updates_paused = False
+        mock_scan_view._progress_session_id = 5
+        mock_scan_view._apply_progress_updates = mock.MagicMock()
+
+        progress = self._make_progress(files_scanned=2)
+        result = mock_scan_view._update_live_progress(
+            progress, scan_session_id=4, target_idx=1, completed_files_before_target=0
+        )
+
+        assert result is False
+        mock_scan_view._apply_progress_updates.assert_not_called()
+
+    def test_update_live_progress_ignores_stale_target(self, mock_scan_view):
+        """Test stale target callbacks do not mutate UI."""
+        self._setup_progress_mocks(mock_scan_view)
+        mock_scan_view._updates_paused = False
+        mock_scan_view._progress_session_id = 6
+        mock_scan_view._current_target_idx = 2
+        mock_scan_view._apply_progress_updates = mock.MagicMock()
+
+        progress = self._make_progress(files_scanned=2)
+        result = mock_scan_view._update_live_progress(
+            progress, scan_session_id=6, target_idx=1, completed_files_before_target=0
+        )
+
+        assert result is False
+        mock_scan_view._apply_progress_updates.assert_not_called()
+
+    def test_apply_progress_updates_uses_target_baseline(self, mock_scan_view):
+        """Test cumulative stat uses passed baseline for the current target."""
+        self._setup_progress_mocks(mock_scan_view)
+        mock_scan_view._total_target_count = 2
+        mock_scan_view._current_target_idx = 2
+
+        progress = self._make_progress(files_scanned=3, files_total=10)
+        with mock.patch.object(mock_scan_view, "_format_path_for_display", return_value="file.txt"):
+            mock_scan_view._apply_progress_updates(progress, completed_files_before_target=7)
+
+        title_text = mock_scan_view._stats_row.set_title.call_args[0][0]
+        subtitle_text = mock_scan_view._stats_row.set_subtitle.call_args[0][0]
+        assert "3" in title_text
+        assert "10" in title_text
+        assert "10" in subtitle_text  # 7 completed + 3 current target
+
+    def test_progress_callback_throttle_is_target_scoped(self, mock_scan_view):
+        """Test callback throttling still preserves first and delayed updates."""
+        self._setup_progress_mocks(mock_scan_view)
+
+        callback = mock_scan_view._create_progress_callback(
+            scan_session_id=9,
+            target_idx=3,
+            completed_files_before_target=11,
+        )
+        progress = self._make_progress(files_scanned=1, infected_count=0)
+
+        with (
+            mock.patch("src.ui.scan_view.time.monotonic", side_effect=[1.0, 1.05, 1.20]),
+            mock.patch("src.ui.scan_view.GLib") as mock_glib,
+        ):
+            callback(progress)  # allowed (first update)
+            callback(progress)  # throttled
+            callback(progress)  # allowed
+
+        assert mock_glib.idle_add.call_count == 2
+        first_call = mock_glib.idle_add.call_args_list[0][0]
+        assert first_call[0] == mock_scan_view._update_live_progress
+        assert first_call[2] == 9
+        assert first_call[3] == 3
+        assert first_call[4] == 11
+
+    def test_progress_callback_bypasses_throttle_on_new_threat(self, mock_scan_view):
+        """Test threat updates bypass throttle so threat list stays live."""
+        self._setup_progress_mocks(mock_scan_view)
+
+        callback = mock_scan_view._create_progress_callback(
+            scan_session_id=2,
+            target_idx=1,
+            completed_files_before_target=0,
+        )
+        normal = self._make_progress(files_scanned=1, infected_count=0)
+        threat = self._make_progress(files_scanned=2, infected_count=1)
+
+        with (
+            mock.patch("src.ui.scan_view.time.monotonic", side_effect=[1.0, 1.05]),
+            mock.patch("src.ui.scan_view.GLib") as mock_glib,
+        ):
+            callback(normal)  # first update
+            callback(threat)  # new threat, should bypass throttle
+
+        assert mock_glib.idle_add.call_count == 2
 
 
 class TestStartScanning:

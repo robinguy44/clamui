@@ -100,6 +100,13 @@ clamui/
 │   ├── profiles/               # Profile tests
 │   ├── integration/            # Integration tests
 │   └── e2e/                    # End-to-end tests
+├── data/                       # Desktop integration files
+│   ├── io.github.linx_systems.ClamUI.desktop
+│   ├── io.github.linx_systems.ClamUI.metainfo.xml
+│   ├── io.github.linx_systems.ClamUI.nemo_action
+│   ├── io.github.linx_systems.ClamUI-virustotal.nemo_action
+│   ├── io.github.linx_systems.ClamUI.service.desktop
+│   └── io.github.linx_systems.ClamUI-virustotal.desktop
 ├── docs/                       # Documentation
 │   ├── CONFIGURATION.md        # Configuration reference
 │   ├── DEVELOPMENT.md          # Development environment guide
@@ -114,14 +121,14 @@ clamui/
 │   ├── LINGUAS                 # Available translations (empty until contributed)
 │   └── clamui.pot              # POT template (regenerate with scripts/update-pot.sh)
 ├── scripts/
-│   ├── clamui-scheduled-scan   # Scheduled scan CLI wrapper
+│   ├── local-run.sh            # Quick-start launcher (installs deps + runs)
 │   ├── update-pot.sh           # Regenerate translation template
 │   └── hooks/                  # Git hooks for development
 │       ├── install-hooks.sh    # Hook installer (run after clone)
 │       └── pre-commit          # Blocks absolute src.* imports
 ├── appimage/                   # AppImage packaging
 │   └── build-appimage.sh       # AppImage build script (bundles Python + GTK4)
-├── flathub/                    # Flatpak packaging
+├── flathub/                    # Flatpak packaging (+ local dev manifest)
 ├── debian/                     # Debian packaging
 ├── icons/                      # Application icons
 ├── .github/workflows/          # CI: test.yml, lint.yml, build-*.yml

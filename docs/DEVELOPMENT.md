@@ -1,6 +1,6 @@
 # ClamUI Development Guide
 
->New to ClamUI? Start with the **[Getting Started Guide](GETTING_STARTED.md)** to learn about installation and basic usage before diving into development.
+>New to ClamUI? Start with the **[Getting Started Guide](user-guide/getting-started.md)** to learn about installation and basic usage before diving into development.
 
 This document provides instructions for setting up a development environment, running tests, and contributing to ClamUI.
 

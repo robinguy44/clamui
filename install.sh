@@ -394,11 +394,11 @@ install_xdg_files() {
 
 	# Install desktop entry
 	log_info "Installing desktop entry to $DESKTOP_DIR..."
-	if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI.desktop" ]; then
-		cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI.desktop" "$DESKTOP_DIR/"
+	if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.desktop" ]; then
+		cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.desktop" "$DESKTOP_DIR/"
 		log_success "Desktop entry installed: $DESKTOP_DIR/io.github.linx_systems.ClamUI.desktop"
 	else
-		log_error "Desktop entry file not found: $SCRIPT_DIR/io.github.linx_systems.ClamUI.desktop"
+		log_error "Desktop entry file not found: $SCRIPT_DIR/data/io.github.linx_systems.ClamUI.desktop"
 		return 1
 	fi
 
@@ -420,16 +420,16 @@ install_xdg_files() {
 
 	# Install Nemo file manager actions
 	log_info "Installing Nemo actions to $NEMO_ACTION_DIR..."
-	if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI.nemo_action" ]; then
-		cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI.nemo_action" "$NEMO_ACTION_DIR/"
+	if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.nemo_action" ]; then
+		cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.nemo_action" "$NEMO_ACTION_DIR/"
 		log_success "Nemo action installed: $NEMO_ACTION_DIR/io.github.linx_systems.ClamUI.nemo_action"
 	else
-		log_warning "Nemo action file not found: $SCRIPT_DIR/io.github.linx_systems.ClamUI.nemo_action"
+		log_warning "Nemo action file not found: $SCRIPT_DIR/data/io.github.linx_systems.ClamUI.nemo_action"
 		log_warning "Nemo context menu integration will not be available"
 	fi
 	# Install VirusTotal Nemo action
-	if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI-virustotal.nemo_action" ]; then
-		cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI-virustotal.nemo_action" "$NEMO_ACTION_DIR/"
+	if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI-virustotal.nemo_action" ]; then
+		cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI-virustotal.nemo_action" "$NEMO_ACTION_DIR/"
 		log_success "VirusTotal Nemo action installed"
 	fi
 
@@ -448,12 +448,12 @@ install_xdg_files() {
 	if command -v dolphin >/dev/null 2>&1 || [ -d "$SHARE_DIR/kservices5" ]; then
 		log_info "Installing Dolphin service menus..."
 		mkdir -p "$DOLPHIN_SERVICES_DIR"
-		if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI.service.desktop" ]; then
-			cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI.service.desktop" "$DOLPHIN_SERVICES_DIR/"
+		if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.service.desktop" ]; then
+			cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.service.desktop" "$DOLPHIN_SERVICES_DIR/"
 			log_success "Dolphin ClamUI scan service menu installed"
 		fi
-		if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI-virustotal.desktop" ]; then
-			cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI-virustotal.desktop" "$DOLPHIN_SERVICES_DIR/"
+		if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI-virustotal.desktop" ]; then
+			cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI-virustotal.desktop" "$DOLPHIN_SERVICES_DIR/"
 			log_success "Dolphin VirusTotal service menu installed"
 		fi
 	fi
@@ -461,11 +461,11 @@ install_xdg_files() {
 	# Install AppStream metainfo
 	METAINFO_DIR="$SHARE_DIR/metainfo"
 	mkdir -p "$METAINFO_DIR"
-	if [ -f "$SCRIPT_DIR/io.github.linx_systems.ClamUI.metainfo.xml" ]; then
-		cp "$SCRIPT_DIR/io.github.linx_systems.ClamUI.metainfo.xml" "$METAINFO_DIR/"
+	if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.metainfo.xml" ]; then
+		cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.metainfo.xml" "$METAINFO_DIR/"
 		log_success "AppStream metainfo installed"
 	else
-		log_warning "AppStream metainfo file not found: $SCRIPT_DIR/io.github.linx_systems.ClamUI.metainfo.xml"
+		log_warning "AppStream metainfo file not found: $SCRIPT_DIR/data/io.github.linx_systems.ClamUI.metainfo.xml"
 		log_warning "Application may not appear in software centers"
 	fi
 

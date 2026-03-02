@@ -1,11 +1,12 @@
 # Scan Progress Widget
 """
-Progress display widget for scan operations.
+Adwaita-styled progress display widget for scan operations.
 
 Single responsibility:
-- Display progress bar with pulse animation
-- Show live file being scanned
-- Display stats (files scanned, threats found)
+- Display progress bar with pulse animation inside Adw.PreferencesGroup
+- Show live file being scanned via Adw.ActionRow with spinner
+- Display stats (files scanned, target info) via Adw.ActionRow
+- Show real-time threat list as threats are detected
 """
 
 from pathlib import Path
@@ -13,81 +14,125 @@ from pathlib import Path
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import GLib, Gtk, Pango
+gi.require_version("Adw", "1")
+from gi.repository import Adw, GLib, Gtk
 
-from ...core.i18n import _
+from ...core.i18n import _, ngettext
 from ...core.scanner import ScanProgress
+from ..utils import resolve_icon_name
 
 
 class ScanProgressWidget(Gtk.Box):
     """
-    Widget showing scan progress with bar and stats.
+    Widget showing scan progress with Adwaita-styled groups and rows.
+
+    Contains two groups:
+    - Scan Progress: progress bar, current file row, stats row
+    - Threats Detected: live threat list (hidden until first detection)
     """
 
     def __init__(self, **kwargs):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6, **kwargs)
-        self.add_css_class("progress-section")
-        self.set_margin_start(12)
-        self.set_margin_end(12)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12, **kwargs)
         self.set_visible(False)
 
         self._pulse_id = None
         self._paused = False
+        self._live_threat_count = 0
 
         self._build_ui()
 
     def _build_ui(self):
+        # --- Scan Progress group ---
+        self._progress_group = Adw.PreferencesGroup()
+        self._progress_group.set_title(_("Scan Progress"))
+
+        # Progress bar wrapper
+        bar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        bar_box.set_margin_start(12)
+        bar_box.set_margin_end(12)
+        bar_box.set_margin_top(4)
+        bar_box.set_margin_bottom(4)
+
         self._bar = Gtk.ProgressBar()
         self._bar.add_css_class("progress-bar-compact")
-        self.append(self._bar)
+        bar_box.append(self._bar)
 
         self._status_label = Gtk.Label()
         self._status_label.set_label(_("Scanning..."))
-        self._status_label.add_css_class("progress-status")
         self._status_label.add_css_class("dim-label")
         self._status_label.set_xalign(0)
-        self.append(self._status_label)
+        self._status_label.set_margin_top(4)
+        bar_box.append(self._status_label)
 
-        self._file_label = Gtk.Label()
-        self._file_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
-        self._file_label.add_css_class("dim-label")
-        self._file_label.add_css_class("caption")
-        self._file_label.set_xalign(0)
-        self._file_label.set_visible(False)
-        self.append(self._file_label)
+        self._progress_group.add(bar_box)
 
-        stats_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        # Currently scanning row
+        self._current_file_row = Adw.ActionRow()
+        self._current_file_row.set_title(_("Currently scanning"))
+        self._current_file_row.set_subtitle(_("Waiting for scan data..."))
+        self._current_file_row.set_subtitle_lines(1)
+        self._file_spinner = Gtk.Spinner()
+        self._file_spinner.set_spinning(True)
+        self._current_file_row.add_prefix(self._file_spinner)
+        self._current_file_row.set_visible(False)
+        self._progress_group.add(self._current_file_row)
 
-        self._stats_label = Gtk.Label()
-        self._stats_label.add_css_class("caption")
-        self._stats_label.add_css_class("dim-label")
-        self._stats_label.set_xalign(0)
-        self._stats_label.set_hexpand(True)
-        self._stats_label.set_visible(False)
-        stats_box.append(self._stats_label)
+        # Stats row
+        self._stats_row = Adw.ActionRow()
+        self._stats_row.set_title(_("Scanned 0 files"))
+        stats_icon = Gtk.Image.new_from_icon_name(resolve_icon_name("document-open-symbolic"))
+        self._stats_row.add_prefix(stats_icon)
+        self._stats_row.set_visible(False)
+        self._progress_group.add(self._stats_row)
 
-        self._threat_label = Gtk.Label()
-        self._threat_label.add_css_class("caption")
-        self._threat_label.add_css_class("error")
-        self._threat_label.set_xalign(1)
-        self._threat_label.set_visible(False)
-        stats_box.append(self._threat_label)
+        self.append(self._progress_group)
 
-        self.append(stats_box)
+        # --- Threats Detected group ---
+        self._threat_group = Adw.PreferencesGroup()
+        self._threat_group.set_title(_("Threats Detected"))
+        self._threat_group.set_visible(False)
 
-    def start(self) -> None:
-        """Show widget and start pulsing."""
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_max_content_height(200)
+        scrolled.set_propagate_natural_height(True)
+
+        self._live_threat_list = Gtk.ListBox()
+        self._live_threat_list.set_selection_mode(Gtk.SelectionMode.NONE)
+        self._live_threat_list.add_css_class("boxed-list")
+        scrolled.set_child(self._live_threat_list)
+
+        self._threat_group.add(scrolled)
+        self.append(self._threat_group)
+
+    def start(self, show_live_progress: bool = True) -> None:
+        """Show widget and start pulsing.
+
+        Args:
+            show_live_progress: Whether to show detailed file/stats rows.
+        """
         self.set_visible(True)
+        self._live_threat_count = 0
+        self._current_file_row.set_visible(show_live_progress)
+        self._current_file_row.set_subtitle(_("Waiting for scan data..."))
+        self._file_spinner.set_spinning(show_live_progress)
+        self._stats_row.set_visible(show_live_progress)
+        self._stats_row.set_title(_("Scanned 0 files"))
+        self._stats_row.set_subtitle("")
+        self._threat_group.set_visible(False)
+        self._clear_threat_list()
         self._start_pulse()
 
     def stop(self) -> None:
         """Hide widget and stop pulsing."""
         self._stop_pulse()
         self.set_visible(False)
-        self._file_label.set_visible(False)
-        self._stats_label.set_visible(False)
-        self._threat_label.set_visible(False)
-        self._threat_label.remove_css_class("error")
+        self._file_spinner.set_spinning(False)
+        self._current_file_row.set_visible(False)
+        self._stats_row.set_visible(False)
+        self._threat_group.set_visible(False)
+        self._clear_threat_list()
+        self._live_threat_count = 0
 
     def update(
         self,
@@ -97,47 +142,108 @@ class ScanProgressWidget(Gtk.Box):
         current_target: int = 1,
         total_targets: int = 1,
     ) -> None:
-        """Update progress display."""
+        """Update progress display with Adwaita rows."""
         if self._paused:
             return
 
+        # Progress bar
         if progress.percentage is not None:
             self._stop_pulse()
             self._bar.set_fraction(progress.percentage / 100)
-
             pct = int(progress.percentage)
             if multi_target:
                 self._status_label.set_text(
-                    _("Target {current} of {total} — {pct}%").format(
+                    _("Target {current} of {total} \u2014 {pct}%").format(
                         current=current_target, total=total_targets, pct=pct
                     )
                 )
             else:
                 self._status_label.set_text(_("Scanning... {pct}%").format(pct=pct))
 
+        # Current file row
         if progress.current_file:
-            self._file_label.set_text(self._truncate_path(progress.current_file))
-            self._file_label.set_visible(True)
+            self._current_file_row.set_subtitle(self._truncate_path(progress.current_file))
 
+        # Stats row
         total = cumulative_files + progress.files_scanned
-        if progress.files_total:
-            self._stats_label.set_text(
-                _("Scanned {scanned:,} / {total:,} files").format(
-                    scanned=progress.files_scanned, total=progress.files_total
+        if multi_target:
+            if progress.files_total:
+                self._stats_row.set_title(
+                    _("Scanned {scanned} / {total} files").format(
+                        scanned=f"{progress.files_scanned:,}",
+                        total=f"{progress.files_total:,}",
+                    )
+                )
+            else:
+                self._stats_row.set_title(
+                    _("Scanned {scanned} files").format(
+                        scanned=f"{progress.files_scanned:,}",
+                    )
+                )
+            self._stats_row.set_subtitle(
+                _("Target {current} of {total} ({cumulative} total)").format(
+                    current=current_target,
+                    total=total_targets,
+                    cumulative=f"{total:,}",
                 )
             )
+        elif progress.files_total:
+            self._stats_row.set_title(
+                _("Scanned {scanned} / {total} files").format(
+                    scanned=f"{progress.files_scanned:,}",
+                    total=f"{progress.files_total:,}",
+                )
+            )
+            self._stats_row.set_subtitle("")
         else:
-            self._stats_label.set_text(_("Scanned {count:,} files").format(count=total))
-        self._stats_label.set_visible(True)
+            self._stats_row.set_title(
+                _("Scanned {scanned} files").format(
+                    scanned=f"{progress.files_scanned:,}",
+                )
+            )
+            self._stats_row.set_subtitle("")
 
-        if progress.infected_count > 0:
-            self._threat_label.set_text(_("Found {n} threat(s)").format(n=progress.infected_count))
-            self._threat_label.add_css_class("error")
-            self._threat_label.set_visible(True)
+        # Append new threats
+        if progress.infected_count > self._live_threat_count:
+            threats = progress.infected_threats or {}
+            for file_path in progress.infected_files[self._live_threat_count :]:
+                threat_name = threats.get(file_path, _("Unknown threat"))
+                self._append_threat_row(file_path, threat_name)
+            self._live_threat_count = progress.infected_count
 
     def set_status(self, text: str) -> None:
         """Set status label text."""
         self._status_label.set_text(text)
+
+    def _append_threat_row(self, file_path: str, threat_name: str):
+        """Append a threat row to the live threat list."""
+        row = Adw.ActionRow()
+        row.set_title(Path(file_path).name)
+        row.set_subtitle(threat_name)
+        row.set_tooltip_text(file_path)
+
+        icon = Gtk.Image.new_from_icon_name(resolve_icon_name("dialog-warning-symbolic"))
+        icon.add_css_class("warning")
+        row.add_prefix(icon)
+
+        self._live_threat_list.append(row)
+
+        self._threat_group.set_title(
+            ngettext(
+                "Threats Detected ({n})",
+                "Threats Detected ({n})",
+                self._live_threat_count + 1,
+            ).format(n=self._live_threat_count + 1)
+        )
+        self._threat_group.set_visible(True)
+
+    def _clear_threat_list(self):
+        """Remove all rows from the live threat list."""
+        while True:
+            row = self._live_threat_list.get_row_at_index(0)
+            if row is None:
+                break
+            self._live_threat_list.remove(row)
 
     def _start_pulse(self):
         if self._pulse_id:

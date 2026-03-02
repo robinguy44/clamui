@@ -62,12 +62,12 @@ class TestMetainfoVersion:
 
     def test_metainfo_exists(self):
         """Test metainfo.xml file exists."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         assert metainfo.exists(), "metainfo.xml not found"
 
     def test_metainfo_is_valid_xml(self):
         """Test metainfo is valid XML."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
 
         try:
             ET.parse(metainfo)
@@ -76,7 +76,7 @@ class TestMetainfoVersion:
 
     def test_metainfo_has_releases(self):
         """Test metainfo has releases section."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         tree = ET.parse(metainfo)
         root = tree.getroot()
 
@@ -99,7 +99,7 @@ class TestMetainfoVersion:
         pyproject_version = pyproject_match.group(1)
 
         # Get metainfo latest release
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         tree = ET.parse(metainfo)
         root = tree.getroot()
 
@@ -120,7 +120,7 @@ class TestMetainfoVersion:
 
     def test_releases_have_dates(self):
         """Test all releases have date attributes."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         tree = ET.parse(metainfo)
         root = tree.getroot()
 
@@ -144,7 +144,7 @@ class TestAppIdConsistency:
 
     def test_metainfo_app_id(self):
         """Test metainfo has correct app ID."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         tree = ET.parse(metainfo)
         root = tree.getroot()
 
@@ -154,7 +154,7 @@ class TestAppIdConsistency:
 
     def test_metainfo_launchable_matches_desktop(self):
         """Test metainfo launchable matches desktop file name."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         tree = ET.parse(metainfo)
         root = tree.getroot()
 
@@ -168,7 +168,7 @@ class TestAppIdConsistency:
 
     def test_metainfo_provides_binary(self):
         """Test metainfo provides correct binary name."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         tree = ET.parse(metainfo)
         root = tree.getroot()
 
@@ -182,7 +182,7 @@ class TestAppIdConsistency:
 
     def test_desktop_file_name_matches_app_id(self):
         """Test desktop file name matches app ID pattern."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
 
         # File name should be app_id.desktop
         expected_name = "io.github.linx_systems.ClamUI.desktop"
@@ -201,7 +201,7 @@ class TestProjectNameConsistency:
 
     def test_metainfo_name(self):
         """Test metainfo has correct display name."""
-        metainfo = PROJECT_ROOT / "io.github.linx_systems.ClamUI.metainfo.xml"
+        metainfo = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.metainfo.xml"
         tree = ET.parse(metainfo)
         root = tree.getroot()
 
@@ -211,7 +211,7 @@ class TestProjectNameConsistency:
 
     def test_desktop_name(self):
         """Test desktop file has correct Name field."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         content = desktop.read_text()
 
         assert "Name=ClamUI" in content, "Desktop Name should be 'ClamUI'"

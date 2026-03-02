@@ -57,6 +57,9 @@ class ScanProgress:
     bytes_scanned: int = 0
     """Number of bytes processed (if available from scanner output)."""
 
+    infected_threats: dict[str, str] | None = None
+    """Map of file path -> threat name for infected files found so far."""
+
     @property
     def percentage(self) -> float | None:
         """Calculate scan completion percentage.

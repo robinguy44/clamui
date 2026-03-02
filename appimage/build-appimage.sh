@@ -906,7 +906,7 @@ copy_desktop_files() {
 	echo
 
 	# Desktop file
-	DESKTOP_FILE="$PROJECT_ROOT/$APP_ID.desktop"
+	DESKTOP_FILE="$PROJECT_ROOT/data/$APP_ID.desktop"
 	if [ -f "$DESKTOP_FILE" ]; then
 		cp "$DESKTOP_FILE" "$APPDIR/usr/share/applications/"
 		# Also copy to AppDir root (required by linuxdeploy)
@@ -942,7 +942,7 @@ copy_desktop_files() {
 	fi
 
 	# AppStream metainfo
-	METAINFO="$PROJECT_ROOT/$APP_ID.metainfo.xml"
+	METAINFO="$PROJECT_ROOT/data/$APP_ID.metainfo.xml"
 	if [ -f "$METAINFO" ]; then
 		cp "$METAINFO" "$APPDIR/usr/share/metainfo/"
 		log_success "AppStream metainfo copied"

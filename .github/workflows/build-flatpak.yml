@@ -32,7 +32,7 @@ jobs:
       - name: Build Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          manifest-path: io.github.linx_systems.ClamUI.local.yml
+          manifest-path: flathub/io.github.linx_systems.ClamUI.local.yml
           bundle: clamui-${{ matrix.arch }}.flatpak
           arch: ${{ matrix.arch }}
           cache-key: flatpak-builder-${{ matrix.runner }}-${{ matrix.arch }}

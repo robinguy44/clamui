@@ -129,7 +129,7 @@ uv run clamui
 
 > **More Installation Options:** See the [Installation Guide](./docs/INSTALL.md) for .deb packages and system-wide installation
 
-> **New users:** Start with the [Getting Started Guide](./docs/GETTING_STARTED.md) for a step-by-step introduction
+> **New users:** Start with the [Getting Started Guide](./docs/user-guide/getting-started.md) for a step-by-step introduction
 
 ---
 
@@ -243,7 +243,7 @@ Comprehensive guides to help you get the most out of ClamUI:
 <th width="70%">Description</th>
 </tr>
 <tr>
-<td><a href="./docs/GETTING_STARTED.md"><strong>Getting Started</strong></a></td>
+<td><a href="./docs/user-guide/getting-started.md"><strong>Getting Started</strong></a></td>
 <td><em>New!</em> Quick start guide for installation, first use, and next steps</td>
 </tr>
 <tr>

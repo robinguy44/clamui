@@ -26,7 +26,7 @@ class TestDesktopFileSyntax:
 
     def test_desktop_file_exists(self):
         """Test that main desktop file exists."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         assert desktop.exists(), "Main desktop file not found"
 
     def test_flathub_desktop_file_exists(self):
@@ -36,7 +36,7 @@ class TestDesktopFileSyntax:
 
     def test_desktop_file_has_required_fields(self):
         """Test desktop file has all required fields."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         content = desktop.read_text()
 
         required_fields = [
@@ -52,14 +52,14 @@ class TestDesktopFileSyntax:
 
     def test_desktop_type_is_application(self):
         """Test desktop file type is Application."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         content = desktop.read_text()
 
         assert "Type=Application" in content, "Type should be Application"
 
     def test_desktop_file_has_categories(self):
         """Test desktop file has Categories field."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         content = desktop.read_text()
 
         assert "Categories=" in content, "Missing Categories field"
@@ -74,7 +74,7 @@ class TestDesktopFileSyntax:
     )
     def test_desktop_file_validates(self):
         """Test desktop file passes desktop-file-validate."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
 
         result = subprocess.run(
             ["desktop-file-validate", str(desktop)],
@@ -90,7 +90,7 @@ class TestExecPath:
 
     def test_exec_uses_clamui_binary(self):
         """Test Exec line uses clamui binary."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         content = desktop.read_text()
 
         # Should be 'clamui' not full path or python -m
@@ -98,7 +98,7 @@ class TestExecPath:
 
     def test_exec_handles_urls(self):
         """Test Exec line handles file URLs with %U."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         content = desktop.read_text()
 
         # Check for %U or %F for file handling
@@ -129,7 +129,7 @@ class TestIconFiles:
 
     def test_desktop_icon_reference_valid(self):
         """Test desktop file Icon field matches actual icon name."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         content = desktop.read_text()
 
         # Extract icon name from desktop file
@@ -154,8 +154,8 @@ class TestDesktopFileConsistency:
     """Tests for consistency between desktop files."""
 
     def test_root_and_flathub_desktop_match(self):
-        """Test root and flathub desktop files are consistent."""
-        root_desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI.desktop"
+        """Test data/ and flathub desktop files are consistent."""
+        root_desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.desktop"
         flathub_desktop = PROJECT_ROOT / "flathub" / "io.github.linx_systems.ClamUI.desktop"
 
         root_content = root_desktop.read_text()
@@ -183,12 +183,12 @@ class TestVirusTotalDesktop:
 
     def test_virustotal_desktop_exists(self):
         """Test VirusTotal action desktop file exists."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI-virustotal.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI-virustotal.desktop"
         assert desktop.exists(), "VirusTotal desktop file not found"
 
     def test_virustotal_desktop_has_mimetype(self):
         """Test VirusTotal desktop references file handling."""
-        desktop = PROJECT_ROOT / "io.github.linx_systems.ClamUI-virustotal.desktop"
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI-virustotal.desktop"
         content = desktop.read_text()
 
         # Should have Type and Exec at minimum

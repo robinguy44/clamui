@@ -8,6 +8,7 @@ import fnmatch
 import logging
 import os
 import subprocess
+import tempfile
 import threading
 import time
 from collections.abc import Callable
@@ -140,11 +141,18 @@ class DaemonScanner:
             return result
 
         # Count files/directories before scanning (clamdscan doesn't report these)
-        # Always count if progress_callback is provided, or if count_targets is True
+        # When progress_callback is provided, also collect file paths for --file-list
+        # mode (clamdscan only outputs per-file results with --file-list, not directories)
         should_count = count_targets or progress_callback is not None
-        file_count, dir_count = (
-            self._count_scan_targets(path, profile_exclusions) if should_count else (0, 0)
-        )
+        file_list_path: str | None = None
+        file_paths: list[str] | None = None
+
+        if should_count:
+            file_count, dir_count, file_paths = self._count_scan_targets(
+                path, profile_exclusions, collect_paths=progress_callback is not None
+            )
+        else:
+            file_count, dir_count = 0, 0
 
         # Check if cancelled during counting phase
         if self._cancel_event.is_set():
@@ -152,12 +160,28 @@ class DaemonScanner:
             self._save_scan_log(result, time.monotonic() - start_time)
             return result
 
-        # Build clamdscan command (use verbose mode if progress callback provided)
-        cmd = self._build_command(
-            path, recursive, profile_exclusions, verbose=progress_callback is not None
-        )
-
         try:
+            # Write file list to temp file for progress mode
+            # clamdscan only emits per-file output with --file-list, not when
+            # scanning a directory (which produces a single summary line)
+            if progress_callback is not None and file_paths:
+                fd, file_list_path = tempfile.mkstemp(prefix="clamui_filelist_", suffix=".txt")
+                try:
+                    with os.fdopen(fd, "w") as f:
+                        f.write("\n".join(file_paths))
+                except Exception:
+                    os.close(fd)
+                    raise
+
+            # Build clamdscan command (use verbose mode if progress callback provided)
+            cmd = self._build_command(
+                path,
+                recursive,
+                profile_exclusions,
+                verbose=progress_callback is not None,
+                file_list_path=file_list_path,
+            )
+
             with self._process_lock:
                 self._current_process = subprocess.Popen(
                     cmd,
@@ -237,6 +261,13 @@ class DaemonScanner:
             result = create_error_result(path, f"Scan failed: {e}", str(e))
             self._save_scan_log(result, time.monotonic() - start_time)
             return result
+        finally:
+            # Clean up temp file list
+            if file_list_path is not None:
+                try:
+                    os.unlink(file_list_path)
+                except OSError:
+                    pass
 
     def scan_async(
         self,
@@ -298,34 +329,49 @@ class DaemonScanner:
         recursive: bool,
         profile_exclusions: dict | None = None,
         verbose: bool = False,
+        file_list_path: str | None = None,
     ) -> list[str]:
         """
         Build the clamdscan command arguments.
 
         Uses --multiscan for parallel scanning and --fdpass for
-        file descriptor passing (faster than streaming).
+        file descriptor passing when not in verbose mode. In verbose mode,
+        uses --file-list to feed individual files so clamdscan emits per-file
+        results on stdout (scanning a directory only produces one summary line).
+        Also prepends stdbuf -oL to force line-buffered stdout.
 
         Args:
-            path: Path to scan
+            path: Path to scan (used as target when file_list_path is None)
             recursive: Whether to scan recursively (clamdscan is always recursive)
             profile_exclusions: Optional exclusions from a scan profile.
             verbose: Whether to enable verbose mode for progress tracking.
                     When True, clamdscan outputs each file as it's scanned.
+            file_list_path: Path to temp file containing one file path per line.
+                    Used in verbose mode for per-file progress output.
 
         Returns:
             List of command arguments (wrapped with flatpak-spawn if in Flatpak)
         """
         # Use binary name only - don't use which_host_command() because it would
         # return the bundled /app/bin/clamdscan which can't talk to the host daemon
-        cmd = ["clamdscan"]
+        #
+        # In verbose mode, prepend stdbuf -oL to force line-buffered stdout.
+        # Without this, clamdscan's C runtime uses full buffering (~4KB blocks)
+        # when stdout is a pipe, causing all output to arrive in a single burst
+        # at process exit instead of line-by-line during the scan.
+        if verbose:
+            cmd = ["stdbuf", "-oL", "clamdscan"]
+        else:
+            cmd = ["clamdscan"]
 
-        # Use multiscan and fdpass for optimal performance
-        # force_host=True ensures clamdscan runs on the HOST where clamd runs,
-        # not the bundled version inside the Flatpak sandbox
-        cmd.append("--multiscan")
-        cmd.append("--fdpass")
+        # --multiscan and --fdpass are fast but suppress per-file stdout output:
+        # they cause clamd to process files server-side in parallel, returning
+        # results in bulk at the end. In verbose mode (progress tracking), we
+        # need per-file output so we use the sequential SCAN protocol instead.
+        if not verbose:
+            cmd.append("--multiscan")
+            cmd.append("--fdpass")
 
-        # Verbose mode for progress tracking (outputs each file being scanned)
         if verbose:
             cmd.append("-v")
         else:
@@ -336,7 +382,14 @@ class DaemonScanner:
         # (it silently ignores them with a warning). Exclusion filtering is
         # performed post-scan in _filter_excluded_threats() instead.
 
-        cmd.append(path)
+        # In verbose mode with file list, use --file-list for per-file output.
+        # clamdscan only emits per-file ": OK"/": FOUND" lines when given
+        # individual files (via --file-list), not when scanning a directory.
+        if file_list_path is not None:
+            cmd.extend(["--file-list", file_list_path])
+        else:
+            cmd.append(path)
+
         return wrap_host_command(cmd, force_host=True)
 
     def _scan_with_progress(
@@ -371,10 +424,13 @@ class DaemonScanner:
         files_scanned = 0
         infected_count = 0
         infected_files: list[str] = []
+        infected_threats: dict[str, str] = {}
         current_file = ""
+        processed_paths: set[str] = set()
 
         def on_line(line: str) -> None:
-            nonlocal files_scanned, infected_count, infected_files, current_file
+            nonlocal files_scanned, infected_count, infected_files
+            nonlocal infected_threats, current_file, processed_paths
 
             # Parse verbose clamdscan output
             # Format for scanning: "/path/to/file: OK" or "/path/to/file: ThreatName FOUND"
@@ -383,6 +439,9 @@ class DaemonScanner:
             if ": OK" in line:
                 # Clean file - extract path
                 current_file = line.rsplit(": OK", 1)[0].strip()
+                if current_file in processed_paths:
+                    return
+                processed_paths.add(current_file)
                 files_scanned += 1
 
                 # Create and send progress update
@@ -392,6 +451,7 @@ class DaemonScanner:
                     files_total=files_total,
                     infected_count=infected_count,
                     infected_files=infected_files.copy(),
+                    infected_threats=infected_threats.copy(),
                 )
                 progress_callback(progress)
 
@@ -401,9 +461,22 @@ class DaemonScanner:
                 parts = line.rsplit(":", 1)
                 if len(parts) == 2:
                     file_path = parts[0].strip()
-                    files_scanned += 1
-                    infected_count += 1
-                    infected_files.append(file_path)
+                    threat_name = parts[1].strip()
+                    # Remove trailing " FOUND" from threat name
+                    if threat_name.endswith(" FOUND"):
+                        threat_name = threat_name[:-6].strip()
+                    is_new_file = file_path not in processed_paths
+                    if is_new_file:
+                        processed_paths.add(file_path)
+                        files_scanned += 1
+                    is_new_infection = file_path not in infected_threats
+                    previous_threat = infected_threats.get(file_path)
+                    if is_new_infection:
+                        infected_count += 1
+                        infected_files.append(file_path)
+                    infected_threats[file_path] = threat_name
+                    if not is_new_file and not is_new_infection and previous_threat == threat_name:
+                        return
 
                     # Send updated progress with new infection
                     progress = ScanProgress(
@@ -412,8 +485,35 @@ class DaemonScanner:
                         files_total=files_total,
                         infected_count=infected_count,
                         infected_files=infected_files.copy(),
+                        infected_threats=infected_threats.copy(),
                     )
                     progress_callback(progress)
+
+            elif line.endswith("ERROR"):
+                # Access/path failures still represent processed file-list entries.
+                skip_markers = (
+                    ": Failed to open file",
+                    ": File path check failure:",
+                )
+                for marker in skip_markers:
+                    if marker in line:
+                        file_path = line.split(marker, 1)[0].strip()
+                        if not file_path or file_path in processed_paths:
+                            return
+                        processed_paths.add(file_path)
+                        current_file = file_path
+                        files_scanned += 1
+
+                        progress = ScanProgress(
+                            current_file=file_path,
+                            files_scanned=files_scanned,
+                            files_total=files_total,
+                            infected_count=infected_count,
+                            infected_files=infected_files.copy(),
+                            infected_threats=infected_threats.copy(),
+                        )
+                        progress_callback(progress)
+                        break
 
         stdout, stderr, was_cancelled = stream_process_output(
             process, self._cancel_event.is_set, on_line
@@ -421,13 +521,20 @@ class DaemonScanner:
         return stdout, stderr, was_cancelled, files_scanned, infected_count, infected_files
 
     def _count_scan_targets(
-        self, path: str, profile_exclusions: dict | None = None
-    ) -> tuple[int, int]:
+        self,
+        path: str,
+        profile_exclusions: dict | None = None,
+        collect_paths: bool = False,
+    ) -> tuple[int, int, list[str] | None]:
         """
         Count files and directories that will be scanned.
 
         Since clamdscan doesn't report file/directory counts in its output,
         we count them ourselves before scanning.
+
+        When collect_paths=True, also collects all file paths during the walk.
+        This is used for --file-list mode which gives per-file progress output
+        from clamdscan (scanning a directory only produces one result line).
 
         Performance Note for Large Directories:
         - Uses os.scandir() (via os.walk) which is 2-3x faster than os.listdir()
@@ -439,19 +546,22 @@ class DaemonScanner:
         Args:
             path: Path to scan
             profile_exclusions: Optional exclusions from a scan profile.
+            collect_paths: If True, collect and return all file paths.
 
         Returns:
-            Tuple of (file_count, dir_count)
+            Tuple of (file_count, dir_count, file_paths).
+            file_paths is None when collect_paths=False.
         """
         scan_path = Path(path)
 
         # Single file scan
         if scan_path.is_file():
-            return (1, 0)
+            paths = [str(scan_path)] if collect_paths else None
+            return (1, 0, paths)
 
         # Not a valid path
         if not scan_path.is_dir():
-            return (0, 0)
+            return (0, 0, None)
 
         # Collect exclusion patterns
         exclude_patterns: list[str] = []
@@ -487,13 +597,14 @@ class DaemonScanner:
 
         file_count = 0
         dir_count = 0
+        file_paths: list[str] = [] if collect_paths else []
 
         try:
             for root, dirs, files in os.walk(path):
                 # Check for cancellation during counting
                 if self._cancel_event.is_set():
                     logger.info("File counting cancelled by user")
-                    return (0, 0)
+                    return (0, 0, None)
 
                 # Filter out excluded directories (modifies dirs in-place)
                 dirs[:] = [
@@ -507,9 +618,11 @@ class DaemonScanner:
 
                 # Count files that aren't excluded
                 for f in files:
-                    file_path = os.path.join(root, f)
-                    if not self._is_excluded(file_path, f, exclude_patterns, is_dir=False):
+                    fp = os.path.join(root, f)
+                    if not self._is_excluded(fp, f, exclude_patterns, is_dir=False):
                         file_count += 1
+                        if collect_paths:
+                            file_paths.append(fp)
         except (PermissionError, OSError):
             # If we can't access the directory, return 0 counts
             pass
@@ -518,7 +631,7 @@ class DaemonScanner:
         if dir_count > 0 or file_count > 0:
             dir_count += 1
 
-        return (file_count, dir_count)
+        return (file_count, dir_count, file_paths if collect_paths else None)
 
     def _is_excluded(self, full_path: str, name: str, patterns: list[str], is_dir: bool) -> bool:
         """
@@ -575,7 +688,8 @@ class DaemonScanner:
         """
         infected_files = []
         threat_details = []
-        skipped_files = []
+        skipped_files: list[str] = []
+        seen_skipped: set[str] = set()
         scanned_files = file_count
         scanned_dirs = dir_count
         infected_count = 0
@@ -608,15 +722,22 @@ class DaemonScanner:
                     threat_details.append(threat_detail)
                     infected_count += 1
 
-            # Pattern: "/path: Failed to open file ERROR"
-            # Extracts path before the error message for tracking skipped files
-            # Look for "Failed to open file" warnings (permission denied)
-            # Format: "/path/to/file: Failed to open file ERROR"
-            elif ": Failed to open file" in line:
-                # Extract the file path (everything before ": Failed to open file")
-                file_path = line.split(": Failed to open file")[0].strip()
-                if file_path:
-                    skipped_files.append(file_path)
+            # Path access warnings from clamdscan (permission denied, etc.).
+            # Different ClamAV versions may emit different wording:
+            # - "/path: Failed to open file ERROR"
+            # - "/path: File path check failure: Permission denied. ERROR"
+            elif line.endswith("ERROR"):
+                skip_markers = (
+                    ": Failed to open file",
+                    ": File path check failure:",
+                )
+                for marker in skip_markers:
+                    if marker in line:
+                        file_path = line.split(marker, 1)[0].strip()
+                        if file_path and file_path not in seen_skipped:
+                            seen_skipped.add(file_path)
+                            skipped_files.append(file_path)
+                        break
 
         # Determine overall status based on exit code
         warning_message = None
@@ -635,6 +756,17 @@ class DaemonScanner:
         else:
             status = ScanStatus.ERROR
 
+        # Prefer stderr for hard errors, but fall back to a concise stdout line when stderr is empty.
+        error_message: str | None = None
+        if status == ScanStatus.ERROR:
+            error_message = stderr.strip() or None
+            if error_message is None:
+                for out_line in stdout.splitlines():
+                    candidate = out_line.strip()
+                    if candidate and "SCAN SUMMARY" not in candidate:
+                        error_message = candidate
+                        break
+
         return ScanResult(
             status=status,
             path=path,
@@ -645,7 +777,7 @@ class DaemonScanner:
             scanned_files=scanned_files,
             scanned_dirs=scanned_dirs,
             infected_count=infected_count,
-            error_message=stderr if status == ScanStatus.ERROR else None,
+            error_message=error_message,
             threat_details=threat_details,
             skipped_files=skipped_files,
             skipped_count=len(skipped_files),
