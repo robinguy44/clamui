@@ -1903,6 +1903,27 @@ class TestBackendIndicator:
         label = mock_scan_view._backend_label.set_label.call_args[0][0]
         assert "clamscan" in label.lower()
 
+    def test_update_backend_label_daemon_sets_eicar_cleanup_note(self, mock_scan_view):
+        """Test daemon backend adds EICAR cleanup warning to tooltip."""
+        mock_scan_view._scanner.get_active_backend.return_value = "daemon"
+
+        mock_scan_view._update_backend_label()
+
+        tooltip = mock_scan_view._eicar_button.set_tooltip_text.call_args[0][0]
+        assert "eicar test file" in tooltip.lower()
+        assert "cleaned up" in tooltip.lower()
+        assert "clamd" in tooltip.lower()
+
+    def test_update_backend_label_clamscan_sets_base_eicar_tooltip(self, mock_scan_view):
+        """Test clamscan backend keeps the base EICAR tooltip text."""
+        mock_scan_view._scanner.get_active_backend.return_value = "clamscan"
+
+        mock_scan_view._update_backend_label()
+
+        tooltip = mock_scan_view._eicar_button.set_tooltip_text.call_args[0][0]
+        assert "eicar test file" in tooltip.lower()
+        assert "cleaned up" not in tooltip.lower()
+
 
 class TestScanStateCallbacks:
     """Tests for scan state change callback functionality."""

@@ -1062,9 +1062,7 @@ class ScanView(Gtk.Box):
         # EICAR Test button
         self._eicar_button = Gtk.Button()
         self._eicar_button.set_label(_("EICAR Test"))
-        self._eicar_button.set_tooltip_text(
-            _("Run a scan with EICAR test file to verify antivirus detection")
-        )
+        self._update_eicar_tooltip()
         self._eicar_button.set_size_request(120, -1)
         self._eicar_button.connect("clicked", self._on_eicar_test_clicked)
         button_box.append(self._eicar_button)
@@ -1596,6 +1594,9 @@ class ScanView(Gtk.Box):
         Args:
             button: The Gtk.Button that was clicked
         """
+        # Refresh backend-dependent UI text before running the test.
+        self._update_backend_label()
+
         # Check if virus database is available before creating test file
         if not self._check_database_and_prompt():
             return
@@ -2078,6 +2079,23 @@ class ScanView(Gtk.Box):
         self._update_backend_label()
         self.append(self._backend_label)
 
+    def _get_eicar_tooltip_text(self, backend: str) -> str:
+        """Get EICAR button tooltip text for the active backend."""
+        base_tooltip = _("Run a scan with EICAR test file to verify antivirus detection")
+        if backend == "daemon":
+            daemon_note = _(
+                "Note: With clamd active, the EICAR test file may be cleaned up before it can be scanned."
+            )
+            return f"{base_tooltip}\n\n{daemon_note}"
+        return base_tooltip
+
+    def _update_eicar_tooltip(self, backend: str | None = None) -> None:
+        """Update EICAR tooltip text for current backend."""
+        if not hasattr(self, "_eicar_button"):
+            return
+        backend_name = backend if backend is not None else self._scanner.get_active_backend()
+        self._eicar_button.set_tooltip_text(self._get_eicar_tooltip_text(backend_name))
+
     def _update_backend_label(self):
         """Update the backend label with the current backend name."""
         backend = self._scanner.get_active_backend()
@@ -2087,6 +2105,7 @@ class ScanView(Gtk.Box):
         }
         backend_display = backend_names.get(backend, backend)
         self._backend_label.set_label(_("Backend: {name}").format(name=backend_display))
+        self._update_eicar_tooltip(backend)
 
     def _create_status_bar(self):
         """Create the status banner."""

@@ -104,6 +104,7 @@ Should include:
 
 ```
 talk=org.freedesktop.Flatpak
+talk=org.a11y.Bus
 ```
 
 #### Troubleshooting Table
@@ -1603,4 +1604,3 @@ If you're still experiencing issues after trying these solutions:
 4. Only then dive into system-level debugging
 
 ---
-
