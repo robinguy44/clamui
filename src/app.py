@@ -313,6 +313,8 @@ class ClamUIApp(Adw.Application):
         """Initialize the application during startup."""
         Adw.Application.do_startup(self)
 
+        self._configure_icon_theme()
+
         self._lifecycle_manager.ensure_clamav_database_dir()
         self._lifecycle_manager.setup_device_monitor()
 
@@ -322,6 +324,20 @@ class ClamUIApp(Adw.Application):
         self._setup_actions()
 
         self._preinit_heavy_resources()
+
+    def _configure_icon_theme(self) -> None:
+        """Force a stable icon theme so icons render consistently across runtimes."""
+        settings = Gtk.Settings.get_default()
+        if settings is None:
+            logger.debug("GTK settings unavailable; keeping current icon theme")
+            return
+
+        current_theme = settings.get_property("gtk-icon-theme-name")
+        if current_theme == "Adwaita":
+            return
+
+        settings.set_property("gtk-icon-theme-name", "Adwaita")
+        logger.info("Icon theme set to Adwaita (was %s)", current_theme)
 
     def _ensure_clamav_database_dir(self) -> None:
         """Ensure the ClamAV database directory exists."""

@@ -299,6 +299,31 @@ class TestClamUIAppLifecycle:
         assert hasattr(app, "_on_about")
         assert callable(app._on_about)
 
+    def test_configure_icon_theme_sets_adwaita_when_theme_differs(self, app):
+        """Test that icon theme is forced to Adwaita when needed."""
+        settings = mock.MagicMock()
+        settings.get_property.return_value = "Mint-Y-Dark"
+
+        with mock.patch("src.app.Gtk.Settings.get_default", return_value=settings):
+            app._configure_icon_theme()
+
+        settings.set_property.assert_called_once_with("gtk-icon-theme-name", "Adwaita")
+
+    def test_configure_icon_theme_keeps_adwaita_when_already_set(self, app):
+        """Test that icon theme is not changed when already Adwaita."""
+        settings = mock.MagicMock()
+        settings.get_property.return_value = "Adwaita"
+
+        with mock.patch("src.app.Gtk.Settings.get_default", return_value=settings):
+            app._configure_icon_theme()
+
+        settings.set_property.assert_not_called()
+
+    def test_configure_icon_theme_noop_when_settings_unavailable(self, app):
+        """Test that icon theme setup is skipped when GTK settings are unavailable."""
+        with mock.patch("src.app.Gtk.Settings.get_default", return_value=None):
+            app._configure_icon_theme()
+
 
 class TestClamUIAppQuickScanProfile:
     """Tests for Quick Scan profile retrieval and application."""
