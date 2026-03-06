@@ -553,6 +553,8 @@ class UpdateView(Gtk.Box):
         """
         # Check if this was a service-triggered update
         is_service_update = result.update_method == UpdateMethod.SERVICE_SIGNAL
+        has_rate_limits = bool(result.rate_limited_databases)
+        has_partial_progress = bool(result.updated_databases or result.up_to_date_databases)
 
         # Update status banner based on result
         if result.status == UpdateStatus.SUCCESS:
@@ -575,7 +577,10 @@ class UpdateView(Gtk.Box):
             set_status_class(self._status_banner, StatusLevel.WARNING)
         else:  # ERROR
             self._status_banner.set_title(result.error_message or _("Update error occurred"))
-            set_status_class(self._status_banner, StatusLevel.ERROR)
+            if has_rate_limits:
+                set_status_class(self._status_banner, StatusLevel.WARNING)
+            else:
+                set_status_class(self._status_banner, StatusLevel.ERROR)
 
         self._status_banner.set_revealed(True)
 
@@ -592,6 +597,10 @@ class UpdateView(Gtk.Box):
             lines.append(_("UPDATE COMPLETE - ALREADY UP TO DATE"))
         elif result.status == UpdateStatus.CANCELLED:
             lines.append(_("UPDATE CANCELLED"))
+        elif has_rate_limits and has_partial_progress:
+            lines.append(_("UPDATE PARTIALLY COMPLETE"))
+        elif has_rate_limits:
+            lines.append(_("UPDATE RATE LIMITED"))
         else:
             lines.append(_("UPDATE ERROR"))
 
@@ -604,6 +613,33 @@ class UpdateView(Gtk.Box):
         lines.append(_("  Method: {method}").format(method=result.update_method.value))
         if result.databases_updated > 0:
             lines.append(_("  Databases updated: {count}").format(count=result.databases_updated))
+        if result.updated_databases:
+            lines.append(
+                _("  Updated databases: {databases}").format(
+                    databases=", ".join(result.updated_databases)
+                )
+            )
+        if result.up_to_date_databases:
+            lines.append(
+                _("  Already current: {databases}").format(
+                    databases=", ".join(result.up_to_date_databases)
+                )
+            )
+        if result.rate_limited_databases:
+            rate_limited_details = []
+            for database, cooldown_until in result.rate_limited_databases.items():
+                if cooldown_until:
+                    rate_limited_details.append(
+                        _("{database} until {cooldown}").format(
+                            database=database,
+                            cooldown=cooldown_until,
+                        )
+                    )
+                else:
+                    rate_limited_details.append(database)
+            lines.append(
+                _("  Rate limited: {databases}").format(databases=", ".join(rate_limited_details))
+            )
         lines.append("")
 
         # Service-specific message

@@ -14,12 +14,13 @@ Usage:
 import argparse
 import sys
 
-from ..core.i18n import _
+from ..core.i18n import N_, _
 
 # Command descriptions and examples, kept in one place for maintainability.
+# Summaries use N_() for deferred translation; translated at display time with _().
 _COMMANDS: dict[str, dict[str, str | list[str]]] = {
     "scan": {
-        "summary": "Scan files or directories for threats",
+        "summary": N_("Scan files or directories for threats"),
         "examples": [
             "clamui scan /home/user/Downloads",
             "clamui scan /tmp --quarantine --json",
@@ -28,7 +29,7 @@ _COMMANDS: dict[str, dict[str, str | list[str]]] = {
         ],
     },
     "quarantine": {
-        "summary": "Manage quarantined files",
+        "summary": N_("Manage quarantined files"),
         "examples": [
             "clamui quarantine list",
             "clamui quarantine list --json",
@@ -37,7 +38,7 @@ _COMMANDS: dict[str, dict[str, str | list[str]]] = {
         ],
     },
     "profile": {
-        "summary": "Manage scan profiles",
+        "summary": N_("Manage scan profiles"),
         "examples": [
             "clamui profile list",
             'clamui profile show "Full Scan"',
@@ -46,14 +47,14 @@ _COMMANDS: dict[str, dict[str, str | list[str]]] = {
         ],
     },
     "status": {
-        "summary": "Show ClamAV and ClamUI status",
+        "summary": N_("Show ClamAV and ClamUI status"),
         "examples": [
             "clamui status",
             "clamui status --json",
         ],
     },
     "history": {
-        "summary": "View scan history",
+        "summary": N_("View scan history"),
         "examples": [
             "clamui history",
             "clamui history --limit 50",
@@ -61,7 +62,7 @@ _COMMANDS: dict[str, dict[str, str | list[str]]] = {
         ],
     },
     "help": {
-        "summary": "Show this help message",
+        "summary": N_("Show this help message"),
         "examples": [
             "clamui help",
             "clamui help scan",
@@ -97,7 +98,8 @@ def _print_overview() -> None:
     # Determine column width from longest command name
     width = max(len(name) for name in _COMMANDS) + 2
     for name, info in _COMMANDS.items():
-        print(f"  {name:<{width}} {info['summary']}")
+        summary = str(info["summary"])
+        print(f"  {name:<{width}} {_(summary)}")
 
     print(_("\nGlobal options:"))
     print(_("  --json                   Machine-readable JSON output"))
@@ -126,7 +128,8 @@ def _print_command_help(name: str) -> int:
         _print_overview()
         return 1
 
-    print(_("clamui {name} — {summary}\n").format(name=name, summary=info["summary"]))
+    summary = str(info["summary"])
+    print(_("clamui {name} — {summary}\n").format(name=name, summary=_(summary)))
     print(_("Examples:"))
     for example in info.get("examples", []):
         print(f"  $ {example}")

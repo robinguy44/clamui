@@ -415,6 +415,30 @@ main.cvd database is up-to-date (version: 62, sigs: 6500000, f-level: 90, builde
         assert result.status == UpdateStatus.SUCCESS
         assert result.databases_updated == 1
 
+    def test_parse_partial_progress_with_database_specific_rate_limits(self, updater_module):
+        """Test parsing preserves per-database rate limit details."""
+        FreshclamUpdater = updater_module["FreshclamUpdater"]
+        UpdateStatus = updater_module["UpdateStatus"]
+        stdout = """
+daily.cvd updated (version: 27150, sigs: 2050000, f-level: 90, builder: virusdb)
+main.cvd database is up-to-date (version: 62, sigs: 6500000, f-level: 90, builder: virusdb)
+bytecode.cvd database available for download (remote version: 333, local version: 332)
+WARNING: FreshClam received error code 429 from the ClamAV CDN.
+WARNING: You are on cool-down until after: 2026-03-06 10:15:00
+WARNING: Can't download bytecode.cvd from https://database.clamav.net/bytecode.cvd
+WARNING: FreshClam failed to update bytecode.cvd
+"""
+        updater = FreshclamUpdater(log_manager=MagicMock())
+        result = updater._parse_results(stdout, "", 1)
+
+        assert result.status == UpdateStatus.ERROR
+        assert result.databases_updated == 1
+        assert result.updated_databases == ["daily.cvd"]
+        assert result.up_to_date_databases == ["main.cvd"]
+        assert result.rate_limited_databases == {"bytecode.cvd": "2026-03-06 10:15:00"}
+        assert "partially completed" in result.error_message.lower()
+        assert "bytecode.cvd until 2026-03-06 10:15:00" in result.error_message
+
 
 # =============================================================================
 # FreshclamUpdater._extract_error_message() Tests
@@ -520,6 +544,26 @@ class TestFreshclamUpdaterExtractErrorMessage:
         updater = FreshclamUpdater(log_manager=MagicMock())
         msg = updater._extract_error_message("cloudflare blocked", "", 1)
         assert "CDN" in msg or "rate limiting" in msg.lower()
+
+    def test_rate_limit_message_includes_per_database_details(self, updater_module):
+        """Test rate limit message reports the affected databases and cooldowns."""
+        FreshclamUpdater = updater_module["FreshclamUpdater"]
+        updater = FreshclamUpdater(log_manager=MagicMock())
+        stdout = """
+daily.cvd updated (version: 27150, sigs: 2050000, f-level: 90, builder: virusdb)
+bytecode.cvd database is up-to-date (version: 333, sigs: 95000, f-level: 90, builder: virusdb)
+main.cvd database available for download (remote version: 63, local version: 62)
+WARNING: FreshClam received error code 429 from the ClamAV CDN.
+WARNING: You are on cool-down until after: 2026-03-06 10:30:00
+WARNING: Can't download main.cvd from https://database.clamav.net/main.cvd
+WARNING: FreshClam failed to update main.cvd
+"""
+
+        msg = updater._extract_error_message(stdout, "", 1)
+
+        assert "daily.cvd" in msg
+        assert "bytecode.cvd" in msg
+        assert "main.cvd until 2026-03-06 10:30:00" in msg
 
     def test_mirror_unavailable_error_detected(self, updater_module):
         """Test mirror unavailable error is detected."""

@@ -4,13 +4,14 @@ Updater module for ClamUI providing freshclam subprocess execution and async dat
 """
 
 import logging
+import re
 import shutil
 import subprocess
 import tempfile
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
@@ -37,6 +38,17 @@ logger = logging.getLogger(__name__)
 _TERMINATE_GRACE_TIMEOUT = 5  # Time to wait after SIGTERM before SIGKILL
 _KILL_WAIT_TIMEOUT = 2  # Time to wait after SIGKILL
 _UPDATE_COMMUNICATE_TIMEOUT = 600  # 10 minutes for freshclam (network operations)
+_DATABASE_FILE_RE = re.compile(r"\b([A-Za-z0-9_.-]+\.(?:cvd|cld|cud))\b", re.IGNORECASE)
+_COOLDOWN_UNTIL_RE = re.compile(r"cool[- ]down until after:\s*(.+)$", re.IGNORECASE)
+_RATE_LIMIT_PATTERNS = (
+    "rate limit",
+    "rate-limit",
+    "rate limited",
+    "429",
+    "too many requests",
+    "temporarily blocked",
+    "blocked temporarily",
+)
 
 
 def get_pkexec_path() -> str | None:
@@ -86,6 +98,9 @@ class UpdateResult:
     databases_updated: int
     error_message: str | None
     update_method: UpdateMethod = UpdateMethod.MANUAL
+    updated_databases: list[str] = field(default_factory=list)
+    up_to_date_databases: list[str] = field(default_factory=list)
+    rate_limited_databases: dict[str, str | None] = field(default_factory=dict)
 
     @property
     def is_success(self) -> bool:
@@ -96,6 +111,15 @@ class UpdateResult:
     def has_error(self) -> bool:
         """Check if update encountered an error."""
         return self.status == UpdateStatus.ERROR
+
+
+@dataclass
+class _ParsedFreshclamOutput:
+    """Structured freshclam output parsed per database."""
+
+    updated_databases: list[str] = field(default_factory=list)
+    up_to_date_databases: list[str] = field(default_factory=list)
+    rate_limited_databases: dict[str, str | None] = field(default_factory=dict)
 
 
 class FreshclamUpdater:
@@ -775,25 +799,8 @@ class FreshclamUpdater:
         Returns:
             Parsed UpdateResult
         """
-        databases_updated = 0
-
-        # Combine stdout and stderr for parsing (freshclam uses both)
-        output = stdout + stderr
-
-        # Parse output line by line
-        for line in output.splitlines():
-            line = line.strip()
-
-            # Check for database update messages
-            # Format: "daily.cvd updated (version: XXXXX, ..."
-            # or "main.cvd updated (version: XXXXX, ..."
-            if "updated (version:" in line.lower():
-                databases_updated += 1
-
-            # Check if already up to date
-            # Format: "daily.cvd database is up-to-date"
-            if "is up-to-date" in line.lower() or "is up to date" in line.lower():
-                pass
+        parsed_output = self._parse_output_details(stdout, stderr)
+        databases_updated = len(parsed_output.updated_databases)
 
         # Determine status from exit code and parsed info
         if exit_code == 0:
@@ -805,7 +812,12 @@ class FreshclamUpdater:
         else:
             status = UpdateStatus.ERROR
             # Try to extract a meaningful error message
-            error_message = self._extract_error_message(stdout, stderr, exit_code)
+            error_message = self._extract_error_message(
+                stdout,
+                stderr,
+                exit_code,
+                parsed_output=parsed_output,
+            )
 
         return UpdateResult(
             status=status,
@@ -814,9 +826,138 @@ class FreshclamUpdater:
             exit_code=exit_code,
             databases_updated=databases_updated,
             error_message=error_message,
+            updated_databases=parsed_output.updated_databases,
+            up_to_date_databases=parsed_output.up_to_date_databases,
+            rate_limited_databases=parsed_output.rate_limited_databases,
         )
 
-    def _extract_error_message(self, stdout: str, stderr: str, exit_code: int = 1) -> str:
+    @staticmethod
+    def _append_unique(items: list[str], value: str | None) -> None:
+        """Append a database name to a list once while preserving order."""
+        if value and value not in items:
+            items.append(value)
+
+    @staticmethod
+    def _extract_database_name_from_line(line: str) -> str | None:
+        """Extract a ClamAV database filename from a freshclam output line."""
+        match = _DATABASE_FILE_RE.search(line)
+        return match.group(1) if match else None
+
+    def _parse_output_details(self, stdout: str, stderr: str) -> _ParsedFreshclamOutput:
+        """
+        Parse freshclam output and preserve per-database state.
+
+        freshclam may update one database, leave another up to date, and rate-limit
+        a third. We keep that structure so callers can present partial progress
+        instead of flattening everything into a single generic error.
+        """
+        parsed = _ParsedFreshclamOutput()
+        output = "\n".join(part for part in (stdout, stderr) if part)
+
+        current_database_context: str | None = None
+        pending_rate_limit = False
+        pending_cooldown_until: str | None = None
+        pending_rate_limit_database: str | None = None
+
+        for raw_line in output.splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+
+            line_lower = line.lower()
+            database = self._extract_database_name_from_line(line)
+            if database:
+                current_database_context = database
+
+            if "updated (version:" in line_lower and database:
+                self._append_unique(parsed.updated_databases, database)
+                parsed.rate_limited_databases.pop(database, None)
+                if pending_rate_limit_database == database:
+                    pending_rate_limit = False
+                    pending_cooldown_until = None
+                    pending_rate_limit_database = None
+                if current_database_context == database:
+                    current_database_context = None
+                continue
+
+            if ("is up-to-date" in line_lower or "is up to date" in line_lower) and database:
+                self._append_unique(parsed.up_to_date_databases, database)
+                parsed.rate_limited_databases.pop(database, None)
+                if pending_rate_limit_database == database:
+                    pending_rate_limit = False
+                    pending_cooldown_until = None
+                    pending_rate_limit_database = None
+                if current_database_context == database:
+                    current_database_context = None
+                continue
+
+            cooldown_match = _COOLDOWN_UNTIL_RE.search(line)
+            if cooldown_match:
+                pending_rate_limit = True
+                pending_cooldown_until = cooldown_match.group(1).strip()
+                target_database = pending_rate_limit_database or current_database_context
+                if target_database:
+                    pending_rate_limit_database = target_database
+                    parsed.rate_limited_databases[target_database] = pending_cooldown_until
+                continue
+
+            rate_limit_detected = any(pattern in line_lower for pattern in _RATE_LIMIT_PATTERNS)
+            if "cloudfront" in line_lower or "cloudflare" in line_lower:
+                rate_limit_detected = True
+
+            if rate_limit_detected:
+                pending_rate_limit = True
+                target_database = database or current_database_context
+                if target_database:
+                    pending_rate_limit_database = target_database
+                    parsed.rate_limited_databases.setdefault(
+                        target_database,
+                        pending_cooldown_until,
+                    )
+                continue
+
+            download_failed = "can't download" in line_lower or "cannot download" in line_lower
+            update_failed = "failed to update" in line_lower
+            if database and (download_failed or update_failed) and pending_rate_limit:
+                parsed.rate_limited_databases[database] = pending_cooldown_until
+                pending_rate_limit_database = database
+                if update_failed:
+                    pending_rate_limit = False
+                    pending_cooldown_until = None
+                    pending_rate_limit_database = None
+                    if current_database_context == database:
+                        current_database_context = None
+
+        return parsed
+
+    @staticmethod
+    def _format_database_list(databases: list[str]) -> str:
+        """Format database names for human-readable summaries."""
+        return ", ".join(databases)
+
+    @staticmethod
+    def _format_rate_limited_databases(rate_limited_databases: dict[str, str | None]) -> str:
+        """Format per-database rate limit details for summaries."""
+        entries = []
+        for database, cooldown_until in rate_limited_databases.items():
+            if cooldown_until:
+                entries.append(
+                    _("{database} until {cooldown}").format(
+                        database=database,
+                        cooldown=cooldown_until,
+                    )
+                )
+            else:
+                entries.append(database)
+        return ", ".join(entries)
+
+    def _extract_error_message(
+        self,
+        stdout: str,
+        stderr: str,
+        exit_code: int = 1,
+        parsed_output: _ParsedFreshclamOutput | None = None,
+    ) -> str:
         """
         Extract a meaningful error message from freshclam output.
 
@@ -828,6 +969,8 @@ class FreshclamUpdater:
         Returns:
             Extracted error message
         """
+        parsed_output = parsed_output or self._parse_output_details(stdout, stderr)
+
         # Check for common error patterns
         output = stdout + stderr
         output_lower = output.lower()
@@ -840,17 +983,31 @@ class FreshclamUpdater:
         if exit_code == 127 and "pkexec" in output_lower:
             return _("Authorization failed. You are not authorized to update the database.")
 
+        if parsed_output.rate_limited_databases:
+            details = self._format_rate_limited_databases(parsed_output.rate_limited_databases)
+            progress_parts = []
+            if parsed_output.updated_databases:
+                progress_parts.append(
+                    _("Updated: {databases}").format(
+                        databases=self._format_database_list(parsed_output.updated_databases)
+                    )
+                )
+            if parsed_output.up_to_date_databases:
+                progress_parts.append(
+                    _("Already current: {databases}").format(
+                        databases=self._format_database_list(parsed_output.up_to_date_databases)
+                    )
+                )
+
+            if progress_parts:
+                return _(
+                    "Database update partially completed. {progress}. Rate limited: {details}."
+                ).format(progress=". ".join(progress_parts), details=details)
+
+            return _("Update rate limited for: {details}.").format(details=details)
+
         # Rate limiting errors
-        rate_limit_patterns = [
-            "rate limit",
-            "rate-limit",
-            "rate limited",
-            "429",
-            "too many requests",
-            "temporarily blocked",
-            "blocked temporarily",
-        ]
-        if any(pattern in output_lower for pattern in rate_limit_patterns):
+        if any(pattern in output_lower for pattern in _RATE_LIMIT_PATTERNS):
             return _("Update rate limited by mirror. Please wait a few minutes and try again.")
 
         # CDN/Proxy errors (often indicate rate limiting)

@@ -8,6 +8,8 @@ and notification-related UI interactions.
 
 import logging
 
+from .core.i18n import _
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,17 +30,23 @@ class NotificationDispatcher:
 
         if result.status == "completed":
             if result.infected_count > 0:
-                summary = f"Scan Complete: {result.infected_count} threats found"
-                body = f"Scanned {result.files_scanned} files. Action taken on threats."
+                summary = _("Scan Complete: {count} threats found").format(
+                    count=result.infected_count
+                )
+                body = _("Scanned {count} files. Action taken on threats.").format(
+                    count=result.files_scanned
+                )
             else:
-                summary = "Scan Complete: No threats found"
-                body = f"Scanned {result.files_scanned} files. System appears clean."
+                summary = _("Scan Complete: No threats found")
+                body = _("Scanned {count} files. System appears clean.").format(
+                    count=result.files_scanned
+                )
         elif result.status == "cancelled":
-            summary = "Scan Cancelled"
-            body = "The scan was cancelled by the user."
+            summary = _("Scan Cancelled")
+            body = _("The scan was cancelled by the user.")
         elif result.status == "error":
-            summary = "Scan Error"
-            body = result.error_message or "An error occurred during the scan."
+            summary = _("Scan Error")
+            body = result.error_message or _("An error occurred during the scan.")
 
         if summary:
             self._app._notification_manager.show_notification(summary, body)
@@ -48,8 +56,10 @@ class NotificationDispatcher:
         if not self._app.settings_manager.get("enable_notifications", True):
             return
 
-        summary = "Threat Quarantined"
-        body = f"Removed and quarantined: {threat_name}\nLocation: {file_path}"
+        summary = _("Threat Quarantined")
+        body = _("Removed and quarantined: {threat}\nLocation: {path}").format(
+            threat=threat_name, path=file_path
+        )
         self._app._notification_manager.show_notification(summary, body)
 
     def show_scan_started_notification(self, scan_type, target):
@@ -57,8 +67,8 @@ class NotificationDispatcher:
         if not self._app.settings_manager.get("enable_notifications", True):
             return
 
-        summary = f"{scan_type} Scan Started"
-        body = f"Scanning: {target}"
+        summary = _("{scan_type} Scan Started").format(scan_type=scan_type)
+        body = _("Scanning: {target}").format(target=target)
         self._app._notification_manager.show_notification(summary, body)
 
     def show_update_available_notification(self, version):
@@ -66,8 +76,10 @@ class NotificationDispatcher:
         if not self._app.settings_manager.get("enable_notifications", True):
             return
 
-        summary = "Update Available"
-        body = f"ClamAV database update available. Version: {version}"
+        summary = _("Update Available")
+        body = _("ClamAV database update available. Version: {version}").format(
+            version=version
+        )
         self._app._notification_manager.show_notification(summary, body)
 
     def show_virustotal_scan_complete(self, result):
@@ -75,9 +87,11 @@ class NotificationDispatcher:
         if not self._app.settings_manager.get("enable_notifications", True):
             return
 
-        summary = "VirusTotal Analysis Complete"
+        summary = _("VirusTotal Analysis Complete")
         if result.positives > 0:
-            body = f"{result.positives}/{result.total} engines detected threats"
+            body = _("{positives}/{total} engines detected threats").format(
+                positives=result.positives, total=result.total
+            )
         else:
-            body = "No threats detected by VirusTotal"
+            body = _("No threats detected by VirusTotal")
         self._app._notification_manager.show_notification(summary, body)

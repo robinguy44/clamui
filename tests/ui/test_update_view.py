@@ -342,6 +342,46 @@ class TestUpdateViewStatusBanner:
             view._status_banner.set_title.assert_called_once_with("Update cancelled")
             view._status_banner.set_revealed.assert_called_with(True)
 
+    def test_rate_limited_result_shows_partial_summary(self, update_view_module):
+        """Test rate-limited database details are shown as partial progress."""
+        UpdateView = update_view_module.UpdateView
+        UpdateStatus = update_view_module.UpdateStatus
+        UpdateResult = update_view_module.UpdateResult
+
+        with mock.patch.object(UpdateView, "_setup_ui"):
+            view = UpdateView()
+            view._status_banner = mock.MagicMock()
+            view._results_text = mock.MagicMock()
+            mock_buffer = mock.MagicMock()
+            view._results_text.get_buffer.return_value = mock_buffer
+
+            result = UpdateResult(
+                status=UpdateStatus.ERROR,
+                stdout="",
+                stderr="",
+                exit_code=1,
+                databases_updated=1,
+                error_message=(
+                    "Database update partially completed. Updated: daily.cvd. "
+                    "Already current: bytecode.cvd. "
+                    "Rate limited: main.cvd until 2026-03-06 10:30:00."
+                ),
+                updated_databases=["daily.cvd"],
+                up_to_date_databases=["bytecode.cvd"],
+                rate_limited_databases={"main.cvd": "2026-03-06 10:30:00"},
+            )
+
+            view._display_results(result)
+
+            view._status_banner.set_title.assert_called_once_with(result.error_message)
+            view._status_banner.add_css_class.assert_any_call("warning")
+
+            rendered_text = mock_buffer.set_text.call_args[0][0]
+            assert "UPDATE PARTIALLY COMPLETE" in rendered_text
+            assert "Updated databases: daily.cvd" in rendered_text
+            assert "Already current: bytecode.cvd" in rendered_text
+            assert "Rate limited: main.cvd until 2026-03-06 10:30:00" in rendered_text
+
 
 # =============================================================================
 # Freshclam Status Tests
