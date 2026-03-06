@@ -77,9 +77,7 @@ class NotificationDispatcher:
             return
 
         summary = _("Update Available")
-        body = _("ClamAV database update available. Version: {version}").format(
-            version=version
-        )
+        body = _("ClamAV database update available. Version: {version}").format(version=version)
         self._app._notification_manager.show_notification(summary, body)
 
     def show_virustotal_scan_complete(self, result):

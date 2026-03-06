@@ -103,9 +103,7 @@ class AppLifecycleManager:
 
     def _cleanup_scan(self) -> None:
         """Cleanup scan resources."""
-        if self._app._scan_view is not None and hasattr(
-            self._app._scan_view, "_scanner"
-        ):
+        if self._app._scan_view is not None and hasattr(self._app._scan_view, "_scanner"):
             try:
                 self._app._scan_view._scanner.cancel()
             except Exception as e:

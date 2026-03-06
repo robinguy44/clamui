@@ -16,7 +16,11 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 
 from ...core.clamav_config import parse_config
-from ...core.clamav_detection import config_file_exists, resolve_clamd_conf_path, resolve_freshclam_conf_path
+from ...core.clamav_detection import (
+    config_file_exists,
+    resolve_clamd_conf_path,
+    resolve_freshclam_conf_path,
+)
 from ...core.flatpak import (
     ensure_freshclam_config,
     get_freshclam_config_path,

@@ -27,9 +27,24 @@ class ViewCoordinator:
             ("show-scan", "app.show-scan", ["<Control>1"], self._app._on_show_scan),
             ("show-update", "app.show-update", ["<Control>2"], self._app._on_show_update),
             ("show-logs", "app.show-logs", ["<Control>3"], self._app._on_show_logs),
-            ("show-components", "app.show-components", ["<Control>4"], self._app._on_show_components),
-            ("show-quarantine", "app.show-quarantine", ["<Control>5"], self._app._on_show_quarantine),
-            ("show-statistics", "app.show-statistics", ["<Control>6"], self._app._on_show_statistics),
+            (
+                "show-components",
+                "app.show-components",
+                ["<Control>4"],
+                self._app._on_show_components,
+            ),
+            (
+                "show-quarantine",
+                "app.show-quarantine",
+                ["<Control>5"],
+                self._app._on_show_quarantine,
+            ),
+            (
+                "show-statistics",
+                "app.show-statistics",
+                ["<Control>6"],
+                self._app._on_show_statistics,
+            ),
             ("start-scan", "app.start-scan", ["<Control>s"], self._app._on_start_scan),
             ("start-update", "app.start-update", ["<Control>u"], self._app._on_start_update),
             ("scan-file", "app.scan-file", [], self._app._on_scan_file),
@@ -45,6 +60,7 @@ class ViewCoordinator:
     def _create_action(self, name, callback):
         """Create a simple action with the given callback."""
         from gi.repository import Gio
+
         action = Gio.SimpleAction.new(name, None)
         action.connect("activate", callback)
         return action
@@ -78,6 +94,7 @@ class ViewCoordinator:
             self.switch_to_view("scan", self._app.scan_view)
         else:
             import os
+
             home_dir = os.path.expanduser("~")
             self._app.scan_view._set_selected_path(home_dir)
             self.switch_to_view("scan", self._app.scan_view)

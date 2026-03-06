@@ -780,12 +780,8 @@ class TestClamdAvailability:
         from src.ui.preferences.window import PreferencesWindow
 
         with mock.patch("src.ui.preferences.window.is_flatpak", return_value=True):
-            with mock.patch(
-                "src.ui.preferences.window.resolve_clamd_conf_path", return_value=None
-            ):
-                with mock.patch(
-                    "src.ui.preferences.window.config_file_exists", return_value=False
-                ):
+            with mock.patch("src.ui.preferences.window.resolve_clamd_conf_path", return_value=None):
+                with mock.patch("src.ui.preferences.window.config_file_exists", return_value=False):
                     with mock.patch(
                         "src.ui.preferences.window.get_freshclam_config_path",
                         return_value=None,
@@ -827,14 +823,13 @@ class TestClamdAvailability:
                 ) as mock_cfe:
                     with mock.patch.object(PreferencesWindow, "_setup_ui"):
                         with mock.patch.object(PreferencesWindow, "_load_configs"):
-                            with mock.patch.object(
-                                PreferencesWindow, "_populate_scheduled_fields"
-                            ):
+                            with mock.patch.object(PreferencesWindow, "_populate_scheduled_fields"):
                                 window = PreferencesWindow()
                                 assert window._clamd_available is True
                                 # config_file_exists must be called for the
                                 # availability check (not Path.exists)
                                 mock_cfe.assert_called_with("/etc/clamav/clamd.conf")
+
 
 class TestLazyPageCreation:
     """Tests for lazy preference page creation.

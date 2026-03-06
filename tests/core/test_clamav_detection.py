@@ -856,9 +856,7 @@ class TestConfigFileExists:
         import subprocess as _subprocess
 
         with mock.patch.object(clamav_detection, "is_flatpak", return_value=True):
-            with mock.patch(
-                "subprocess.run", side_effect=_subprocess.TimeoutExpired("test", 5)
-            ):
+            with mock.patch("subprocess.run", side_effect=_subprocess.TimeoutExpired("test", 5)):
                 assert clamav_detection.config_file_exists("/etc/clamd.d/scan.conf") is False
 
 
@@ -911,6 +909,7 @@ class TestFlatpakConfigDetection:
             assert result == "/etc/clamd.d/scan.conf"
             # Verify config_file_exists was called (host-aware check)
             mock_check.assert_called_with("/etc/clamd.d/scan.conf")
+
 
 class TestDetectClamdConfPath:
     """Tests for detect_clamd_conf_path() function."""
