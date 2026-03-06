@@ -299,6 +299,33 @@ class TestClamUIAppLifecycle:
         assert hasattr(app, "_on_about")
         assert callable(app._on_about)
 
+    def test_on_about_uses_compat_presenter(self, app):
+        """Test that about action delegates to the compatibility presenter."""
+        app.props = mock.MagicMock()
+        app.props.active_window = mock.MagicMock()
+
+        with mock.patch("src.app.present_about_dialog") as mock_present_about_dialog:
+            app._on_about(None, None)
+
+        mock_present_about_dialog.assert_called_once()
+        call_kwargs = mock_present_about_dialog.call_args.kwargs
+        assert call_kwargs["app_name"] == "ClamUI"
+        assert call_kwargs["version"] == app.version
+        assert call_kwargs["license_type"] == mock.ANY
+
+    def test_on_scan_file_uses_compat_file_picker(self, app):
+        """Test that scan-file action delegates to the compatibility picker."""
+        app.props = mock.MagicMock()
+        app.props.active_window = mock.MagicMock()
+
+        with mock.patch("src.app.open_paths_dialog") as mock_open_paths_dialog:
+            app._on_scan_file(None, None)
+
+        mock_open_paths_dialog.assert_called_once()
+        call_kwargs = mock_open_paths_dialog.call_args.kwargs
+        assert call_kwargs["select_folders"] is True
+        assert call_kwargs["multiple"] is False
+
     def test_configure_icon_theme_sets_adwaita_when_theme_differs(self, app):
         """Test that icon theme is forced to Adwaita when needed."""
         settings = mock.MagicMock()

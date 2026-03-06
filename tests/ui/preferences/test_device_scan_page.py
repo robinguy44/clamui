@@ -86,7 +86,7 @@ class TestCreatePage:
         from src.ui.preferences.device_scan_page import DeviceScanPage
 
         instance = DeviceScanPage(settings_manager=settings_manager)
-        result = instance.create_page()
+        instance.create_page()
 
         # PreferencesPage was called to create the page
         adw.PreferencesPage.assert_called_once()

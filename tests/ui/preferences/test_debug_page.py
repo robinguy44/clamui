@@ -295,6 +295,20 @@ class TestDebugPageExport:
 
         _clear_src_modules()
 
+    def test_show_save_dialog_uses_compat_helper(self, mock_gi_modules):
+        """Test save dialog delegates to the shared compatibility helper."""
+        from src.ui.preferences.debug_page import DebugPage
+
+        page = DebugPage(parent_window=MagicMock())
+
+        with patch("src.ui.preferences.debug_page.save_path_dialog") as mock_save_path_dialog:
+            page._show_save_dialog("logs.zip", MagicMock())
+
+        mock_save_path_dialog.assert_called_once()
+        call_kwargs = mock_save_path_dialog.call_args.kwargs
+        assert call_kwargs["initial_name"] == "logs.zip"
+        _clear_src_modules()
+
 
 class TestDebugPageClear:
     """Test log clear functionality."""

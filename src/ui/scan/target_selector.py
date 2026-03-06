@@ -21,6 +21,7 @@ from gi.repository import Adw, Gdk, GObject, Gtk
 
 from ...core.i18n import _
 from ...core.utils import format_scan_path, validate_dropped_files
+from ..compat import open_paths_dialog
 from ..utils import resolve_icon_name
 
 logger = logging.getLogger(__name__)
@@ -156,54 +157,19 @@ class TargetSelector(Adw.PreferencesGroup):
         self._show_file_dialog(select_folders=True)
 
     def _show_file_dialog(self, select_folders: bool):
-        if hasattr(Gtk, "FileDialog"):
-            dialog = Gtk.FileDialog()
-            dialog.set_title(_("Select Files") if not select_folders else _("Select Folders"))
-            if select_folders:
-                dialog.set_open_multiple_folders(True)
-                dialog.select_multiple_folders.begin(
-                    self.get_root(), None, self._on_dialog_response
-                )
-            else:
-                dialog.set_open_multiple_files(True)
-                dialog.open_multiple_files.begin(self.get_root(), None, self._on_dialog_response)
-        else:
-            self._show_legacy_dialog(select_folders)
-
-    def _on_dialog_response(self, dialog, result):
-        try:
-            files = dialog.select_multiple_files_end(result)
-            for f in files:
-                path = f.get_path()
-                if path:
-                    self.add_path(path)
-        except Exception:
-            pass
-
-    def _show_legacy_dialog(self, select_folders: bool):
-        action = (
-            Gtk.FileChooserAction.SELECT_FOLDER if select_folders else Gtk.FileChooserAction.OPEN
-        )
-        dialog = Gtk.FileChooserNative.new(
-            _("Select Folders") if select_folders else _("Select Files"),
+        open_paths_dialog(
             self.get_root(),
-            action,
-            _("_Open"),
-            _("_Cancel"),
+            title=_("Select Folders") if select_folders else _("Select Files"),
+            on_selected=self._add_dialog_paths,
+            select_folders=select_folders,
+            multiple=True,
         )
-        dialog.set_select_multiple(True)
-        dialog.connect("response", self._on_legacy_dialog_response)
-        self._native_dialog = dialog
-        dialog.show()
 
-    def _on_legacy_dialog_response(self, dialog, response):
-        if response == Gtk.ResponseType.ACCEPT:
-            files = dialog.get_files()
-            for f in files:
-                path = f.get_path()
-                if path:
-                    self.add_path(path)
-        dialog.destroy()
+    def _add_dialog_paths(self, paths: list[str]) -> None:
+        """Add paths selected through the file chooser dialog."""
+        for path in paths:
+            if path:
+                self.add_path(path)
 
     def add_path(self, path: str) -> bool:
         normalized = os.path.normpath(path)

@@ -17,13 +17,13 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Gdk", "4.0")
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from gi.repository import Adw, Gdk, GLib, Gtk
 
 from ...core.flatpak import is_flatpak
 from ...core.i18n import N_, _, ngettext
 from ...core.logging_config import get_logging_config
 from ...core.sanitize import sanitize_path_for_logging
-from ..compat import create_toolbar_view
+from ..compat import create_toolbar_view, save_path_dialog
 from ..utils import resolve_icon_name
 from .base import PreferencesPageMixin, styled_prefix_icon
 
@@ -631,35 +631,20 @@ class DebugPage(PreferencesPageMixin):
             default_filename: Default filename to suggest
             on_save_callback: Callback with file path when saved
         """
-        dialog = Gtk.FileDialog()
-        dialog.set_initial_name(default_filename)
-
-        # Set up ZIP filter
-        filter_store = Gio.ListStore.new(Gtk.FileFilter)
-
         zip_filter = Gtk.FileFilter()
         zip_filter.set_name("ZIP Archives")
         zip_filter.add_pattern("*.zip")
-        filter_store.append(zip_filter)
-
         all_filter = Gtk.FileFilter()
         all_filter.set_name("All Files")
         all_filter.add_pattern("*")
-        filter_store.append(all_filter)
 
-        dialog.set_filters(filter_store)
-
-        def on_response(dialog, result):
-            try:
-                file = dialog.save_finish(result)
-                if file:
-                    file_path = file.get_path()
-                    on_save_callback(file_path)
-            except GLib.Error as e:
-                if e.code != Gtk.DialogError.DISMISSED:
-                    logger.error("File dialog error: %s", e)
-
-        dialog.save(self._parent_window, None, on_response)
+        save_path_dialog(
+            self._parent_window,
+            title=_("Export Logs"),
+            on_selected=on_save_callback,
+            initial_name=default_filename,
+            filters=[zip_filter, all_filter],
+        )
 
     def _on_clear_clicked(self, _button):
         """Handle Clear button click - show confirmation dialog."""

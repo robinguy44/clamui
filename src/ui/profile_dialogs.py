@@ -12,7 +12,12 @@ from typing import TYPE_CHECKING
 from gi.repository import Adw, GLib, GObject, Gtk
 
 from ..core.i18n import _, ngettext
-from .compat import create_entry_row, create_toolbar_view
+from .compat import (
+    create_entry_row,
+    create_toolbar_view,
+    open_paths_dialog,
+    save_path_dialog,
+)
 from .utils import add_row_icon, resolve_icon_name
 
 if TYPE_CHECKING:
@@ -312,22 +317,18 @@ class ProfileDialog(Adw.Window):
 
     def _on_add_target_folder_clicked(self, button):
         """Handle add target folder button click."""
-        self._open_file_dialog(
-            select_folder=True, multiple=True, callback=self._on_target_folders_selected
-        )
+        self._open_file_dialog(select_folder=True, multiple=True, callback=self._add_target_paths)
 
     def _on_add_target_file_clicked(self, button):
         """Handle add target file button click."""
-        self._open_file_dialog(
-            select_folder=False, multiple=True, callback=self._on_target_files_selected
-        )
+        self._open_file_dialog(select_folder=False, multiple=True, callback=self._add_target_paths)
 
     def _on_add_exclusion_path_clicked(self, button):
         """Handle add exclusion path button click."""
         self._open_file_dialog(
             select_folder=True,
             multiple=True,
-            callback=self._on_exclusion_paths_selected,
+            callback=self._add_exclusion_paths,
         )
 
     def _on_add_exclusion_pattern_clicked(self, button):
@@ -352,28 +353,36 @@ class ProfileDialog(Adw.Window):
         Args:
             select_folder: True to select folders, False for files
             multiple: True to allow selecting multiple items
-            callback: Callback function to handle the selection
+            callback: Callback function that receives a list of selected paths
         """
-        dialog = Gtk.FileDialog()
-
-        if select_folder:
-            dialog.set_title(_("Select Folders") if multiple else _("Select Folder"))
-        else:
-            dialog.set_title(_("Select Files") if multiple else _("Select File"))
-
-        # Get the parent window
         window = self.get_root()
+        if window is None:
+            return
 
         if select_folder:
-            if multiple:
-                dialog.select_multiple_folders(window, None, callback)
-            else:
-                dialog.select_folder(window, None, callback)
+            title = _("Select Folders") if multiple else _("Select Folder")
         else:
-            if multiple:
-                dialog.open_multiple(window, None, callback)
-            else:
-                dialog.open(window, None, callback)
+            title = _("Select Files") if multiple else _("Select File")
+
+        open_paths_dialog(
+            window,
+            title=title,
+            on_selected=callback,
+            select_folders=select_folder,
+            multiple=multiple,
+        )
+
+    def _add_target_paths(self, paths: list[str]) -> None:
+        """Add selected target paths to the dialog."""
+        for path in paths:
+            if path and path not in self._targets:
+                self._add_target_to_list(path)
+
+    def _add_exclusion_paths(self, paths: list[str]) -> None:
+        """Add selected exclusion paths to the dialog."""
+        for path in paths:
+            if path and path not in self._exclusion_paths:
+                self._add_exclusion_path_to_list(path)
 
     def _on_target_files_selected(self, dialog, result):
         """Handle multiple file selection for targets."""
@@ -1314,67 +1323,36 @@ class ProfileListDialog(Adw.Window):
         if self._profile_manager is None:
             return
 
-        # Create save dialog
-        dialog = Gtk.FileDialog()
-        dialog.set_title(_("Export Profile"))
-
         # Generate default filename from profile name
         safe_name = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in profile.name)
-        dialog.set_initial_name(f"{safe_name}.json")
+        initial_name = f"{safe_name}.json"
 
         # Set up file filter for JSON files
         json_filter = Gtk.FileFilter()
         json_filter.set_name(_("JSON Files"))
         json_filter.add_mime_type("application/json")
         json_filter.add_pattern("*.json")
+        save_path_dialog(
+            self.get_root(),
+            title=_("Export Profile"),
+            on_selected=lambda path: self._export_profile_to_path(profile.id, path),
+            initial_name=initial_name,
+            filters=[json_filter],
+        )
 
-        from gi.repository import Gio
+    def _export_profile_to_path(self, profile_id: str, file_path: str) -> None:
+        """Export the selected profile to disk."""
+        if self._profile_manager is None or not file_path:
+            return
 
-        filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(json_filter)
-        dialog.set_filters(filters)
-        dialog.set_default_filter(json_filter)
+        if not file_path.endswith(".json"):
+            file_path += ".json"
 
-        # Get the parent window
-        window = self.get_root()
-
-        # Store profile ID for callback
-        self._exporting_profile_id = profile.id
-
-        # Open save dialog
-        dialog.save(window, None, self._on_export_file_selected)
-
-    def _on_export_file_selected(self, dialog, result):
-        """
-        Handle export file selection result.
-
-        Args:
-            dialog: The FileDialog that was used
-            result: The async result from the save dialog
-        """
         try:
-            file = dialog.save_finish(result)
-            if file is None:
-                return  # User cancelled
-
-            file_path = file.get_path()
-            if file_path is None:
-                return
-
-            # Ensure .json extension
-            if not file_path.endswith(".json"):
-                file_path += ".json"
-
-            # Export the profile
             from pathlib import Path
 
-            self._profile_manager.export_profile(self._exporting_profile_id, Path(file_path))
-
-        except GLib.Error:
-            # User cancelled the dialog
-            pass
+            self._profile_manager.export_profile(profile_id, Path(file_path))
         except (ValueError, OSError):
-            # Export failed - could show an error dialog
             pass
 
     def _on_profile_saved(self, profile: "ScanProfile"):
@@ -1400,55 +1378,27 @@ class ProfileListDialog(Adw.Window):
         if self._profile_manager is None:
             return
 
-        # Create open dialog
-        dialog = Gtk.FileDialog()
-        dialog.set_title(_("Import Profile"))
-
         # Set up file filter for JSON files
         json_filter = Gtk.FileFilter()
         json_filter.set_name(_("JSON Files"))
         json_filter.add_mime_type("application/json")
         json_filter.add_pattern("*.json")
+        open_paths_dialog(
+            self.get_root(),
+            title=_("Import Profile"),
+            on_selected=lambda paths: self._import_profile_from_path(paths[0]),
+            filters=[json_filter],
+        )
 
-        from gi.repository import Gio
+    def _import_profile_from_path(self, file_path: str) -> None:
+        """Import a profile from disk and refresh the list."""
+        if self._profile_manager is None or not file_path:
+            return
 
-        filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(json_filter)
-        dialog.set_filters(filters)
-        dialog.set_default_filter(json_filter)
-
-        # Get the parent window
-        window = self.get_root()
-
-        # Open file dialog
-        dialog.open(window, None, self._on_import_file_selected)
-
-    def _on_import_file_selected(self, dialog, result):
-        """
-        Handle import file selection result.
-
-        Args:
-            dialog: The FileDialog that was used
-            result: The async result from the open dialog
-        """
         try:
-            file = dialog.open_finish(result)
-            if file is None:
-                return  # User cancelled
-
-            file_path = file.get_path()
-            if file_path is None:
-                return
-
-            # Import the profile
             from pathlib import Path
 
             self._profile_manager.import_profile(Path(file_path))
             self._refresh_profile_list()
-
-        except GLib.Error:
-            # User cancelled the dialog
-            pass
         except (ValueError, OSError):
-            # Import failed - could show an error dialog
             pass

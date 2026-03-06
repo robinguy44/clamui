@@ -418,6 +418,42 @@ class TestDuplicateDetection:
         assert len(mock_scan_view._selected_paths) == 2
 
 
+class TestFileChooserCompatibility:
+    """Tests for file chooser compatibility wrappers."""
+
+    def test_select_file_clicked_uses_open_paths_dialog(self, mock_scan_view):
+        """Test file selection delegates to the compatibility helper."""
+        window_type = type("Window", (), {})
+        window = window_type()
+        mock_scan_view.get_root.return_value = window
+        mock_scan_view._get_initial_selection_folder = mock.MagicMock(return_value=None)
+
+        with mock.patch("src.ui.scan_view.Gtk.Window", window_type):
+            with mock.patch("src.ui.scan_view.open_paths_dialog") as mock_open_paths_dialog:
+                mock_scan_view._on_select_file_clicked(mock.MagicMock())
+
+        mock_open_paths_dialog.assert_called_once()
+        call_kwargs = mock_open_paths_dialog.call_args.kwargs
+        assert call_kwargs["multiple"] is True
+        assert call_kwargs["select_folders"] is False
+
+    def test_select_folder_clicked_uses_open_paths_dialog(self, mock_scan_view):
+        """Test folder selection delegates to the compatibility helper."""
+        window_type = type("Window", (), {})
+        window = window_type()
+        mock_scan_view.get_root.return_value = window
+        mock_scan_view._get_initial_selection_folder = mock.MagicMock(return_value=None)
+
+        with mock.patch("src.ui.scan_view.Gtk.Window", window_type):
+            with mock.patch("src.ui.scan_view.open_paths_dialog") as mock_open_paths_dialog:
+                mock_scan_view._on_select_folder_clicked(mock.MagicMock())
+
+        mock_open_paths_dialog.assert_called_once()
+        call_kwargs = mock_open_paths_dialog.call_args.kwargs
+        assert call_kwargs["multiple"] is True
+        assert call_kwargs["select_folders"] is True
+
+
 class TestDragDropMultiple:
     """Tests for drag-and-drop with multiple files."""
 

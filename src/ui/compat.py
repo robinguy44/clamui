@@ -1,6 +1,6 @@
 # ClamUI Compatibility Module
 """
-Factory functions for libadwaita 1.0+ compatibility.
+Factory functions and helpers for libadwaita/GTK compatibility.
 
 Provides drop-in replacements for widgets introduced in libadwaita 1.2-1.4:
 - create_entry_row() → replaces Adw.EntryRow (1.2+)
@@ -8,16 +8,33 @@ Provides drop-in replacements for widgets introduced in libadwaita 1.2-1.4:
 - create_toolbar_view() → replaces Adw.ToolbarView (1.4+)
 - create_banner() → replaces Adw.Banner (1.3+)
 
+Also provides runtime fallbacks for APIs that are unavailable on Ubuntu 22.04:
+- present_about_dialog() → uses Adw.AboutDialog when available, Gtk.AboutDialog otherwise
+- open_paths_dialog() → uses Gtk.FileDialog on GTK 4.10+, FileChooserNative otherwise
+- save_path_dialog() → uses Gtk.FileDialog on GTK 4.10+, FileChooserNative otherwise
+
 Each factory returns a standard 1.0+ widget with monkey-patched methods
 to match the higher-version API surface, so callers can use the same
-method names regardless of libadwaita version.
+method names regardless of runtime version.
 """
+
+from collections.abc import Callable
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
+
+from ..core.i18n import _
+
+try:
+    _GTK_MINOR_VERSION = Gtk.get_minor_version()
+    _HAS_FILE_DIALOG = _GTK_MINOR_VERSION >= 10
+except (TypeError, AttributeError):
+    _HAS_FILE_DIALOG = False
+
+_NATIVE_DIALOG_REFS: set[object] = set()
 
 
 def create_entry_row(icon_name: str | None = None) -> Adw.ActionRow:
@@ -242,6 +259,260 @@ def create_banner() -> Gtk.Revealer:
     revealer.connect = _patched_connect
 
     return revealer
+
+
+def present_about_dialog(
+    parent: Gtk.Window | None,
+    *,
+    app_name: str,
+    version: str,
+    developer_name: str | None = None,
+    comments: str | None = None,
+    website: str | None = None,
+    issue_url: str | None = None,
+    icon_name: str | None = None,
+    license_type=None,
+):
+    """
+    Present an about dialog using the newest supported API at runtime.
+
+    Ubuntu 22.04 ships libadwaita 1.1.x, which does not provide
+    Adw.AboutDialog. Fall back to Gtk.AboutDialog on older runtimes.
+    """
+    if hasattr(Adw, "AboutDialog"):
+        about = Adw.AboutDialog()
+        about.set_application_name(app_name)
+        about.set_version(version)
+        if developer_name:
+            about.set_developer_name(developer_name)
+        if license_type is not None:
+            about.set_license_type(license_type)
+        if comments:
+            about.set_comments(comments)
+        if website:
+            about.set_website(website)
+        if issue_url and hasattr(about, "set_issue_url"):
+            about.set_issue_url(issue_url)
+        if icon_name:
+            about.set_application_icon(icon_name)
+        if parent is not None:
+            about.present(parent)
+        else:
+            about.present()
+        return about
+
+    about = Gtk.AboutDialog()
+    if hasattr(about, "set_program_name"):
+        about.set_program_name(app_name)
+    elif hasattr(about, "set_application_name"):
+        about.set_application_name(app_name)
+    if hasattr(about, "set_version"):
+        about.set_version(version)
+    if developer_name:
+        if hasattr(about, "set_authors"):
+            about.set_authors([developer_name])
+        elif hasattr(about, "set_developers"):
+            about.set_developers([developer_name])
+    if license_type is not None and hasattr(about, "set_license_type"):
+        about.set_license_type(license_type)
+    if comments and hasattr(about, "set_comments"):
+        about.set_comments(comments)
+    if website and hasattr(about, "set_website"):
+        about.set_website(website)
+    if icon_name:
+        if hasattr(about, "set_logo_icon_name"):
+            about.set_logo_icon_name(icon_name)
+        elif hasattr(about, "set_application_icon"):
+            about.set_application_icon(icon_name)
+    if parent is not None and hasattr(about, "set_transient_for"):
+        about.set_transient_for(parent)
+    if parent is not None and hasattr(about, "set_modal"):
+        about.set_modal(True)
+    about.present()
+    return about
+
+
+def _create_filter_store(filters: list[Gtk.FileFilter] | None):
+    if not filters:
+        return None
+
+    filter_store = Gio.ListStore.new(Gtk.FileFilter)
+    for gtk_filter in filters:
+        filter_store.append(gtk_filter)
+    return filter_store
+
+
+def _paths_from_list_model(files) -> list[str]:
+    paths: list[str] = []
+    if files is None:
+        return paths
+
+    for index in range(files.get_n_items()):
+        file = files.get_item(index)
+        if file is None:
+            continue
+        path = file.get_path()
+        if path:
+            paths.append(path)
+    return paths
+
+
+def open_paths_dialog(
+    parent: Gtk.Window | None,
+    *,
+    title: str,
+    on_selected: Callable[[list[str]], None],
+    select_folders: bool = False,
+    multiple: bool = False,
+    initial_folder: Gio.File | None = None,
+    filters: list[Gtk.FileFilter] | None = None,
+):
+    """
+    Open a file or folder picker compatible with GTK 4.6+.
+
+    Calls ``on_selected`` with a list of filesystem paths. The callback is not
+    invoked when the dialog is dismissed or no local paths are returned.
+    """
+
+    def _emit_paths(paths: list[str]) -> None:
+        if paths:
+            on_selected(paths)
+
+    if _HAS_FILE_DIALOG:
+        dialog = Gtk.FileDialog()
+        dialog.set_title(title)
+        if initial_folder is not None:
+            dialog.set_initial_folder(initial_folder)
+
+        filter_store = _create_filter_store(filters)
+        if filter_store is not None:
+            dialog.set_filters(filter_store)
+            dialog.set_default_filter(filters[0])
+
+        def _on_finish(dlg, result):
+            try:
+                if select_folders and multiple:
+                    files = dlg.select_multiple_folders_finish(result)
+                    _emit_paths(_paths_from_list_model(files))
+                elif select_folders:
+                    file = dlg.select_folder_finish(result)
+                    _emit_paths([file.get_path()] if file and file.get_path() else [])
+                elif multiple:
+                    files = dlg.open_multiple_finish(result)
+                    _emit_paths(_paths_from_list_model(files))
+                else:
+                    file = dlg.open_finish(result)
+                    _emit_paths([file.get_path()] if file and file.get_path() else [])
+            except GLib.Error:
+                pass
+
+        if select_folders and multiple:
+            dialog.select_multiple_folders(parent, None, _on_finish)
+        elif select_folders:
+            dialog.select_folder(parent, None, _on_finish)
+        elif multiple:
+            dialog.open_multiple(parent, None, _on_finish)
+        else:
+            dialog.open(parent, None, _on_finish)
+
+        return dialog
+
+    action = Gtk.FileChooserAction.SELECT_FOLDER if select_folders else Gtk.FileChooserAction.OPEN
+    dialog = Gtk.FileChooserNative.new(
+        title,
+        parent,
+        action,
+        _("_Open"),
+        _("_Cancel"),
+    )
+    dialog.set_select_multiple(multiple)
+    if initial_folder is not None:
+        dialog.set_current_folder(initial_folder)
+    for gtk_filter in filters or []:
+        dialog.add_filter(gtk_filter)
+
+    _NATIVE_DIALOG_REFS.add(dialog)
+
+    def _on_response(dlg, response):
+        try:
+            if response == Gtk.ResponseType.ACCEPT:
+                if multiple:
+                    _emit_paths(_paths_from_list_model(dlg.get_files()))
+                else:
+                    file = dlg.get_file()
+                    _emit_paths([file.get_path()] if file and file.get_path() else [])
+        finally:
+            _NATIVE_DIALOG_REFS.discard(dlg)
+
+    dialog.connect("response", _on_response)
+    dialog.show()
+    return dialog
+
+
+def save_path_dialog(
+    parent: Gtk.Window | None,
+    *,
+    title: str,
+    on_selected: Callable[[str], None],
+    initial_name: str | None = None,
+    filters: list[Gtk.FileFilter] | None = None,
+):
+    """Open a save dialog compatible with GTK 4.6+."""
+
+    if _HAS_FILE_DIALOG:
+        dialog = Gtk.FileDialog()
+        dialog.set_title(title)
+        if initial_name:
+            dialog.set_initial_name(initial_name)
+
+        filter_store = _create_filter_store(filters)
+        if filter_store is not None:
+            dialog.set_filters(filter_store)
+            dialog.set_default_filter(filters[0])
+
+        def _on_finish(dlg, result):
+            try:
+                file = dlg.save_finish(result)
+                if file is None:
+                    return
+                path = file.get_path()
+                if path:
+                    on_selected(path)
+            except GLib.Error:
+                pass
+
+        dialog.save(parent, None, _on_finish)
+        return dialog
+
+    dialog = Gtk.FileChooserNative.new(
+        title,
+        parent,
+        Gtk.FileChooserAction.SAVE,
+        _("_Save"),
+        _("_Cancel"),
+    )
+    if initial_name:
+        dialog.set_current_name(initial_name)
+    for gtk_filter in filters or []:
+        dialog.add_filter(gtk_filter)
+
+    _NATIVE_DIALOG_REFS.add(dialog)
+
+    def _on_response(dlg, response):
+        try:
+            if response == Gtk.ResponseType.ACCEPT:
+                file = dlg.get_file()
+                if file is None:
+                    return
+                path = file.get_path()
+                if path:
+                    on_selected(path)
+        finally:
+            _NATIVE_DIALOG_REFS.discard(dlg)
+
+    dialog.connect("response", _on_response)
+    dialog.show()
+    return dialog
 
 
 # --- Safe method helpers for optional 1.2+/1.3+ methods ---

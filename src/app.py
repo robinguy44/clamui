@@ -45,6 +45,7 @@ from .notification_dispatcher import NotificationDispatcher
 from .profiles.models import ScanProfile
 from .profiles.profile_manager import ProfileManager
 from .tray_integration import TrayIntegration
+from .ui.compat import open_paths_dialog, present_about_dialog
 from .ui.window import MainWindow
 from .view_coordinator import ViewCoordinator
 
@@ -460,19 +461,20 @@ class ClamUIApp(Adw.Application):
         if not win:
             return
 
-        dialog = Gtk.FileDialog()
-        dialog.set_title(_("Select File or Folder"))
-        dialog.select_folder(win, None, self._on_scan_file_selected)
+        open_paths_dialog(
+            win,
+            title=_("Select File or Folder"),
+            on_selected=self._on_scan_file_selected,
+            select_folders=True,
+            multiple=False,
+        )
 
-    def _on_scan_file_selected(self, dialog, result):
-        """Handle file/folder selection from the scan-file dialog."""
-        try:
-            folder = dialog.select_folder_finish(result)
-            path = folder.get_path()
-            if not path:
-                return
-        except Exception:
+    def _on_scan_file_selected(self, paths: list[str]):
+        """Handle selected scan target paths from the file chooser."""
+        if not paths:
             return  # User cancelled
+
+        path = paths[0]
 
         win = self.props.active_window
         if not win:
@@ -518,16 +520,17 @@ class ClamUIApp(Adw.Application):
         """Handle about action — show about dialog."""
         from .ui.utils import resolve_icon_name
 
-        about = Adw.AboutDialog()
-        about.set_application_name(self._app_name)
-        about.set_version(self._version)
-        about.set_developer_name("ClamUI Contributors")
-        about.set_license_type(Gtk.License.MIT_X11)
-        about.set_comments("A graphical interface for ClamAV antivirus")
-        about.set_website("https://github.com/linx-systems/clamui")
-        about.set_issue_url("https://github.com/linx-systems/clamui/issues")
-        about.set_application_icon(resolve_icon_name("security-high-symbolic"))
-        about.present(self.props.active_window)
+        present_about_dialog(
+            self.props.active_window,
+            app_name=self._app_name,
+            version=self._version,
+            developer_name="ClamUI Contributors",
+            license_type=Gtk.License.MIT_X11,
+            comments="A graphical interface for ClamAV antivirus",
+            website="https://github.com/linx-systems/clamui",
+            issue_url="https://github.com/linx-systems/clamui/issues",
+            icon_name=resolve_icon_name("security-high-symbolic"),
+        )
 
     def _on_tray_quick_scan(self):
         """Trigger a quick scan from the tray."""

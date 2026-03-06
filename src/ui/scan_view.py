@@ -24,7 +24,7 @@ from ..core.utils import (
     is_flatpak,
     validate_dropped_files,
 )
-from .compat import create_banner
+from .compat import create_banner, open_paths_dialog
 from .profile_dialogs import ProfileListDialog
 from .scan_results_dialog import ScanResultsDialog
 from .utils import add_row_icon, resolve_icon_name
@@ -35,10 +35,8 @@ from .view_helpers import StatusLevel, set_status_class
 try:
     _GTK_MINOR_VERSION = Gtk.get_minor_version()
     _HAS_CSS_LOAD_STRING = _GTK_MINOR_VERSION >= 12
-    _HAS_FILE_DIALOG = _GTK_MINOR_VERSION >= 10
 except (TypeError, AttributeError):
     _HAS_CSS_LOAD_STRING = False
-    _HAS_FILE_DIALOG = False
 
 if TYPE_CHECKING:
     from ..core.settings_manager import SettingsManager
@@ -803,31 +801,14 @@ class ScanView(Gtk.Box):
         if root is None or not isinstance(root, Gtk.Window):
             return
 
-        dialog = Gtk.FileDialog()
-        dialog.set_title(_("Select Files to Scan"))
-
-        # Set initial folder if a path is already selected
-        if self._selected_paths:
-            first_path = self._selected_paths[0]
-            parent_dir = os.path.dirname(first_path) if os.path.isfile(first_path) else first_path
-            if os.path.isdir(parent_dir):
-                dialog.set_initial_folder(Gio.File.new_for_path(parent_dir))
-
-        def on_files_selected(dialog, result):
-            try:
-                files = dialog.open_multiple_finish(result)
-                if files:
-                    # Clear existing selection before adding new files
-                    self._clear_paths()
-                    for i in range(files.get_n_items()):
-                        file = files.get_item(i)
-                        path = file.get_path()
-                        if path:
-                            self._add_path(path)
-            except GLib.GError:
-                pass  # User cancelled
-
-        dialog.open_multiple(root, None, on_files_selected)
+        open_paths_dialog(
+            root,
+            title=_("Select Files to Scan"),
+            on_selected=self._replace_selected_paths,
+            select_folders=False,
+            multiple=True,
+            initial_folder=self._get_initial_selection_folder(),
+        )
 
     def _on_select_folder_clicked(self, button):
         """
@@ -842,72 +823,34 @@ class ScanView(Gtk.Box):
         if root is None or not isinstance(root, Gtk.Window):
             return
 
-        if _HAS_FILE_DIALOG:
-            self._show_file_dialog_modern(root)
-        else:
-            self._show_file_dialog_legacy(root)
-
-    def _show_file_dialog_modern(self, root: Gtk.Window) -> None:
-        """Use GTK 4.10+ FileDialog API for folder selection."""
-        dialog = Gtk.FileDialog()
-        dialog.set_title(_("Select Folders to Scan"))
-
-        # Set initial folder if a path is already selected
-        if self._selected_paths:
-            first_path = self._selected_paths[0]
-            initial_dir = first_path if os.path.isdir(first_path) else os.path.dirname(first_path)
-            if os.path.isdir(initial_dir):
-                dialog.set_initial_folder(Gio.File.new_for_path(initial_dir))
-
-        def on_folders_selected(dialog, result):
-            try:
-                files = dialog.select_multiple_folders_finish(result)
-                if files:
-                    # Clear existing selection before adding new folders
-                    self._clear_paths()
-                    for i in range(files.get_n_items()):
-                        file = files.get_item(i)
-                        path = file.get_path()
-                        if path:
-                            self._add_path(path)
-            except GLib.GError:
-                pass  # User cancelled
-
-        dialog.select_multiple_folders(root, None, on_folders_selected)
-
-    def _show_file_dialog_legacy(self, root: Gtk.Window) -> None:
-        """Use GTK 4.0+ FileChooserNative API (fallback for GTK < 4.10)."""
-        dialog = Gtk.FileChooserNative.new(
-            _("Select Folders to Scan"),
+        open_paths_dialog(
             root,
-            Gtk.FileChooserAction.SELECT_FOLDER,
-            _("_Open"),
-            _("_Cancel"),
+            title=_("Select Folders to Scan"),
+            on_selected=self._replace_selected_paths,
+            select_folders=True,
+            multiple=True,
+            initial_folder=self._get_initial_selection_folder(),
         )
-        dialog.set_select_multiple(True)
 
-        # Set initial folder if a path is already selected
-        if self._selected_paths:
-            first_path = self._selected_paths[0]
-            initial_dir = first_path if os.path.isdir(first_path) else os.path.dirname(first_path)
-            if os.path.isdir(initial_dir):
-                dialog.set_current_folder(Gio.File.new_for_path(initial_dir))
+    def _get_initial_selection_folder(self) -> Gio.File | None:
+        """Return the best initial folder for file chooser dialogs."""
+        if not self._selected_paths:
+            return None
 
-        def on_response(dialog, response):
-            if response == Gtk.ResponseType.ACCEPT:
-                files = dialog.get_files()
-                if files:
-                    self._clear_paths()
-                    for i in range(files.get_n_items()):
-                        file = files.get_item(i)
-                        path = file.get_path()
-                        if path:
-                            self._add_path(path)
+        first_path = self._selected_paths[0]
+        initial_dir = first_path if os.path.isdir(first_path) else os.path.dirname(first_path)
+        if not os.path.isdir(initial_dir):
+            return None
+        return Gio.File.new_for_path(initial_dir)
 
-        dialog.connect("response", on_response)
-        # Prevent garbage collection
-        self._native_dialog = dialog
-        dialog.show()
+    def _replace_selected_paths(self, paths: list[str]) -> None:
+        """Replace the current selection with the paths chosen in a dialog."""
+        if not paths:
+            return
+
+        self._clear_paths()
+        for path in paths:
+            self._add_path(path)
 
     def show_file_picker(self) -> None:
         """
