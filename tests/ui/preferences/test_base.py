@@ -253,6 +253,33 @@ class TestPreferencesPageMixinMethods:
             callback(mock_button)
             mock_open.assert_called_once_with(str(tmp_path))
 
+    def test_create_file_location_group_button_uses_updated_row_path(
+        self, test_instance, mock_gi_modules, tmp_path
+    ):
+        """Test open folder button uses the row's current file path."""
+        adw = mock_gi_modules["adw"]
+        gtk = mock_gi_modules["gtk"]
+        mock_page = mock.MagicMock()
+        mock_row = mock.MagicMock()
+        mock_button = mock.MagicMock()
+        adw.ActionRow.side_effect = lambda *args, **kwargs: mock_row
+        gtk.Button.return_value = mock_button
+
+        initial_file = tmp_path / "default" / "clamd.conf"
+        updated_file = tmp_path / "custom" / "clamd-custom.conf"
+
+        test_instance._create_file_location_group(
+            mock_page, "Test Group", str(initial_file), "Test description"
+        )
+
+        mock_row.get_subtitle.return_value = str(updated_file)
+
+        callback = mock_button.connect.call_args[0][1]
+
+        with mock.patch.object(test_instance, "_open_folder_in_file_manager") as mock_open:
+            callback(mock_button)
+            mock_open.assert_called_once_with(str(updated_file.parent))
+
     def test_create_file_location_group_adds_to_page(self, test_instance, mock_gi_modules):
         """Test _create_file_location_group adds group to page."""
         adw = mock_gi_modules["adw"]

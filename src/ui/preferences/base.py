@@ -672,13 +672,19 @@ class PreferencesPageMixin:
         open_folder_button.add_css_class("flat")
         open_folder_button.set_tooltip_text(_("Open containing folder in file manager"))
 
-        # Get the parent directory for the file
-        parent_dir = os.path.dirname(file_path)
+        def _open_current_folder(_button):
+            # Resolve from the row so Detect/Browse updates are respected.
+            current_path = file_path
+            get_subtitle = getattr(path_row, "get_subtitle", None)
+            if callable(get_subtitle):
+                subtitle = get_subtitle()
+                if isinstance(subtitle, str) and subtitle.strip():
+                    current_path = subtitle.strip()
 
-        # Connect click handler to open folder
-        open_folder_button.connect(
-            "clicked", lambda btn: self._open_folder_in_file_manager(parent_dir)
-        )
+            self._open_folder_in_file_manager(os.path.dirname(current_path))
+
+        # Connect click handler to open the current containing folder
+        open_folder_button.connect("clicked", _open_current_folder)
 
         path_row.add_suffix(open_folder_button)
 
