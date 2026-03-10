@@ -5,6 +5,7 @@
 # Note: pygobject-stubs are type stubs, not needed at runtime
 psutil>=5.9.0
 matplotlib>=3.8.0
-requests>=2.31.0
+requests>=2.32.4
 urllib3>=2.6.3
+certifi>=2024.7.4
 keyring>=25.0.0
