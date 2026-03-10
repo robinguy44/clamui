@@ -141,7 +141,9 @@ modules:
       # File manager integration files (bundled for first-run installation)
       - install -Dm644 flathub/integrations/io.github.linx_systems.ClamUI.nemo_action /app/share/clamui/integrations/io.github.linx_systems.ClamUI.nemo_action
       - install -Dm644 flathub/integrations/io.github.linx_systems.ClamUI-virustotal.nemo_action /app/share/clamui/integrations/io.github.linx_systems.ClamUI-virustotal.nemo_action
+      - install -Dm644 flathub/integrations/io.github.linx_systems.ClamUI.service.desktop /app/share/clamui/integrations/io.github.linx_systems.ClamUI.service.desktop
       - install -Dm644 flathub/integrations/io.github.linx_systems.ClamUI-virustotal.desktop /app/share/clamui/integrations/io.github.linx_systems.ClamUI-virustotal.desktop
+      - install -Dm755 flathub/integrations/clamui-scan-nautilus.sh /app/share/clamui/integrations/clamui-scan-nautilus.sh
       - install -Dm755 flathub/integrations/clamui-virustotal-nautilus.sh /app/share/clamui/integrations/clamui-virustotal-nautilus.sh
     sources:
       - type: dir

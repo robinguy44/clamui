@@ -2,8 +2,8 @@
 Type=Service
 Name=ClamUI VirusTotal Scanner
 Comment=Scan files with VirusTotal online service
-X-KDE-ServiceTypes=KonqPopupMenu/Plugin
-MimeType=all/allfiles;
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=application/octet-stream;
 Actions=ScanWithVirusTotal;
 X-KDE-Priority=TopLevel
 

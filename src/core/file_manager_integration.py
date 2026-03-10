@@ -13,11 +13,12 @@ and are copied to the user's local share directories on first run.
 import logging
 import os
 import shutil
+import subprocess
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 
-from .flatpak import is_flatpak
+from .flatpak import is_flatpak, wrap_host_command
 from .i18n import N_, _
 
 logger = logging.getLogger(__name__)
@@ -88,16 +89,23 @@ NAUTILUS_INTEGRATIONS = [
     ),
 ]
 
-DOLPHIN_INTEGRATIONS = [
-    (
-        "io.github.linx_systems.ClamUI.desktop",
-        "kservices5/ServiceMenus/io.github.linx_systems.ClamUI.desktop",
-    ),
-    (
-        "io.github.linx_systems.ClamUI-virustotal.desktop",
-        "kservices5/ServiceMenus/io.github.linx_systems.ClamUI-virustotal.desktop",
-    ),
-]
+
+def _build_dolphin_integrations(service_menu_dir: str) -> list[tuple[str, str]]:
+    """Build Dolphin integration mappings for a specific KDE service menu directory."""
+    return [
+        (
+            "io.github.linx_systems.ClamUI.service.desktop",
+            f"{service_menu_dir}/io.github.linx_systems.ClamUI.service.desktop",
+        ),
+        (
+            "io.github.linx_systems.ClamUI-virustotal.desktop",
+            f"{service_menu_dir}/io.github.linx_systems.ClamUI-virustotal.desktop",
+        ),
+    ]
+
+
+DOLPHIN_INTEGRATIONS = _build_dolphin_integrations("kio/servicemenus")
+DOLPHIN_LEGACY_INTEGRATIONS = _build_dolphin_integrations("kservices5/ServiceMenus")
 
 
 def _get_local_share_dir() -> Path:
@@ -150,7 +158,7 @@ def _check_file_manager_available(file_manager: FileManager) -> bool:
 
     elif file_manager == FileManager.DOLPHIN:
         # Check if KDE service menus directory exists or can be created
-        kde_dir = local_share / "kservices5"
+        kde_dir = local_share / _get_dolphin_service_menu_parent(local_share)
         return kde_dir.exists() or _can_create_directory(kde_dir)
 
     return False
@@ -192,13 +200,35 @@ def _check_integration_status(
 
     if file_manager == FileManager.NEMO:
         files = NEMO_INTEGRATIONS
+        return _check_integration_files(local_share, files)
     elif file_manager == FileManager.NAUTILUS:
         files = NAUTILUS_INTEGRATIONS
+        return _check_integration_files(local_share, files)
     elif file_manager == FileManager.DOLPHIN:
-        files = DOLPHIN_INTEGRATIONS
+        preferred_files = _get_dolphin_integrations(local_share)
+        status, missing = _check_integration_files(local_share, preferred_files)
+        if status != IntegrationStatus.NOT_INSTALLED:
+            return status, missing
+
+        legacy_files = _get_dolphin_legacy_integrations(local_share)
+        legacy_status, _legacy_missing = _check_integration_files(local_share, legacy_files)
+        if legacy_status != IntegrationStatus.NOT_INSTALLED:
+            # Treat legacy-only installs as partial so Apply repairs them into
+            # the current service menu path on Plasma 6 systems.
+            return (
+                IntegrationStatus.PARTIAL,
+                [dest_rel for _source_name, dest_rel in preferred_files],
+            )
+        return status, missing
     else:
         return IntegrationStatus.NOT_INSTALLED, []
 
+
+def _check_integration_files(
+    local_share: Path,
+    files: list[tuple[str, str]],
+) -> tuple[IntegrationStatus, list[str]]:
+    """Check whether a specific integration file set is installed."""
     if not files:
         return IntegrationStatus.NOT_INSTALLED, []
 
@@ -214,10 +244,83 @@ def _check_integration_status(
 
     if installed_count == 0:
         return IntegrationStatus.NOT_INSTALLED, missing
-    elif missing:
+    if missing:
         return IntegrationStatus.PARTIAL, missing
-    else:
-        return IntegrationStatus.INSTALLED, []
+    return IntegrationStatus.INSTALLED, []
+
+
+def _get_dolphin_service_menu_parent(local_share: Path | None = None) -> str:
+    """Return the preferred KDE service menu parent directory name."""
+    if local_share is None:
+        local_share = _get_local_share_dir()
+
+    session_version = os.environ.get("KDE_SESSION_VERSION")
+    if session_version == "5":
+        return "kservices5"
+    if session_version == "6":
+        return "kio"
+
+    modern_dir = local_share / "kio"
+    legacy_dir = local_share / "kservices5"
+    if modern_dir.exists():
+        return "kio"
+    if legacy_dir.exists():
+        return "kservices5"
+    return "kio"
+
+
+def _get_dolphin_integrations(local_share: Path | None = None) -> list[tuple[str, str]]:
+    """Return the preferred Dolphin integration mapping for this KDE environment."""
+    parent_dir = _get_dolphin_service_menu_parent(local_share)
+    if parent_dir == "kservices5":
+        return DOLPHIN_LEGACY_INTEGRATIONS
+    return DOLPHIN_INTEGRATIONS
+
+
+def _get_dolphin_legacy_integrations(local_share: Path | None = None) -> list[tuple[str, str]]:
+    """Return the non-preferred Dolphin integration mapping for cleanup/repair."""
+    parent_dir = _get_dolphin_service_menu_parent(local_share)
+    if parent_dir == "kservices5":
+        return DOLPHIN_INTEGRATIONS
+    return DOLPHIN_LEGACY_INTEGRATIONS
+
+
+def _set_integration_permissions(
+    file_manager: FileManager, source_name: str, dest_path: Path
+) -> None:
+    """Apply any required executable permissions to installed integration files."""
+    if source_name.endswith(".sh") or file_manager == FileManager.DOLPHIN:
+        dest_path.chmod(0o755)
+
+
+def _remove_legacy_dolphin_files(local_share: Path) -> None:
+    """Remove Dolphin service menu files from the non-preferred KDE path."""
+    for _source_name, dest_rel in _get_dolphin_legacy_integrations(local_share):
+        dest_path = local_share / dest_rel
+        if dest_path.exists():
+            dest_path.unlink()
+            logger.info("Removed stale Dolphin integration: %s", dest_path)
+
+
+def _refresh_dolphin_service_menu_cache() -> None:
+    """Refresh KDE service menu cache after changing Dolphin integration files."""
+    for binary in ("kbuildsycoca6", "kbuildsycoca5"):
+        try:
+            subprocess.run(
+                wrap_host_command([binary, "--noincremental"], force_host=True),
+                capture_output=True,
+                check=True,
+                text=True,
+                timeout=10,
+            )
+            logger.info("Refreshed KDE service menu cache via %s", binary)
+            return
+        except FileNotFoundError:
+            continue
+        except subprocess.CalledProcessError as e:
+            logger.debug("Failed to refresh KDE cache via %s: %s", binary, e.stderr or e)
+        except Exception as e:
+            logger.debug("Failed to refresh KDE cache via %s: %s", binary, e)
 
 
 def _check_integration_installed(file_manager: FileManager) -> bool:
@@ -295,7 +398,7 @@ def get_available_integrations() -> list[IntegrationInfo]:
             file_manager=FileManager.DOLPHIN,
             display_name="Dolphin",
             description=N_("KDE file manager"),
-            source_files=DOLPHIN_INTEGRATIONS,
+            source_files=_get_dolphin_integrations(),
             status=dolphin_status,
             is_available=dolphin_available,
             missing_files=dolphin_missing,
@@ -331,7 +434,7 @@ def install_integration(file_manager: FileManager) -> tuple[bool, str | None]:
     elif file_manager == FileManager.NAUTILUS:
         files = NAUTILUS_INTEGRATIONS
     elif file_manager == FileManager.DOLPHIN:
-        files = DOLPHIN_INTEGRATIONS
+        files = _get_dolphin_integrations(local_share)
     else:
         return False, _("Unknown file manager: {name}").format(name=file_manager)
 
@@ -350,11 +453,13 @@ def install_integration(file_manager: FileManager) -> tuple[bool, str | None]:
             # Copy the file
             shutil.copy2(source_path, dest_path)
 
-            # Make scripts executable
-            if source_name.endswith(".sh"):
-                dest_path.chmod(0o755)
+            _set_integration_permissions(file_manager, source_name, dest_path)
 
             logger.info(f"Installed: {dest_path}")
+
+        if file_manager == FileManager.DOLPHIN:
+            _remove_legacy_dolphin_files(local_share)
+            _refresh_dolphin_service_menu_cache()
 
         return True, None
 
@@ -401,7 +506,7 @@ def repair_integration(file_manager: FileManager) -> tuple[bool, str | None]:
     elif file_manager == FileManager.NAUTILUS:
         files = NAUTILUS_INTEGRATIONS
     elif file_manager == FileManager.DOLPHIN:
-        files = DOLPHIN_INTEGRATIONS
+        files = _get_dolphin_integrations(local_share)
     else:
         return False, _("Unknown file manager: {name}").format(name=file_manager)
 
@@ -420,10 +525,13 @@ def repair_integration(file_manager: FileManager) -> tuple[bool, str | None]:
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source_path, dest_path)
 
-            if source_name.endswith(".sh"):
-                dest_path.chmod(0o755)
+            _set_integration_permissions(file_manager, source_name, dest_path)
 
             logger.info("Repaired: %s", dest_path)
+
+        if file_manager == FileManager.DOLPHIN:
+            _remove_legacy_dolphin_files(local_share)
+            _refresh_dolphin_service_menu_cache()
 
         return True, None
 
@@ -457,7 +565,9 @@ def remove_integration(file_manager: FileManager) -> tuple[bool, str | None]:
     elif file_manager == FileManager.NAUTILUS:
         files = NAUTILUS_INTEGRATIONS
     elif file_manager == FileManager.DOLPHIN:
-        files = DOLPHIN_INTEGRATIONS
+        files = _get_dolphin_integrations(local_share) + _get_dolphin_legacy_integrations(
+            local_share
+        )
     else:
         return False, _("Unknown file manager: {name}").format(name=file_manager)
 
@@ -468,6 +578,9 @@ def remove_integration(file_manager: FileManager) -> tuple[bool, str | None]:
             if dest_path.exists():
                 dest_path.unlink()
                 logger.info(f"Removed: {dest_path}")
+
+        if file_manager == FileManager.DOLPHIN:
+            _refresh_dolphin_service_menu_cache()
 
         return True, None
 

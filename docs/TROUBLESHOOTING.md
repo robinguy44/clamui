@@ -144,26 +144,52 @@ ClamUI automatically manages a Flatpak-specific database directory at
 
 **Symptom:** Right-click menu doesn't show the scan option.
 
-**Cause:** Desktop entry or Nemo action file not installed.
+**Cause:** The file manager integration is missing, installed in the wrong directory, or not executable.
 
 **Solution for GNOME (Nautilus):**
 
-1. Copy the desktop entry:
+1. Create the scripts directory:
 
    ```bash
-   cp /usr/share/applications/io.github.linx_systems.ClamUI.desktop ~/.local/share/applications/
+   mkdir -p ~/.local/share/nautilus/scripts
    ```
 
-2. Update desktop database:
+2. Copy the scan script:
 
    ```bash
-   update-desktop-database ~/.local/share/applications
+   cp /usr/share/clamui/integrations/clamui-scan-nautilus.sh ~/.local/share/nautilus/scripts/Scan\ with\ ClamUI
+   chmod +x ~/.local/share/nautilus/scripts/Scan\ with\ ClamUI
    ```
 
 3. Restart Nautilus:
 
    ```bash
    nautilus -q
+   ```
+
+**Solution for KDE (Dolphin):**
+
+1. Create the service menu directory:
+
+   ```bash
+   mkdir -p ~/.local/share/kio/servicemenus
+   ```
+
+   On older KDE Plasma 5 systems, use `~/.local/share/kservices5/ServiceMenus` instead.
+
+2. Copy the Dolphin service menu files:
+
+   ```bash
+   cp /usr/share/kio/servicemenus/io.github.linx_systems.ClamUI.service.desktop ~/.local/share/kio/servicemenus/
+   cp /usr/share/kio/servicemenus/io.github.linx_systems.ClamUI-virustotal.desktop ~/.local/share/kio/servicemenus/
+   chmod +x ~/.local/share/kio/servicemenus/io.github.linx_systems.ClamUI.service.desktop
+   chmod +x ~/.local/share/kio/servicemenus/io.github.linx_systems.ClamUI-virustotal.desktop
+   ```
+
+3. Refresh the KDE service cache:
+
+   ```bash
+   kbuildsycoca6 --noincremental || kbuildsycoca5 --noincremental
    ```
 
 **Solution for Cinnamon (Nemo):**

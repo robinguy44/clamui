@@ -311,8 +311,10 @@ create_package_structure() {
 	log_info "Creating usr/share/clamui/integrations/ for Nautilus scripts..."
 	mkdir -p "$BUILD_DIR/usr/share/clamui/integrations"
 
-	# Create /usr/share/kservices5/ServiceMenus/ for Dolphin service menus
-	log_info "Creating usr/share/kservices5/ServiceMenus/ for Dolphin menus..."
+	# Create KDE service menu directories for Dolphin (Plasma 6 + legacy KDE5)
+	log_info "Creating usr/share/kio/servicemenus/ for Dolphin menus..."
+	mkdir -p "$BUILD_DIR/usr/share/kio/servicemenus"
+	log_info "Creating usr/share/kservices5/ServiceMenus/ for legacy Dolphin menus..."
 	mkdir -p "$BUILD_DIR/usr/share/kservices5/ServiceMenus"
 
 	echo
@@ -331,6 +333,7 @@ create_package_structure() {
 	log_info "  - usr/share/polkit-1/actions/"
 	log_info "  - usr/share/nemo/actions/"
 	log_info "  - usr/share/clamui/integrations/"
+	log_info "  - usr/share/kio/servicemenus/"
 	log_info "  - usr/share/kservices5/ServiceMenus/"
 
 	return 0
@@ -610,7 +613,9 @@ copy_desktop_files() {
 	DOLPHIN_SCAN_SERVICE="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI.service.desktop"
 	if [ -f "$DOLPHIN_SCAN_SERVICE" ]; then
 		log_info "Copying Dolphin scan service menu..."
+		cp "$DOLPHIN_SCAN_SERVICE" "$BUILD_DIR/usr/share/kio/servicemenus/"
 		cp "$DOLPHIN_SCAN_SERVICE" "$BUILD_DIR/usr/share/kservices5/ServiceMenus/"
+		chmod 644 "$BUILD_DIR/usr/share/kio/servicemenus/io.github.linx_systems.ClamUI.service.desktop"
 		chmod 644 "$BUILD_DIR/usr/share/kservices5/ServiceMenus/io.github.linx_systems.ClamUI.service.desktop"
 		log_success "Dolphin scan service menu installed"
 	else
@@ -620,7 +625,9 @@ copy_desktop_files() {
 	DOLPHIN_VT_SERVICE="$PROJECT_ROOT/data/io.github.linx_systems.ClamUI-virustotal.desktop"
 	if [ -f "$DOLPHIN_VT_SERVICE" ]; then
 		log_info "Copying Dolphin VirusTotal service menu..."
+		cp "$DOLPHIN_VT_SERVICE" "$BUILD_DIR/usr/share/kio/servicemenus/"
 		cp "$DOLPHIN_VT_SERVICE" "$BUILD_DIR/usr/share/kservices5/ServiceMenus/"
+		chmod 644 "$BUILD_DIR/usr/share/kio/servicemenus/io.github.linx_systems.ClamUI-virustotal.desktop"
 		chmod 644 "$BUILD_DIR/usr/share/kservices5/ServiceMenus/io.github.linx_systems.ClamUI-virustotal.desktop"
 		log_success "Dolphin VirusTotal service menu installed"
 	else

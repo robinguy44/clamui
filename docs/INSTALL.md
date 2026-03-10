@@ -254,41 +254,64 @@ ClamUI integrates with file managers to provide a "Scan with ClamUI" right-click
 
 | File Manager | Desktop  | Integration Type     |
 |--------------|----------|----------------------|
-| Nautilus     | GNOME    | Desktop entry action |
-| Dolphin      | KDE      | Desktop entry action |
+| Nautilus     | GNOME    | Nautilus script      |
+| Dolphin      | KDE      | Dolphin service menu |
 | Nemo         | Cinnamon | Native Nemo action   |
 
 ### Flatpak Users
 
-If you installed ClamUI via Flatpak, context menu integration is **included automatically**. The Flatpak manifest
-includes the necessary filesystem permissions to access files for scanning.
+If you installed ClamUI via Flatpak, ClamUI bundles the integration files and can install them into your
+user profile from Preferences. The Flatpak manifest includes the necessary filesystem permissions to access
+files for scanning.
 
 ### Native Installation
 
 For native (non-Flatpak) installations, set up context menu integration manually:
 
-#### GNOME (Nautilus) and KDE (Dolphin)
+#### GNOME (Nautilus)
 
-1. **Copy the desktop file**:
+1. **Create the Nautilus scripts directory**:
 
    ```bash
-   cp io.github.linx_systems.ClamUI.desktop ~/.local/share/applications/
+   mkdir -p ~/.local/share/nautilus/scripts
    ```
 
-2. **Update the desktop database**:
+2. **Copy the Nautilus script**:
 
    ```bash
-   update-desktop-database ~/.local/share/applications
+   cp scripts/clamui-scan-nautilus.sh ~/.local/share/nautilus/scripts/Scan\ with\ ClamUI
+   chmod +x ~/.local/share/nautilus/scripts/Scan\ with\ ClamUI
    ```
 
-3. **Restart your file manager**:
+3. **Restart Nautilus**:
 
    ```bash
-   # For GNOME (Nautilus):
    nautilus -q
+   ```
 
-   # For KDE (Dolphin):
-   killall dolphin
+#### KDE (Dolphin)
+
+1. **Create the Dolphin service menu directory**:
+
+   ```bash
+   mkdir -p ~/.local/share/kio/servicemenus
+   ```
+
+   On older KDE Plasma 5 systems, use `~/.local/share/kservices5/ServiceMenus` instead.
+
+2. **Copy the Dolphin service menu files**:
+
+   ```bash
+   cp data/io.github.linx_systems.ClamUI.service.desktop ~/.local/share/kio/servicemenus/
+   cp data/io.github.linx_systems.ClamUI-virustotal.desktop ~/.local/share/kio/servicemenus/
+   chmod +x ~/.local/share/kio/servicemenus/io.github.linx_systems.ClamUI.service.desktop
+   chmod +x ~/.local/share/kio/servicemenus/io.github.linx_systems.ClamUI-virustotal.desktop
+   ```
+
+3. **Refresh Dolphin's service menu cache**:
+
+   ```bash
+   kbuildsycoca6 --noincremental || kbuildsycoca5 --noincremental
    ```
 
 #### Cinnamon (Nemo)
@@ -325,8 +348,11 @@ Nemo uses its own action format for context menu extensions:
 Check that the integration files are installed:
 
 ```bash
-# Desktop entry
-ls ~/.local/share/applications/io.github.linx_systems.ClamUI.desktop
+# Nautilus script
+ls ~/.local/share/nautilus/scripts/Scan\ with\ ClamUI
+
+# Dolphin service menu
+ls ~/.local/share/kio/servicemenus/io.github.linx_systems.ClamUI.service.desktop
 
 # Nemo action (if using Nemo)
 ls ~/.local/share/nemo/actions/io.github.linx_systems.ClamUI.nemo_action
@@ -335,10 +361,11 @@ ls ~/.local/share/nemo/actions/io.github.linx_systems.ClamUI.nemo_action
 If the context menu doesn't appear:
 
 1. Log out and log back in
-2. Manually refresh the desktop database:
+2. Manually refresh your file manager integration:
    ```bash
-   update-desktop-database ~/.local/share/applications
-   gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor
+   nautilus -q
+   kbuildsycoca6 --noincremental || kbuildsycoca5 --noincremental
+   nemo -q
    ```
 
 > **Troubleshooting**: For more detailed troubleshooting of context menu issues,

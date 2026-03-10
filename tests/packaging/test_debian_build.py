@@ -193,6 +193,14 @@ class TestPackageStructure:
             "Architecture should be 'all' for pure Python package"
         )
 
+    def test_build_script_installs_dolphin_service_menus_to_kio_and_legacy_paths(self):
+        """Test Debian build script packages Dolphin service menus for KDE6 and KDE5."""
+        build_script = PROJECT_ROOT / "debian" / "build-deb.sh"
+        content = build_script.read_text()
+
+        assert "/usr/share/kio/servicemenus" in content
+        assert "/usr/share/kservices5/ServiceMenus" in content
+
 
 class TestMaintainerScripts:
     """Tests for Debian maintainer scripts."""

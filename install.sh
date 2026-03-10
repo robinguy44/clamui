@@ -115,8 +115,13 @@ ICON_DIR_SCALABLE="$SHARE_DIR/icons/hicolor/scalable/apps"
 ICON_DIR_128="$SHARE_DIR/icons/hicolor/128x128/apps"
 NEMO_ACTION_DIR="$SHARE_DIR/nemo/actions"
 NAUTILUS_SCRIPTS_DIR="$HOME/.local/share/nautilus/scripts"
-DOLPHIN_SERVICES_DIR="$SHARE_DIR/kservices5/ServiceMenus"
+DOLPHIN_SERVICES_DIR="$SHARE_DIR/kio/servicemenus"
+DOLPHIN_LEGACY_SERVICES_DIR="$SHARE_DIR/kservices5/ServiceMenus"
 POLKIT_ACTION_DIR="/usr/share/polkit-1/actions"
+
+if [ "${KDE_SESSION_VERSION:-}" = "5" ] || { [ -d "$SHARE_DIR/kservices5" ] && [ ! -d "$SHARE_DIR/kio" ]; }; then
+	DOLPHIN_SERVICES_DIR="$DOLPHIN_LEGACY_SERVICES_DIR"
+fi
 
 # Get script directory (where install.sh is located)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -445,16 +450,26 @@ install_xdg_files() {
 		fi
 	fi
 
-	# Install Dolphin service menus (if Dolphin/KDE is detected)
-	if command -v dolphin >/dev/null 2>&1 || [ -d "$SHARE_DIR/kservices5" ]; then
+	# Install Dolphin service menus (prefer KDE6 path, fall back to KDE5)
+	if command -v dolphin >/dev/null 2>&1 || [ -d "$SHARE_DIR/kio" ] || [ -d "$SHARE_DIR/kservices5" ]; then
 		log_info "Installing Dolphin service menus..."
 		mkdir -p "$DOLPHIN_SERVICES_DIR"
 		if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.service.desktop" ]; then
 			cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI.service.desktop" "$DOLPHIN_SERVICES_DIR/"
+			if [ "$SYSTEM_INSTALL" = "1" ]; then
+				chmod 644 "$DOLPHIN_SERVICES_DIR/io.github.linx_systems.ClamUI.service.desktop"
+			else
+				chmod 755 "$DOLPHIN_SERVICES_DIR/io.github.linx_systems.ClamUI.service.desktop"
+			fi
 			log_success "Dolphin ClamUI scan service menu installed"
 		fi
 		if [ -f "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI-virustotal.desktop" ]; then
 			cp "$SCRIPT_DIR/data/io.github.linx_systems.ClamUI-virustotal.desktop" "$DOLPHIN_SERVICES_DIR/"
+			if [ "$SYSTEM_INSTALL" = "1" ]; then
+				chmod 644 "$DOLPHIN_SERVICES_DIR/io.github.linx_systems.ClamUI-virustotal.desktop"
+			else
+				chmod 755 "$DOLPHIN_SERVICES_DIR/io.github.linx_systems.ClamUI-virustotal.desktop"
+			fi
 			log_success "Dolphin VirusTotal service menu installed"
 		fi
 	fi

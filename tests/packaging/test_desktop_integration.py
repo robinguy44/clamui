@@ -194,3 +194,30 @@ class TestVirusTotalDesktop:
         # Should have Type and Exec at minimum
         assert "Type=" in content, "Missing Type field"
         assert "Exec=" in content, "Missing Exec field"
+
+
+class TestDolphinServiceMenus:
+    """Tests for Dolphin/KDE service menu files."""
+
+    def test_dolphin_scan_service_exists(self):
+        """Test Dolphin scan service menu file exists."""
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.service.desktop"
+        assert desktop.exists(), "Dolphin scan service menu not found"
+
+    def test_dolphin_service_uses_valid_all_files_mimetype(self):
+        """Test Dolphin service menu uses the KDE-compatible all-files MIME type."""
+        desktop = PROJECT_ROOT / "data" / "io.github.linx_systems.ClamUI.service.desktop"
+        content = desktop.read_text()
+
+        assert "MimeType=application/octet-stream;inode/directory;" in content
+        assert "ServiceTypes=KonqPopupMenu/Plugin" in content
+
+    def test_flathub_dolphin_service_exists(self):
+        """Test Flatpak integration bundle includes the Dolphin scan service menu."""
+        desktop = (
+            PROJECT_ROOT
+            / "flathub"
+            / "integrations"
+            / "io.github.linx_systems.ClamUI.service.desktop"
+        )
+        assert desktop.exists(), "Flatpak Dolphin scan service menu not found"

@@ -67,15 +67,32 @@ class TestCheckFileManagerAvailable:
                 assert result is True
 
     def test_check_dolphin_available_dir_exists(self):
-        """Test Dolphin detected when ~/.local/share/kservices5 exists."""
-        with mock.patch.object(
-            file_manager_integration,
-            "_get_local_share_dir",
-            return_value=Path("/home/user/.local/share"),
-        ):
-            with mock.patch.object(Path, "exists", return_value=True):
-                result = file_manager_integration._check_file_manager_available(FileManager.DOLPHIN)
-                assert result is True
+        """Test Dolphin detected when ~/.local/share/kio exists on Plasma 6."""
+        with mock.patch.dict(os.environ, {"KDE_SESSION_VERSION": "6"}, clear=True):
+            with mock.patch.object(
+                file_manager_integration,
+                "_get_local_share_dir",
+                return_value=Path("/home/user/.local/share"),
+            ):
+                with mock.patch.object(Path, "exists", return_value=True):
+                    result = file_manager_integration._check_file_manager_available(
+                        FileManager.DOLPHIN
+                    )
+                    assert result is True
+
+    def test_check_dolphin_available_legacy_dir_exists(self):
+        """Test Dolphin still supports ~/.local/share/kservices5 on Plasma 5."""
+        with mock.patch.dict(os.environ, {"KDE_SESSION_VERSION": "5"}, clear=True):
+            with mock.patch.object(
+                file_manager_integration,
+                "_get_local_share_dir",
+                return_value=Path("/home/user/.local/share"),
+            ):
+                with mock.patch.object(Path, "exists", return_value=True):
+                    result = file_manager_integration._check_file_manager_available(
+                        FileManager.DOLPHIN
+                    )
+                    assert result is True
 
 
 class TestCheckIntegrationStatus:
@@ -160,6 +177,26 @@ class TestCheckIntegrationStatus:
             assert status == IntegrationStatus.INSTALLED
             assert missing == []
 
+    def test_dolphin_legacy_install_on_modern_kde_requires_repair(self, tmp_path):
+        """Test legacy KDE5-only installs are treated as partial on Plasma 6."""
+        local_share = tmp_path / "share"
+        for _, dest_rel in file_manager_integration.DOLPHIN_LEGACY_INTEGRATIONS:
+            dest = local_share / dest_rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_text("test")
+
+        with mock.patch.dict(os.environ, {"KDE_SESSION_VERSION": "6"}, clear=True):
+            with mock.patch.object(
+                file_manager_integration, "_get_local_share_dir", return_value=local_share
+            ):
+                status, missing = file_manager_integration._check_integration_status(
+                    FileManager.DOLPHIN
+                )
+                assert status == IntegrationStatus.PARTIAL
+                assert missing == [
+                    dest for _, dest in file_manager_integration.DOLPHIN_INTEGRATIONS
+                ]
+
 
 class TestCheckIntegrationInstalled:
     """Tests for _check_integration_installed() backward-compat wrapper."""
@@ -219,7 +256,7 @@ class TestIntegrationLists:
         """Test Dolphin integration list contains both ClamUI scan and VirusTotal."""
         assert len(file_manager_integration.DOLPHIN_INTEGRATIONS) == 2
         source_names = [s for s, _ in file_manager_integration.DOLPHIN_INTEGRATIONS]
-        assert "io.github.linx_systems.ClamUI.desktop" in source_names
+        assert "io.github.linx_systems.ClamUI.service.desktop" in source_names
         assert "io.github.linx_systems.ClamUI-virustotal.desktop" in source_names
 
     def test_nemo_has_scan_and_virustotal(self):
@@ -348,6 +385,36 @@ class TestInstallIntegration:
                             success, error = install_integration(FileManager.NEMO)
                             assert success is False
                             assert "Permission denied" in error
+
+    def test_install_dolphin_integration_makes_desktop_files_executable(self, tmp_path):
+        """Test Dolphin service menu files are executable for user-local installs."""
+        source_dir = tmp_path / "source"
+        source_dir.mkdir()
+        for source_name, _ in file_manager_integration.DOLPHIN_INTEGRATIONS:
+            (source_dir / source_name).write_text("[Desktop Entry]\nType=Service\n")
+
+        dest_dir = tmp_path / "dest"
+
+        with mock.patch.dict(os.environ, {"KDE_SESSION_VERSION": "6"}, clear=True):
+            with mock.patch.object(file_manager_integration, "is_flatpak", return_value=True):
+                with mock.patch.object(
+                    file_manager_integration, "INTEGRATIONS_SOURCE_DIR", source_dir
+                ):
+                    with mock.patch.object(
+                        file_manager_integration, "_get_local_share_dir", return_value=dest_dir
+                    ):
+                        with mock.patch.object(
+                            file_manager_integration,
+                            "_refresh_dolphin_service_menu_cache",
+                        ):
+                            success, error = install_integration(FileManager.DOLPHIN)
+                            assert success is True
+                            assert error is None
+
+        for _, dest_rel in file_manager_integration.DOLPHIN_INTEGRATIONS:
+            dest_path = dest_dir / dest_rel
+            assert dest_path.exists()
+            assert dest_path.stat().st_mode & 0o111
 
 
 class TestRepairIntegration:

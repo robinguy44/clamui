@@ -167,6 +167,26 @@ class TestModulesSection:
         assert has_clamui, "Missing clamui module"
 
 
+class TestIntegrationAssets:
+    """Tests for bundled file manager integration assets."""
+
+    def test_manifest_bundles_dolphin_service_menu(self):
+        """Test manifest installs the Dolphin scan service menu into integration assets."""
+        manifest = PROJECT_ROOT / "flathub" / "io.github.linx_systems.ClamUI.yml"
+        content = manifest.read_text()
+
+        assert "io.github.linx_systems.ClamUI.service.desktop" in content
+
+    def test_local_manifest_bundles_scan_and_virustotal_integrations(self):
+        """Test local Flatpak manifest includes both scan and VirusTotal assets."""
+        manifest = PROJECT_ROOT / "flathub" / "io.github.linx_systems.ClamUI.local.yml"
+        content = manifest.read_text()
+
+        assert "clamui-scan-nautilus.sh" in content
+        assert "io.github.linx_systems.ClamUI.service.desktop" in content
+        assert "io.github.linx_systems.ClamUI-virustotal.desktop" in content
+
+
 class TestGeneratedDependencies:
     """Tests for generated dependency files."""
 
