@@ -224,6 +224,7 @@ class Scanner:
         recursive: bool = True,
         profile_exclusions: dict | None = None,
         progress_callback: Callable[[ScanProgress], None] | None = None,
+        backend_override: str | None = None,
     ) -> ScanResult:
         """
         Execute a synchronous scan on the given path.
@@ -245,6 +246,8 @@ class Scanner:
             progress_callback: Optional callback for real-time progress updates.
                               If provided, verbose mode is used and callback receives
                               ScanProgress updates as files are scanned.
+            backend_override: Optional one-shot backend override for this scan.
+                              Uses the provided backend without changing saved settings.
 
         Returns:
             ScanResult with scan details
@@ -263,7 +266,7 @@ class Scanner:
             return result
 
         # Determine which backend to use
-        backend = self._get_backend()
+        backend = backend_override if backend_override is not None else self._get_backend()
 
         # For daemon-only mode, delegate entirely to daemon scanner
         if backend == "daemon":

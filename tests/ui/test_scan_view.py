@@ -84,6 +84,7 @@ def mock_scan_view(scan_view_class):
     view._current_target_idx = 1
     view._total_target_count = 1
     view._cumulative_files_scanned = 0
+    view._scan_backend_override = None
 
     # Mock UI elements
     view._path_label = mock.MagicMock()
@@ -951,9 +952,44 @@ class TestScanWorker:
             call_args = mock_scan_view._scanner.scan_sync.call_args
             assert call_args[0][0] == "/home/user/test.txt"
             assert call_args[1]["recursive"] is True
+            assert call_args[1]["backend_override"] is None
 
             # Verify _on_scan_complete was scheduled
             assert len(captured_callbacks) >= 1
+
+    def test_scan_worker_uses_backend_override(self, mock_scan_view):
+        """Test scan worker passes one-shot backend overrides to the scanner."""
+        self._setup_scan_mocks(mock_scan_view)
+
+        mock_status = mock.MagicMock()
+        mock_status.CLEAN = "clean"
+        mock_status.INFECTED = "infected"
+        mock_status.ERROR = "error"
+        mock_status.CANCELLED = "cancelled"
+
+        mock_result = mock.MagicMock()
+        mock_result.status = mock_status.CLEAN
+        mock_result.scanned_files = 1
+        mock_result.scanned_dirs = 0
+        mock_result.infected_count = 0
+        mock_result.infected_files = []
+        mock_result.threat_details = []
+        mock_result.stdout = ""
+        mock_result.stderr = ""
+        mock_result.error_message = None
+
+        mock_scan_view._scanner.scan_sync.return_value = mock_result
+        mock_scan_view._selected_paths = ["/home/user/eicar.txt"]
+        mock_scan_view._scan_backend_override = "clamscan"
+
+        with mock.patch("src.ui.scan_view.GLib") as mock_glib:
+            mock_glib.idle_add.side_effect = lambda callback, *args: True
+
+            mock_scan_view._scan_worker()
+
+        mock_scan_view._scanner.scan_sync.assert_called_once()
+        call_args = mock_scan_view._scanner.scan_sync.call_args
+        assert call_args[1]["backend_override"] == "clamscan"
 
     def test_scan_worker_no_paths_returns_error(self, mock_scan_view):
         """Test scan worker with no paths returns an error result."""
@@ -1868,6 +1904,7 @@ class TestEicarTest:
             call_kwargs = mock_tempfile.NamedTemporaryFile.call_args[1]
             assert call_kwargs["delete"] is False
             assert ".txt" in call_kwargs["suffix"]
+            assert mock_scan_view._scan_backend_override == "clamscan"
 
     def test_eicar_test_uses_cache_dir_in_flatpak(self, mock_scan_view, tmp_path):
         """Test that EICAR test uses ~/.cache/clamui directory in Flatpak.
@@ -1939,16 +1976,16 @@ class TestBackendIndicator:
         label = mock_scan_view._backend_label.set_label.call_args[0][0]
         assert "clamscan" in label.lower()
 
-    def test_update_backend_label_daemon_sets_eicar_cleanup_note(self, mock_scan_view):
-        """Test daemon backend adds EICAR cleanup warning to tooltip."""
+    def test_update_backend_label_daemon_sets_eicar_clamscan_note(self, mock_scan_view):
+        """Test daemon backend tooltip explains the clamscan EICAR workaround."""
         mock_scan_view._scanner.get_active_backend.return_value = "daemon"
 
         mock_scan_view._update_backend_label()
 
         tooltip = mock_scan_view._eicar_button.set_tooltip_text.call_args[0][0]
         assert "eicar test file" in tooltip.lower()
-        assert "cleaned up" in tooltip.lower()
-        assert "clamd" in tooltip.lower()
+        assert "clamscan" in tooltip.lower()
+        assert "daemon backend" in tooltip.lower()
 
     def test_update_backend_label_clamscan_sets_base_eicar_tooltip(self, mock_scan_view):
         """Test clamscan backend keeps the base EICAR tooltip text."""
@@ -2605,6 +2642,7 @@ class TestScanCompleteEicarCleanupError:
         # Create a path that we'll make fail on deletion
         fake_path = str(tmp_path / "nonexistent_eicar.txt")
         mock_scan_view._eicar_temp_path = fake_path
+        mock_scan_view._scan_backend_override = "clamscan"
 
         clean_status = mock.MagicMock()
         result = mock.MagicMock()
@@ -2625,6 +2663,7 @@ class TestScanCompleteEicarCleanupError:
 
         # EICAR path should still be cleared
         assert mock_scan_view._eicar_temp_path == ""
+        assert mock_scan_view._scan_backend_override is None
 
 
 class TestScanErrorEicarCleanup:
@@ -2643,6 +2682,7 @@ class TestScanErrorEicarCleanup:
 
         fake_path = str(tmp_path / "nonexistent_eicar.txt")
         mock_scan_view._eicar_temp_path = fake_path
+        mock_scan_view._scan_backend_override = "clamscan"
 
         with mock.patch("src.ui.scan_view.set_status_class"):
             with mock.patch("os.path.exists", return_value=True):
@@ -2652,6 +2692,7 @@ class TestScanErrorEicarCleanup:
 
         # EICAR path should still be cleared
         assert mock_scan_view._eicar_temp_path == ""
+        assert mock_scan_view._scan_backend_override is None
 
 
 class TestScanErrorNotifiesCallback:

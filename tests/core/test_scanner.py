@@ -2175,3 +2175,40 @@ class TestScannerBackendSelection:
         backend = scanner._get_backend()
 
         assert backend == "auto"
+
+
+class TestScannerBackendOverride:
+    """Tests for one-shot backend overrides during scans."""
+
+    def test_scan_sync_backend_override_uses_clamscan(self, tmp_path):
+        """Test backend_override bypasses daemon mode without changing settings."""
+        test_file = tmp_path / "eicar.txt"
+        test_file.write_text("test content")
+
+        mock_settings = mock.MagicMock()
+        mock_settings.get.side_effect = lambda key, default=None: (
+            "daemon" if key == "scan_backend" else default
+        )
+        scanner = Scanner(settings_manager=mock_settings)
+
+        with (
+            mock.patch("src.core.scanner.check_clamav_installed") as mock_installed,
+            mock.patch("src.core.scanner.check_clamd_connection") as mock_connection,
+            mock.patch.object(scanner, "_get_daemon_scanner") as mock_daemon,
+            mock.patch("src.core.scanner.get_clamav_path", return_value="/usr/bin/clamscan"),
+            mock.patch("src.core.scanner.wrap_host_command", side_effect=lambda x: x),
+            mock.patch("subprocess.Popen") as mock_popen,
+        ):
+            mock_installed.return_value = (True, "ClamAV 1.0.0")
+            mock_connection.return_value = (True, "PONG")
+
+            mock_process = mock.MagicMock()
+            mock_process.communicate.return_value = ("", "")
+            mock_process.returncode = 0
+            mock_popen.return_value = mock_process
+
+            result = scanner.scan_sync(str(test_file), backend_override="clamscan")
+
+        assert result.status == ScanStatus.CLEAN
+        mock_installed.assert_called_once()
+        mock_daemon.assert_not_called()

@@ -97,6 +97,8 @@ class ScanView(Gtk.Box):
 
         # Temp file path for EICAR test (for cleanup)
         self._eicar_temp_path: str = ""
+        # Optional one-shot backend override for the current scan session.
+        self._scan_backend_override: str | None = None
 
         # Current scan result (for dialog)
         self._current_result: ScanResult | None = None
@@ -1491,6 +1493,7 @@ class ScanView(Gtk.Box):
         if not self._check_database_and_prompt():
             return
 
+        self._scan_backend_override = None
         self._start_scanning()
 
     def _check_database_and_prompt(self) -> bool:
@@ -1567,6 +1570,9 @@ class ScanView(Gtk.Box):
 
             # Set the EICAR file as scan target and start scan
             self._set_selected_path(self._eicar_temp_path)
+            # Work around host clamd false-clean EICAR results by forcing
+            # the self-test through clamscan without changing saved settings.
+            self._scan_backend_override = "clamscan"
             # The EICAR test path will be shown in the listbox via _set_selected_path
             self._start_scanning()
 
@@ -1732,6 +1738,7 @@ class ScanView(Gtk.Box):
             final_status = ScanStatus.CLEAN
 
             target_count = len(self._selected_paths)
+            backend_override = self._scan_backend_override
 
             for idx, target_path in enumerate(self._selected_paths, start=1):
                 # Check if cancel all was requested before starting next target
@@ -1767,6 +1774,7 @@ class ScanView(Gtk.Box):
                     recursive=True,
                     profile_exclusions=profile_exclusions,
                     progress_callback=progress_callback,
+                    backend_override=backend_override,
                 )
 
                 # Check if scan was cancelled (either this target or cancel all)
@@ -1908,6 +1916,7 @@ class ScanView(Gtk.Box):
             except OSError as e:
                 logger.warning(f"Failed to clean up EICAR file: {e}")
             self._eicar_temp_path = ""
+        self._scan_backend_override = None
 
         # Stop progress animation and hide progress section
         self._stop_progress_pulse()
@@ -1983,6 +1992,7 @@ class ScanView(Gtk.Box):
             except OSError:
                 pass
             self._eicar_temp_path = ""
+        self._scan_backend_override = None
 
         # Stop progress animation and hide progress section
         self._stop_progress_pulse()
@@ -2027,7 +2037,7 @@ class ScanView(Gtk.Box):
         base_tooltip = _("Run a scan with EICAR test file to verify antivirus detection")
         if backend == "daemon":
             daemon_note = _(
-                "Note: With clamd active, the EICAR test file may be cleaned up before it can be scanned."
+                "Note: ClamUI uses clamscan for the EICAR self-test when the daemon backend is active."
             )
             return f"{base_tooltip}\n\n{daemon_note}"
         return base_tooltip
