@@ -144,7 +144,7 @@ import tempfile
 import threading
 import uuid
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -700,6 +700,32 @@ CLAMD_LOG_PATHS = [
 
 # Index file for optimized log retrieval
 INDEX_FILENAME = "log_index.json"
+LOG_PRIVACY_VERSION = 1
+LOG_PRIVACY_STATE_FILENAME = ".log-privacy-version"
+
+
+@dataclass(frozen=True)
+class LogPrivacyMigrationStatus:
+    """Shared progress snapshot for persisted log privacy migration."""
+
+    is_running: bool
+    processed_files: int = 0
+    total_files: int = 0
+
+
+@dataclass
+class _LogPrivacyMigrationTracker:
+    """Process-local tracker for one log directory's privacy migration."""
+
+    lock: threading.Lock = field(default_factory=threading.Lock)
+    done_event: threading.Event = field(default_factory=threading.Event)
+    running: bool = False
+    processed_files: int = 0
+    total_files: int = 0
+    thread: threading.Thread | None = None
+
+    def __post_init__(self) -> None:
+        self.done_event.set()
 
 
 class LogManager:
@@ -719,6 +745,9 @@ class LogManager:
             ]
         }
     """
+
+    _privacy_tracker_lock = threading.Lock()
+    _privacy_trackers: dict[str, _LogPrivacyMigrationTracker] = {}
 
     def __init__(self, log_dir: str | None = None):
         """
@@ -749,6 +778,67 @@ class LogManager:
             self._log_dir.mkdir(parents=True, exist_ok=True)
         except (OSError, PermissionError) as e:
             logger.warning("Failed to create log directory %s: %s", self._log_dir, e)
+
+    @property
+    def _privacy_state_path(self) -> Path:
+        """Get the state file used to track persisted-log privacy migration."""
+        return self._log_dir / LOG_PRIVACY_STATE_FILENAME
+
+    def _read_privacy_state_version_unlocked(self) -> int:
+        """Read the completed persisted-log privacy migration version from disk."""
+        try:
+            return int(self._privacy_state_path.read_text(encoding="utf-8").strip() or "0")
+        except (OSError, ValueError):
+            return 0
+
+    def _has_completed_privacy_migration_unlocked(self) -> bool:
+        """Return True when persisted logs have already been privacy-migrated."""
+        return self._read_privacy_state_version_unlocked() >= LOG_PRIVACY_VERSION
+
+    def _mark_privacy_migration_complete_unlocked(self) -> None:
+        """Persist the current privacy migration version for stored logs."""
+        self._ensure_log_dir()
+
+        fd, temp_path = tempfile.mkstemp(prefix="log_privacy_", dir=self._log_dir)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(str(LOG_PRIVACY_VERSION))
+
+            Path(temp_path).replace(self._privacy_state_path)
+            self._privacy_state_path.chmod(0o600)
+        except OSError:
+            with contextlib.suppress(OSError):
+                Path(temp_path).unlink(missing_ok=True)
+
+    def _clear_privacy_migration_state_unlocked(self) -> None:
+        """Delete the persisted-log privacy migration state marker."""
+        with contextlib.suppress(OSError):
+            self._privacy_state_path.unlink()
+
+    def _collect_privacy_migration_targets_unlocked(self) -> list[Path]:
+        """Collect persisted log files that need one-time privacy migration."""
+        if not self._log_dir.exists():
+            return []
+
+        return sorted(
+            log_file for log_file in self._log_dir.glob("*.json") if log_file.name != INDEX_FILENAME
+        )
+
+    @classmethod
+    def _get_privacy_tracker_for_log_dir(cls, log_dir: Path) -> _LogPrivacyMigrationTracker:
+        """Return the shared privacy migration tracker for a log directory."""
+        tracker_key = str(log_dir.expanduser().resolve(strict=False))
+
+        with cls._privacy_tracker_lock:
+            tracker = cls._privacy_trackers.get(tracker_key)
+            if tracker is None:
+                tracker = _LogPrivacyMigrationTracker()
+                cls._privacy_trackers[tracker_key] = tracker
+            return tracker
+
+    def _get_privacy_tracker(self) -> _LogPrivacyMigrationTracker:
+        """Return the shared privacy migration tracker for this manager's log directory."""
+        return self._get_privacy_tracker_for_log_dir(self._log_dir)
 
     @property
     def _index_path(self) -> Path:
@@ -978,34 +1068,175 @@ class LogManager:
                 Path(temp_path).unlink(missing_ok=True)
             raise
 
-    def _check_and_run_privacy_migration_unlocked(self) -> None:
-        """Redact sensitive data from existing persisted scan logs once per instance."""
+    def _execute_privacy_migration_targets(
+        self, tracker: _LogPrivacyMigrationTracker, targets: list[Path]
+    ) -> None:
+        """Rewrite legacy persisted logs so only privacy-safe data remains on disk."""
+        try:
+            for log_file in targets:
+                try:
+                    with open(log_file, encoding="utf-8") as f:
+                        data = json.load(f)
+
+                    required_fields = ("id", "timestamp", "type")
+                    if any(not data.get(field) for field in required_fields):
+                        continue
+
+                    sanitized = _sanitize_persisted_log_data(data)
+                    if sanitized != data:
+                        self._write_log_file_unlocked(log_file, sanitized)
+                except (OSError, json.JSONDecodeError) as e:
+                    logger.debug("Privacy migration skipped for %s: %s", log_file.name, e)
+                finally:
+                    with tracker.lock:
+                        tracker.processed_files += 1
+
+            self._mark_privacy_migration_complete_unlocked()
+            self._privacy_migration_checked = True
+        finally:
+            migration_complete = self._has_completed_privacy_migration_unlocked()
+            with tracker.lock:
+                if migration_complete:
+                    tracker.processed_files = tracker.total_files
+                tracker.running = False
+                tracker.done_event.set()
+
+    def start_privacy_migration_async(self) -> bool:
+        """
+        Start the one-time persisted-log privacy migration in a background thread.
+
+        Returns:
+            True when migration is running after this call, False otherwise.
+        """
+        if self._privacy_migration_checked or self._has_completed_privacy_migration_unlocked():
+            self._privacy_migration_checked = True
+            return False
+
+        targets = self._collect_privacy_migration_targets_unlocked()
+        if not targets:
+            self._mark_privacy_migration_complete_unlocked()
+            self._privacy_migration_checked = True
+            return False
+
+        tracker = self._get_privacy_tracker()
+        with tracker.lock:
+            if tracker.running:
+                return True
+
+            tracker.running = True
+            tracker.processed_files = 0
+            tracker.total_files = len(targets)
+            tracker.done_event.clear()
+
+            thread = threading.Thread(
+                target=self._execute_privacy_migration_targets,
+                args=(tracker, targets),
+                name="clamui-log-privacy-migration",
+                daemon=True,
+            )
+            tracker.thread = thread
+
+        thread.start()
+        return True
+
+    def get_privacy_migration_status(self) -> LogPrivacyMigrationStatus:
+        """Return a process-local snapshot of persisted-log privacy migration progress."""
+        tracker = self._get_privacy_tracker()
+
+        with tracker.lock:
+            if tracker.running:
+                return LogPrivacyMigrationStatus(
+                    is_running=True,
+                    processed_files=tracker.processed_files,
+                    total_files=tracker.total_files,
+                )
+
+            processed_files = tracker.processed_files
+            total_files = tracker.total_files
+
+        if self._has_completed_privacy_migration_unlocked():
+            self._privacy_migration_checked = True
+            processed_files = total_files
+
+        return LogPrivacyMigrationStatus(
+            is_running=False,
+            processed_files=processed_files,
+            total_files=total_files,
+        )
+
+    def wait_for_privacy_migration(self, timeout: float | None = None) -> bool:
+        """
+        Wait for any in-flight persisted-log privacy migration to finish.
+
+        Returns:
+            True when migration completed successfully, False on timeout or failure.
+        """
+        if self._has_completed_privacy_migration_unlocked():
+            self._privacy_migration_checked = True
+            return True
+
+        tracker = self._get_privacy_tracker()
+        with tracker.lock:
+            if not tracker.running:
+                return False
+            done_event = tracker.done_event
+
+        if not done_event.wait(timeout):
+            return False
+
+        migration_complete = self._has_completed_privacy_migration_unlocked()
+        if migration_complete:
+            self._privacy_migration_checked = True
+        return migration_complete
+
+    def _reset_privacy_migration_tracker_unlocked(self) -> None:
+        """Reset in-memory privacy migration progress after log storage is cleared."""
+        tracker = self._get_privacy_tracker()
+        with tracker.lock:
+            tracker.running = False
+            tracker.processed_files = 0
+            tracker.total_files = 0
+            tracker.thread = None
+            tracker.done_event.set()
+
+    def _check_and_run_privacy_migration_unlocked(self, *, wait: bool = True) -> None:
+        """Ensure legacy persisted logs are privacy-migrated before reading them."""
         if self._privacy_migration_checked:
             return
 
-        self._privacy_migration_checked = True
-
-        if not self._log_dir.exists():
+        if self._has_completed_privacy_migration_unlocked():
+            self._privacy_migration_checked = True
             return
 
-        for log_file in self._log_dir.glob("*.json"):
-            if log_file.name == INDEX_FILENAME:
-                continue
+        if not wait:
+            self.start_privacy_migration_async()
+            return
 
-            try:
-                with open(log_file, encoding="utf-8") as f:
-                    data = json.load(f)
+        tracker = self._get_privacy_tracker()
+        with tracker.lock:
+            if tracker.running:
+                done_event = tracker.done_event
+                targets: list[Path] | None = None
+            else:
+                targets = self._collect_privacy_migration_targets_unlocked()
+                if not targets:
+                    self._mark_privacy_migration_complete_unlocked()
+                    self._privacy_migration_checked = True
+                    return
 
-                required_fields = ("id", "timestamp", "type")
-                if any(not data.get(field) for field in required_fields):
-                    continue
+                tracker.running = True
+                tracker.processed_files = 0
+                tracker.total_files = len(targets)
+                tracker.done_event.clear()
+                done_event = None
 
-                sanitized = _sanitize_persisted_log_data(data)
-                if sanitized != data:
-                    self._write_log_file_unlocked(log_file, sanitized)
-            except (OSError, json.JSONDecodeError) as e:
-                logger.debug("Privacy migration skipped for %s: %s", log_file.name, e)
-                continue
+        if done_event is not None:
+            done_event.wait()
+            if self._has_completed_privacy_migration_unlocked():
+                self._privacy_migration_checked = True
+            return
+
+        self._execute_privacy_migration_targets(tracker, targets or [])
 
     def save_log(self, entry: LogEntry) -> bool:
         """
@@ -1020,7 +1251,7 @@ class LogManager:
         with self._lock:
             try:
                 self._ensure_log_dir()
-                self._check_and_run_privacy_migration_unlocked()
+                self._check_and_run_privacy_migration_unlocked(wait=False)
                 log_file = self._log_dir / f"{entry.id}.json"
                 self._write_log_file_unlocked(log_file, entry.to_dict())
 
@@ -1362,6 +1593,12 @@ class LogManager:
         """
         with self._lock:
             try:
+                tracker = self._get_privacy_tracker()
+                with tracker.lock:
+                    done_event = tracker.done_event if tracker.running else None
+                if done_event is not None:
+                    done_event.wait()
+
                 if self._log_dir.exists():
                     for log_file in self._log_dir.glob("*.json"):
                         # Skip the index file - we'll reset it separately
@@ -1378,6 +1615,9 @@ class LogManager:
                     # Index can be rebuilt later if needed
                     logger.debug("Index reset failed after clearing logs: %s", e)
 
+                self._clear_privacy_migration_state_unlocked()
+                self._reset_privacy_migration_tracker_unlocked()
+                self._privacy_migration_checked = False
                 return True
             except OSError as e:
                 logger.warning("Failed to clear logs: %s", e)

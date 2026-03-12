@@ -422,7 +422,7 @@ class MainWindow(Adw.ApplicationWindow):
         # Create the header bar
         self._header_bar = self._create_header_bar()
 
-        # Create the content area (where views are displayed)
+        # Create the content area (startup banner + active view)
         self._content_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self._content_area.set_vexpand(True)
         self._content_area.set_hexpand(True)
@@ -451,6 +451,14 @@ class MainWindow(Adw.ApplicationWindow):
         # Connect to folded state changes for adaptive header
         self._leaflet.connect("notify::folded", self._on_leaflet_folded_changed)
 
+        self._activity_banner = self._create_activity_banner()
+        self._content_area.append(self._activity_banner)
+
+        self._content_view_host = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self._content_view_host.set_vexpand(True)
+        self._content_view_host.set_hexpand(True)
+        self._content_area.append(self._content_view_host)
+
         # Add toast overlay for in-app notifications
         self._toast_overlay = Adw.ToastOverlay()
         self._toast_overlay.set_child(self._leaflet)
@@ -464,6 +472,32 @@ class MainWindow(Adw.ApplicationWindow):
 
         # Show placeholder content (will be replaced with ScanView in integration)
         self._show_placeholder()
+
+    def _create_activity_banner(self) -> Gtk.Revealer:
+        """Create the transient activity banner shown for startup maintenance work."""
+        revealer = Gtk.Revealer()
+        revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        revealer.set_reveal_child(False)
+
+        banner_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        banner_box.set_margin_start(12)
+        banner_box.set_margin_end(12)
+        banner_box.set_margin_top(8)
+        banner_box.set_margin_bottom(8)
+        banner_box.add_css_class("banner")
+
+        self._activity_spinner = Gtk.Spinner()
+        self._activity_spinner.set_visible(False)
+        banner_box.append(self._activity_spinner)
+
+        self._activity_label = Gtk.Label()
+        self._activity_label.set_hexpand(True)
+        self._activity_label.set_xalign(0)
+        self._activity_label.set_wrap(True)
+        banner_box.append(self._activity_label)
+
+        revealer.set_child(banner_box)
+        return revealer
 
     def _create_header_bar(self) -> Adw.HeaderBar:
         """
@@ -610,7 +644,7 @@ class MainWindow(Adw.ApplicationWindow):
         placeholder.set_icon_name(resolve_icon_name("security-high-symbolic"))
         placeholder.set_vexpand(True)
 
-        self._content_area.append(placeholder)
+        self._content_view_host.append(placeholder)
 
     def set_content_view(self, view: Gtk.Widget):
         """
@@ -622,16 +656,16 @@ class MainWindow(Adw.ApplicationWindow):
             view: The widget to display in the content area
         """
         # Remove existing content
-        child = self._content_area.get_first_child()
+        child = self._content_view_host.get_first_child()
         while child:
             next_child = child.get_next_sibling()
-            self._content_area.remove(child)
+            self._content_view_host.remove(child)
             child = next_child
 
         # Add the new view
         view.set_vexpand(True)
         view.set_hexpand(True)
-        self._content_area.append(view)
+        self._content_view_host.append(view)
 
     def add_toast(self, toast: Adw.Toast) -> None:
         """
@@ -641,6 +675,26 @@ class MainWindow(Adw.ApplicationWindow):
             toast: The Adw.Toast instance to display
         """
         self._toast_overlay.add_toast(toast)
+
+    def set_activity_status(self, message: str | None, *, show_spinner: bool = True) -> None:
+        """Show or hide the transient startup activity banner."""
+        if not hasattr(self, "_activity_banner"):
+            return
+
+        if message:
+            self._activity_label.set_label(message)
+            if show_spinner:
+                self._activity_spinner.set_visible(True)
+                self._activity_spinner.start()
+            else:
+                self._activity_spinner.stop()
+                self._activity_spinner.set_visible(False)
+            self._activity_banner.set_reveal_child(True)
+            return
+
+        self._activity_spinner.stop()
+        self._activity_spinner.set_visible(False)
+        self._activity_banner.set_reveal_child(False)
 
     @property
     def content_area(self) -> Gtk.Box:

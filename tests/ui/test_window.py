@@ -83,6 +83,7 @@ def window(window_class, mock_app):
 
     # Mock widgets
     win._content_area = MagicMock()
+    win._content_view_host = MagicMock()
     win._sidebar = MagicMock()
     win._leaflet = MagicMock()
     win._leaflet.get_folded = MagicMock(return_value=False)
@@ -90,6 +91,9 @@ def window(window_class, mock_app):
     win._title_label = MagicMock()
     win._toast_overlay = MagicMock()
     win._header_bar = MagicMock()
+    win._activity_banner = MagicMock()
+    win._activity_spinner = MagicMock()
+    win._activity_label = MagicMock()
 
     return win
 
@@ -609,17 +613,17 @@ class TestViewManagement:
         """Test set_content_view removes old content before adding new."""
         mock_child = MagicMock()
         mock_child.get_next_sibling.return_value = None
-        window._content_area.get_first_child.return_value = mock_child
+        window._content_view_host.get_first_child.return_value = mock_child
 
         new_view = MagicMock()
         window.set_content_view(new_view)
 
-        window._content_area.remove.assert_called_with(mock_child)
-        window._content_area.append.assert_called_with(new_view)
+        window._content_view_host.remove.assert_called_with(mock_child)
+        window._content_view_host.append.assert_called_with(new_view)
 
     def test_set_content_view_sets_expand_on_new_view(self, window):
         """Test set_content_view sets vexpand and hexpand on the new view."""
-        window._content_area.get_first_child.return_value = None
+        window._content_view_host.get_first_child.return_value = None
         new_view = MagicMock()
 
         window.set_content_view(new_view)
@@ -737,6 +741,40 @@ class TestToast:
         window.add_toast(mock_toast)
 
         window._toast_overlay.add_toast.assert_called_with(mock_toast)
+
+
+class TestActivityBanner:
+    """Tests for the transient startup activity banner."""
+
+    def test_set_activity_status_shows_banner_and_starts_spinner(self, window):
+        """Test set_activity_status reveals the banner when a message is provided."""
+        window.set_activity_status("Updating stored logs for privacy (1/3)")
+
+        window._activity_label.set_label.assert_called_once_with(
+            "Updating stored logs for privacy (1/3)"
+        )
+        window._activity_spinner.set_visible.assert_called_once_with(True)
+        window._activity_spinner.start.assert_called_once()
+        window._activity_banner.set_reveal_child.assert_called_once_with(True)
+
+    def test_set_activity_status_can_show_banner_without_spinner(self, window):
+        """Test set_activity_status can show a completion banner without spinner activity."""
+        window.set_activity_status("Updating stored logs for privacy (3/3)", show_spinner=False)
+
+        window._activity_label.set_label.assert_called_once_with(
+            "Updating stored logs for privacy (3/3)"
+        )
+        window._activity_spinner.stop.assert_called_once()
+        window._activity_spinner.set_visible.assert_called_once_with(False)
+        window._activity_banner.set_reveal_child.assert_called_once_with(True)
+
+    def test_set_activity_status_hides_banner_when_message_cleared(self, window):
+        """Test set_activity_status hides the banner when message is None."""
+        window.set_activity_status(None)
+
+        window._activity_spinner.stop.assert_called_once()
+        window._activity_spinner.set_visible.assert_called_once_with(False)
+        window._activity_banner.set_reveal_child.assert_called_once_with(False)
 
 
 # =============================================================================

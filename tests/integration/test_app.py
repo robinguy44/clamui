@@ -2,6 +2,7 @@
 """Unit tests for the ClamUIApp application class."""
 
 import sys
+from types import SimpleNamespace
 from unittest import mock
 
 import pytest
@@ -350,6 +351,109 @@ class TestClamUIAppLifecycle:
         """Test that icon theme setup is skipped when GTK settings are unavailable."""
         with mock.patch("src.app.Gtk.Settings.get_default", return_value=None):
             app._configure_icon_theme()
+
+    def test_ensure_log_privacy_migration_monitor_waits_before_showing_status_and_schedules_poll(
+        self, app, mock_gtk_modules
+    ):
+        """Test startup migration monitoring waits before showing the banner."""
+        mock_window = mock.MagicMock()
+        app.props = mock.MagicMock()
+        app.props.active_window = mock_window
+
+        mock_manager = mock.MagicMock()
+        mock_manager.get_privacy_migration_status.return_value = SimpleNamespace(
+            is_running=True,
+            processed_files=2,
+            total_files=5,
+        )
+        app._startup_log_manager = mock_manager
+        app._log_privacy_poll_id = None
+
+        with mock.patch("src.app.time.monotonic", return_value=100.0):
+            app._ensure_log_privacy_migration_monitor()
+
+        mock_manager.start_privacy_migration_async.assert_called_once()
+        assert app._log_privacy_started_at == 100.0
+        assert app._log_privacy_banner_shown_at is None
+        mock_window.set_activity_status.assert_called_once_with(None)
+        mock_gtk_modules["GLib"].timeout_add.assert_called_once()
+
+    def test_poll_log_privacy_migration_shows_status_after_delay(self, app):
+        """Test the poller shows the banner once migration exceeds the delay threshold."""
+        mock_window = mock.MagicMock()
+        app.props = mock.MagicMock()
+        app.props.active_window = mock_window
+
+        mock_manager = mock.MagicMock()
+        mock_manager.get_privacy_migration_status.return_value = SimpleNamespace(
+            is_running=True,
+            processed_files=2,
+            total_files=5,
+        )
+        app._startup_log_manager = mock_manager
+        app._log_privacy_started_at = 10.0
+
+        with mock.patch("src.app.time.monotonic", return_value=11.1):
+            result = app._poll_log_privacy_migration()
+
+        assert result is True
+        assert app._log_privacy_banner_shown_at == 11.1
+        mock_window.set_activity_status.assert_called_once_with(
+            "Updating stored logs for privacy (2/5)"
+        )
+
+    def test_poll_log_privacy_migration_keeps_completion_banner_visible_until_minimum_time(
+        self, app
+    ):
+        """Test the completed banner remains visible without a spinner for the dwell time."""
+        mock_window = mock.MagicMock()
+        app.props = mock.MagicMock()
+        app.props.active_window = mock_window
+
+        mock_manager = mock.MagicMock()
+        mock_manager.get_privacy_migration_status.return_value = SimpleNamespace(
+            is_running=False,
+            processed_files=3,
+            total_files=3,
+        )
+        app._startup_log_manager = mock_manager
+        app._log_privacy_started_at = 20.0
+        app._log_privacy_banner_shown_at = 21.0
+
+        with mock.patch("src.app.time.monotonic", return_value=24.0):
+            result = app._poll_log_privacy_migration()
+
+        assert result is True
+        mock_window.set_activity_status.assert_called_once_with(
+            "Updating stored logs for privacy (3/3)",
+            show_spinner=False,
+        )
+
+    def test_poll_log_privacy_migration_hides_status_after_minimum_visible_time(self, app):
+        """Test the poller hides the banner once the minimum visible time has elapsed."""
+        mock_window = mock.MagicMock()
+        app.props = mock.MagicMock()
+        app.props.active_window = mock_window
+
+        mock_manager = mock.MagicMock()
+        mock_manager.get_privacy_migration_status.return_value = SimpleNamespace(
+            is_running=False,
+            processed_files=3,
+            total_files=3,
+        )
+        app._startup_log_manager = mock_manager
+        app._log_privacy_started_at = 20.0
+        app._log_privacy_banner_shown_at = 21.0
+        app._log_privacy_poll_id = 99
+
+        with mock.patch("src.app.time.monotonic", return_value=26.1):
+            result = app._poll_log_privacy_migration()
+
+        assert result is False
+        assert app._log_privacy_poll_id is None
+        assert app._log_privacy_started_at is None
+        assert app._log_privacy_banner_shown_at is None
+        mock_window.set_activity_status.assert_called_once_with(None)
 
 
 class TestClamUIAppQuickScanProfile:

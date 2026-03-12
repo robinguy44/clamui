@@ -29,6 +29,7 @@ Example:
 
 import logging
 import os
+import time
 from pathlib import Path
 
 import gi
@@ -38,7 +39,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from .app_lifecycle import AppLifecycleManager
-from .core.i18n import _
+from .core.i18n import _, ngettext
 from .core.notification_manager import NotificationManager
 from .core.settings_manager import SettingsManager
 from .notification_dispatcher import NotificationDispatcher
@@ -50,6 +51,10 @@ from .ui.window import MainWindow
 from .view_coordinator import ViewCoordinator
 
 logger = logging.getLogger(__name__)
+
+LOG_PRIVACY_BANNER_DELAY_SECONDS = 1.0
+LOG_PRIVACY_BANNER_MIN_VISIBLE_SECONDS = 5.0
+LOG_PRIVACY_BANNER_POLL_INTERVAL_MS = 200
 
 
 class ClamUIApp(Adw.Application):
@@ -122,6 +127,12 @@ class ClamUIApp(Adw.Application):
 
         # VirusTotal client (lazy-initialized)
         self._vt_client = None
+
+        # Shared log privacy migration monitor
+        self._startup_log_manager = None
+        self._log_privacy_poll_id: int | None = None
+        self._log_privacy_started_at: float | None = None
+        self._log_privacy_banner_shown_at: float | None = None
 
         # Device monitor (initialized in do_startup)
         self._device_monitor = None
@@ -280,6 +291,7 @@ class ClamUIApp(Adw.Application):
             self._current_view = "scan"
 
         win.present()
+        self._ensure_log_privacy_migration_monitor()
 
         if self._first_activation:
             self._first_activation = False
@@ -292,6 +304,123 @@ class ClamUIApp(Adw.Application):
 
         if self._initial_scan_paths:
             self._process_initial_scan_paths()
+
+    def _get_startup_log_manager(self):
+        """Get the shared LogManager used to monitor privacy migration progress."""
+        if self._startup_log_manager is None:
+            from .core.log_manager import LogManager
+
+            self._startup_log_manager = LogManager()
+        return self._startup_log_manager
+
+    def _format_log_privacy_status(self, processed_files: int, total_files: int) -> str:
+        """Build the startup status text for persisted-log privacy migration."""
+        if total_files <= 0:
+            return _("Updating stored logs for privacy")
+
+        return ngettext(
+            "Updating stored log for privacy ({processed}/{total})",
+            "Updating stored logs for privacy ({processed}/{total})",
+            total_files,
+        ).format(processed=min(processed_files, total_files), total=total_files)
+
+    def _reset_log_privacy_banner_state(self) -> None:
+        """Clear banner timing state once startup migration handling is finished."""
+        self._log_privacy_started_at = None
+        self._log_privacy_banner_shown_at = None
+
+    def _show_log_privacy_progress_if_ready(self, win, status, now: float) -> None:
+        """Show the progress banner only after migration has been running long enough."""
+        if self._log_privacy_started_at is None:
+            self._log_privacy_started_at = now
+
+        if self._log_privacy_banner_shown_at is None:
+            elapsed = now - self._log_privacy_started_at
+            if elapsed < LOG_PRIVACY_BANNER_DELAY_SECONDS:
+                win.set_activity_status(None)
+                return
+
+            self._log_privacy_banner_shown_at = now
+
+        win.set_activity_status(
+            self._format_log_privacy_status(
+                processed_files=status.processed_files,
+                total_files=status.total_files,
+            )
+        )
+
+    def _should_keep_log_privacy_banner_visible(self, now: float) -> bool:
+        """Keep the banner visible for a minimum dwell time once it appears."""
+        if self._log_privacy_banner_shown_at is None:
+            return False
+
+        return (now - self._log_privacy_banner_shown_at) < LOG_PRIVACY_BANNER_MIN_VISIBLE_SECONDS
+
+    def _ensure_log_privacy_migration_monitor(self) -> None:
+        """Start monitoring the one-time persisted-log privacy migration."""
+        win = self.props.active_window
+        if win is None:
+            return
+
+        log_manager = self._get_startup_log_manager()
+        log_manager.start_privacy_migration_async()
+        status = log_manager.get_privacy_migration_status()
+        now = time.monotonic()
+
+        if status.is_running:
+            self._show_log_privacy_progress_if_ready(win, status, now)
+            if self._log_privacy_poll_id is None:
+                self._log_privacy_poll_id = GLib.timeout_add(
+                    LOG_PRIVACY_BANNER_POLL_INTERVAL_MS,
+                    self._poll_log_privacy_migration,
+                )
+            return
+
+        if self._should_keep_log_privacy_banner_visible(now):
+            win.set_activity_status(
+                self._format_log_privacy_status(
+                    processed_files=status.processed_files,
+                    total_files=status.total_files,
+                ),
+                show_spinner=False,
+            )
+            if self._log_privacy_poll_id is None:
+                self._log_privacy_poll_id = GLib.timeout_add(
+                    LOG_PRIVACY_BANNER_POLL_INTERVAL_MS,
+                    self._poll_log_privacy_migration,
+                )
+            return
+
+        win.set_activity_status(None)
+        self._reset_log_privacy_banner_state()
+
+    def _poll_log_privacy_migration(self) -> bool:
+        """Refresh the main-window banner while persisted logs are being migrated."""
+        win = self.props.active_window
+        if win is None:
+            self._log_privacy_poll_id = None
+            return False
+
+        status = self._get_startup_log_manager().get_privacy_migration_status()
+        now = time.monotonic()
+        if status.is_running:
+            self._show_log_privacy_progress_if_ready(win, status, now)
+            return True
+
+        if self._should_keep_log_privacy_banner_visible(now):
+            win.set_activity_status(
+                self._format_log_privacy_status(
+                    processed_files=status.processed_files,
+                    total_files=status.total_files,
+                ),
+                show_spinner=False,
+            )
+            return True
+
+        win.set_activity_status(None)
+        self._reset_log_privacy_banner_state()
+        self._log_privacy_poll_id = None
+        return False
 
     def _preinit_heavy_resources(self) -> None:
         """Pre-initialize heavy resources in the background."""

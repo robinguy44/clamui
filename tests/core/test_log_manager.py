@@ -8,12 +8,14 @@ import os
 import tempfile
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 from unittest import mock
 
 import pytest
 
 from src.core.log_manager import (
+    LOG_PRIVACY_STATE_FILENAME,
     DaemonStatus,
     LogEntry,
     LogManager,
@@ -5311,3 +5313,75 @@ class TestIndexRebuildPerformance:
         index = manager._load_index()
         assert len(index["entries"]) == 1
         assert index["entries"][0]["id"] == "late-uuid"
+
+
+class TestLogManagerPrivacyMigrationState:
+    """Tests for persisted-log privacy migration state and async startup support."""
+
+    def _write_legacy_log(self, log_dir: Path, log_id: str, suffix: str) -> Path:
+        """Write a legacy log file containing sensitive path data."""
+        original_path = f"/home/testuser/Documents/private-{suffix}.txt"
+        payload = {
+            "id": log_id,
+            "timestamp": datetime.now().isoformat(),
+            "type": "scan",
+            "status": "clean",
+            "summary": f"Scanned {original_path}",
+            "details": f"Legacy output for {original_path}",
+            "path": original_path,
+            "duration": 1.5,
+            "scheduled": False,
+        }
+        log_file = log_dir / f"{log_id}.json"
+        log_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        return log_file
+
+    def test_privacy_migration_writes_state_marker(self, tmp_path):
+        """Test that privacy migration marks legacy persisted logs as migrated."""
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        manager = LogManager(log_dir=str(log_dir))
+        log_file = self._write_legacy_log(log_dir, "legacy-log", "marker")
+
+        manager.get_logs()
+
+        marker = log_dir / LOG_PRIVACY_STATE_FILENAME
+        content = log_file.read_text(encoding="utf-8")
+
+        assert marker.exists()
+        assert "/home/testuser/Documents/private-marker.txt" not in content
+        assert REDACTED_PATH in content
+
+    def test_start_privacy_migration_async_completes_and_updates_status(self, tmp_path):
+        """Test that async privacy migration can be started early during app startup."""
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        self._write_legacy_log(log_dir, "legacy-a", "async-a")
+        self._write_legacy_log(log_dir, "legacy-b", "async-b")
+
+        manager = LogManager(log_dir=str(log_dir))
+
+        started = manager.start_privacy_migration_async()
+        completed = manager.wait_for_privacy_migration(timeout=2)
+        status = manager.get_privacy_migration_status()
+
+        assert started is True
+        assert completed is True
+        assert status.is_running is False
+        assert status.total_files == 2
+        assert status.processed_files == 2
+        assert (log_dir / LOG_PRIVACY_STATE_FILENAME).exists()
+
+    def test_privacy_migration_skips_second_full_rescan_when_marker_exists(self, tmp_path):
+        """Test that later LogManager instances reuse the on-disk migration marker."""
+        log_dir = tmp_path / "logs"
+        log_dir.mkdir()
+        self._write_legacy_log(log_dir, "legacy-log", "rerun")
+
+        LogManager(log_dir=str(log_dir)).get_logs()
+        manager = LogManager(log_dir=str(log_dir))
+
+        with mock.patch.object(manager, "_execute_privacy_migration_targets") as mock_execute:
+            manager.get_logs()
+
+        mock_execute.assert_not_called()
