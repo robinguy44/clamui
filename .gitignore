@@ -92,6 +92,11 @@ squashfs-root/
 clamui.zip
 *.AppImage
 
+# Environment files (prevent accidental credential commits)
+.env
+.env.*
+*.env
+
 # Claude Code sandbox stubs (empty read-only files blocking writes to git internals)
 HEAD
 config

@@ -93,7 +93,9 @@ def set_api_key(
                          If None, creates a new instance.
 
     Returns:
-        Tuple of (success, error_message). On success, error_message is None.
+        Tuple of (success, message). On success, message is None if stored
+        in the keyring, or a warning string if stored in the plaintext
+        settings fallback. On failure, message is an error string.
     """
     if not api_key:
         return False, _("API key cannot be empty")
@@ -120,7 +122,7 @@ def set_api_key(
 
     if settings_manager.set("virustotal_api_key", api_key):
         logger.info("Stored VirusTotal API key in settings")
-        return True, None
+        return True, _("Stored in settings file (keyring unavailable — less secure)")
 
     return False, _("Failed to save API key to settings")
 

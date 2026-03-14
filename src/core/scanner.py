@@ -129,6 +129,10 @@ class Scanner:
     while safely updating the UI via GLib.idle_add.
     """
 
+    # Cache daemon availability check result (60-second TTL)
+    _daemon_cache: tuple[float, bool] | None = None
+    _DAEMON_CACHE_TTL = 60.0
+
     def __init__(
         self,
         log_manager: LogManager | None = None,
@@ -171,6 +175,19 @@ class Scanner:
             )
         return self._daemon_scanner
 
+    def _is_daemon_available_cached(self) -> bool:
+        """Check daemon availability with caching (60s TTL)."""
+        now = time.monotonic()
+        if (
+            Scanner._daemon_cache is not None
+            and now - Scanner._daemon_cache[0] < Scanner._DAEMON_CACHE_TTL
+        ):
+            return Scanner._daemon_cache[1]
+
+        is_available, _ = check_clamd_connection()
+        Scanner._daemon_cache = (now, is_available)
+        return is_available
+
     def get_active_backend(self) -> str:
         """
         Get the backend that will actually be used for scanning.
@@ -185,7 +202,7 @@ class Scanner:
             is_available, _ = self._get_daemon_scanner().check_available()
             return "daemon" if is_available else "unavailable"
         else:  # auto
-            is_available, _ = check_clamd_connection()
+            is_available = self._is_daemon_available_cached()
             return "daemon" if is_available else "clamscan"
 
     def check_available(self) -> tuple[bool, str | None]:
@@ -213,7 +230,7 @@ class Scanner:
             return self._get_daemon_scanner().check_available()
         else:  # auto
             # For auto, check if daemon is available, otherwise fallback to clamscan
-            is_daemon_available, _ = check_clamd_connection()
+            is_daemon_available = self._is_daemon_available_cached()
             if is_daemon_available:
                 return (True, "Using clamd daemon")
             return check_clamav_installed()
@@ -276,7 +293,7 @@ class Scanner:
 
         # For auto mode, try daemon first if available
         if backend == "auto":
-            is_daemon_available, _ = check_clamd_connection()
+            is_daemon_available = self._is_daemon_available_cached()
             if is_daemon_available:
                 return self._get_daemon_scanner().scan_sync(
                     path, recursive, profile_exclusions, progress_callback=progress_callback
@@ -378,7 +395,7 @@ class Scanner:
             self._save_scan_log(result, time.monotonic() - start_time)
             return result
 
-    def _count_files(self, path: str, profile_exclusions: dict | None = None) -> int:
+    def _count_files(self, path: str, profile_exclusions: dict | None = None) -> int | None:
         """
         Pre-count files for progress calculation.
 
@@ -389,7 +406,7 @@ class Scanner:
             profile_exclusions: Optional exclusions from a scan profile
 
         Returns:
-            Total number of files that will be scanned
+            Total number of files to scan, or None if counting was skipped
         """
         scan_path = Path(path)
 
@@ -397,9 +414,16 @@ class Scanner:
         if scan_path.is_file():
             return 1
 
+        # Skip pre-counting for root-level paths (adds 3-30s of overhead)
+        # The UI handles files_total=None gracefully (shows count without percentage)
+        ROOT_LEVEL_PATHS = {"/", "/home", "/usr", "/var", "/opt", "/etc", "/tmp", "/root"}
+        resolved = str(scan_path.resolve())
+        if resolved in ROOT_LEVEL_PATHS:
+            return None
+
         # Not a valid path
         if not scan_path.is_dir():
-            return 0
+            return None
 
         # Collect exclusion patterns
         exclude_patterns: list[str] = []
@@ -534,8 +558,8 @@ class Scanner:
                     files_scanned=files_scanned,
                     files_total=files_total,
                     infected_count=infected_count,
-                    infected_files=infected_files.copy(),
-                    infected_threats=infected_threats.copy(),
+                    infected_files=infected_files,
+                    infected_threats=infected_threats,
                 )
                 progress_callback(progress)
 
@@ -559,8 +583,8 @@ class Scanner:
                         files_scanned=files_scanned,
                         files_total=files_total,
                         infected_count=infected_count,
-                        infected_files=infected_files.copy(),
-                        infected_threats=infected_threats.copy(),
+                        infected_files=infected_files,
+                        infected_threats=infected_threats,
                     )
                     progress_callback(progress)
 

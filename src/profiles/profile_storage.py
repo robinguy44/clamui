@@ -112,6 +112,8 @@ class ProfileStorage:
                     # Atomic rename
                     temp_path_obj = Path(temp_path)
                     temp_path_obj.replace(self._storage_path)
+                    # Restrict permissions to owner-only (profiles contain user paths)
+                    os.chmod(self._storage_path, 0o600)
                     return True
                 except Exception:
                     # Clean up temp file on failure

@@ -166,6 +166,7 @@ class DaemonScanner:
             # scanning a directory (which produces a single summary line)
             if progress_callback is not None and file_paths:
                 fd, file_list_path = tempfile.mkstemp(prefix="clamui_filelist_", suffix=".txt")
+                os.fchmod(fd, 0o600)
                 try:
                     with os.fdopen(fd, "w") as f:
                         f.write("\n".join(file_paths))
@@ -450,8 +451,8 @@ class DaemonScanner:
                     files_scanned=files_scanned,
                     files_total=files_total,
                     infected_count=infected_count,
-                    infected_files=infected_files.copy(),
-                    infected_threats=infected_threats.copy(),
+                    infected_files=infected_files,
+                    infected_threats=infected_threats,
                 )
                 progress_callback(progress)
 
@@ -484,8 +485,8 @@ class DaemonScanner:
                         files_scanned=files_scanned,
                         files_total=files_total,
                         infected_count=infected_count,
-                        infected_files=infected_files.copy(),
-                        infected_threats=infected_threats.copy(),
+                        infected_files=infected_files,
+                        infected_threats=infected_threats,
                     )
                     progress_callback(progress)
 
@@ -509,8 +510,8 @@ class DaemonScanner:
                             files_scanned=files_scanned,
                             files_total=files_total,
                             infected_count=infected_count,
-                            infected_files=infected_files.copy(),
-                            infected_threats=infected_threats.copy(),
+                            infected_files=infected_files,
+                            infected_threats=infected_threats,
                         )
                         progress_callback(progress)
                         break

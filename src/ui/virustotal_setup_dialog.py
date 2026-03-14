@@ -275,10 +275,10 @@ class VirusTotalSetupDialog(Adw.Window):
             return
 
         # Save to keyring
-        success, error = set_api_key(api_key, self._settings_manager)
+        success, message = set_api_key(api_key, self._settings_manager)
 
         if success:
-            self._show_toast(_("API key saved"))
+            self._show_toast(message or _("API key saved"))
 
             # Close dialog and trigger callback
             self.close()
@@ -287,8 +287,8 @@ class VirusTotalSetupDialog(Adw.Window):
                 self._on_key_saved(api_key)
         else:
             self._show_toast(
-                _("Failed to save: {error}").format(error=error)
-                if error
+                _("Failed to save: {error}").format(error=message)
+                if message
                 else _("Failed to save API key")
             )
 

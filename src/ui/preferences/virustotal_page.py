@@ -292,10 +292,10 @@ class VirusTotalPage:
             return
 
         # Save to keyring
-        success, error = set_api_key(api_key, settings_manager)
+        success, message = set_api_key(api_key, settings_manager)
 
         if success:
-            VirusTotalPage._show_toast(page, _("API key saved"))
+            VirusTotalPage._show_toast(page, message or _("API key saved"))
 
             # Update status using helper
             update_status_row(
@@ -311,8 +311,8 @@ class VirusTotalPage:
             page._save_button.set_sensitive(False)
             page._delete_button.set_sensitive(True)
         else:
-            if error:
-                VirusTotalPage._show_toast(page, _("Failed to save: {error}").format(error=error))
+            if message:
+                VirusTotalPage._show_toast(page, _("Failed to save: {error}").format(error=message))
             else:
                 VirusTotalPage._show_toast(page, _("Failed"))
 
