@@ -1,6 +1,7 @@
 # ClamUI TrayIcons Tests
 """Unit tests for the tray_icons module."""
 
+import os
 import sys
 from pathlib import Path
 from unittest import mock
@@ -163,6 +164,47 @@ class TestTrayIconGeneratorInit:
 
         with pytest.raises(FileNotFoundError):
             tray_icons.TrayIconGenerator(str(base_icon), str(cache_dir))
+
+    def test_init_svg_without_cairosvg_raises(self, tmp_path, mock_pil_modules):
+        """Test that SVG icon without cairosvg raises RuntimeError."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        tray_icons.CAIROSVG_AVAILABLE = False
+
+        svg_icon = tmp_path / "icon.svg"
+        svg_icon.write_text("<svg></svg>")
+        cache_dir = tmp_path / "cache"
+
+        with pytest.raises(RuntimeError, match="cairosvg is required"):
+            tray_icons.TrayIconGenerator(str(svg_icon), str(cache_dir))
+
+    def test_init_svg_with_cairosvg_triggers_conversion(
+        self, tmp_path, monkeypatch, mock_pil_modules
+    ):
+        """Test that SVG icon with cairosvg available triggers conversion."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        mock_cairosvg = mock.MagicMock()
+        monkeypatch.setitem(sys.modules, "cairosvg", mock_cairosvg)
+        tray_icons.CAIROSVG_AVAILABLE = True
+        tray_icons.cairosvg = mock_cairosvg
+
+        svg_icon = tmp_path / "icon.svg"
+        svg_icon.write_text("<svg></svg>")
+        cache_dir = tmp_path / "cache"
+
+        generator = tray_icons.TrayIconGenerator(str(svg_icon), str(cache_dir))
+
+        assert generator._converted_png_path is not None
+        assert generator._converted_png_path == cache_dir / "clamui-base-converted.png"
 
     def test_init_stores_paths(self, tmp_path, mock_pil_modules):
         """Test that generator stores base icon and cache dir paths."""
@@ -462,6 +504,171 @@ class TestIsAvailable:
         result = tray_icons.is_available()
 
         assert result is False
+
+    def test_is_available_false_svg_without_cairosvg(self, monkeypatch, mock_pil_modules):
+        """Test is_available returns False when icon is SVG and cairosvg unavailable."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        monkeypatch.setattr(
+            tray_icons, "find_clamui_base_icon", lambda: "/usr/share/icons/clamui.svg"
+        )
+        tray_icons.PIL_AVAILABLE = True
+        tray_icons.CAIROSVG_AVAILABLE = False
+
+        result = tray_icons.is_available()
+        assert result is False
+
+    def test_is_available_true_svg_with_cairosvg(self, monkeypatch, mock_pil_modules):
+        """Test is_available returns True when icon is SVG and cairosvg available."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        monkeypatch.setattr(
+            tray_icons, "find_clamui_base_icon", lambda: "/usr/share/icons/clamui.svg"
+        )
+        tray_icons.PIL_AVAILABLE = True
+        tray_icons.CAIROSVG_AVAILABLE = True
+
+        result = tray_icons.is_available()
+        assert result is True
+
+    def test_is_available_true_png_regardless_of_cairosvg(self, monkeypatch, mock_pil_modules):
+        """Test is_available returns True for PNG icon regardless of cairosvg."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        monkeypatch.setattr(
+            tray_icons, "find_clamui_base_icon", lambda: "/usr/share/icons/clamui.png"
+        )
+        tray_icons.PIL_AVAILABLE = True
+        tray_icons.CAIROSVG_AVAILABLE = False
+
+        result = tray_icons.is_available()
+        assert result is True
+
+
+class TestConvertSvgToPng:
+    """Tests for SVG to PNG conversion via cairosvg."""
+
+    def test_convert_svg_calls_cairosvg_svg2png(self, tmp_path, monkeypatch, mock_pil_modules):
+        """Test that SVG base icon triggers cairosvg.svg2png with correct args."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        mock_cairosvg = mock.MagicMock()
+        monkeypatch.setitem(sys.modules, "cairosvg", mock_cairosvg)
+        tray_icons.CAIROSVG_AVAILABLE = True
+        tray_icons.cairosvg = mock_cairosvg
+
+        svg_icon = tmp_path / "icon.svg"
+        svg_icon.write_text("<svg></svg>")
+        cache_dir = tmp_path / "cache"
+
+        tray_icons.TrayIconGenerator(str(svg_icon), str(cache_dir))
+
+        mock_cairosvg.svg2png.assert_called_once_with(
+            url=str(svg_icon),
+            write_to=str(cache_dir / "clamui-base-converted.png"),
+            output_width=128,
+            output_height=128,
+        )
+
+    def test_convert_svg_uses_cache_when_fresh(self, tmp_path, monkeypatch, mock_pil_modules):
+        """Test that cached PNG is reused when newer than SVG source."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        mock_cairosvg = mock.MagicMock()
+        monkeypatch.setitem(sys.modules, "cairosvg", mock_cairosvg)
+        tray_icons.CAIROSVG_AVAILABLE = True
+        tray_icons.cairosvg = mock_cairosvg
+
+        svg_icon = tmp_path / "icon.svg"
+        svg_icon.write_text("<svg></svg>")
+        cache_dir = tmp_path / "cache"
+        cache_dir.mkdir()
+
+        # Pre-create cached PNG newer than the SVG
+        cached_png = cache_dir / "clamui-base-converted.png"
+        cached_png.write_bytes(b"cached png data")
+
+        import time
+
+        time.sleep(0.01)
+        # Touch the cache to ensure it's newer
+        os.utime(cached_png, None)
+
+        tray_icons.TrayIconGenerator(str(svg_icon), str(cache_dir))
+
+        mock_cairosvg.svg2png.assert_not_called()
+
+    def test_convert_svg_raises_runtime_error_on_failure(
+        self, tmp_path, monkeypatch, mock_pil_modules
+    ):
+        """Test that cairosvg failure raises RuntimeError."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        mock_cairosvg = mock.MagicMock()
+        mock_cairosvg.svg2png.side_effect = Exception("SVG parse error")
+        monkeypatch.setitem(sys.modules, "cairosvg", mock_cairosvg)
+        tray_icons.CAIROSVG_AVAILABLE = True
+        tray_icons.cairosvg = mock_cairosvg
+
+        svg_icon = tmp_path / "icon.svg"
+        svg_icon.write_text("<svg></svg>")
+        cache_dir = tmp_path / "cache"
+
+        with pytest.raises(RuntimeError, match="Failed to convert SVG to PNG"):
+            tray_icons.TrayIconGenerator(str(svg_icon), str(cache_dir))
+
+
+class TestGetBaseIconPath:
+    """Tests for TrayIconGenerator._get_base_icon_path method."""
+
+    def test_get_base_icon_path_returns_converted_png(
+        self, tmp_path, monkeypatch, mock_pil_modules
+    ):
+        """Test that after SVG init, _get_base_icon_path returns converted PNG path."""
+        import importlib
+
+        from src.ui import tray_icons
+
+        importlib.reload(tray_icons)
+
+        mock_cairosvg = mock.MagicMock()
+        monkeypatch.setitem(sys.modules, "cairosvg", mock_cairosvg)
+        tray_icons.CAIROSVG_AVAILABLE = True
+        tray_icons.cairosvg = mock_cairosvg
+
+        svg_icon = tmp_path / "icon.svg"
+        svg_icon.write_text("<svg></svg>")
+        cache_dir = tmp_path / "cache"
+
+        generator = tray_icons.TrayIconGenerator(str(svg_icon), str(cache_dir))
+
+        result = generator._get_base_icon_path()
+        assert result == cache_dir / "clamui-base-converted.png"
+        assert result != svg_icon
 
 
 class TestTrayIconGeneratorCaching:
