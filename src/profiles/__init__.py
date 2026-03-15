@@ -7,4 +7,4 @@ from .models import ScanProfile
 from .profile_manager import ProfileManager
 from .profile_storage import ProfileStorage
 
-__all__ = ["ScanProfile", "ProfileManager", "ProfileStorage"]
+__all__ = ["ProfileManager", "ProfileStorage", "ScanProfile"]

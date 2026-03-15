@@ -620,7 +620,7 @@ class DaemonScanner:
 
         file_count = 0
         dir_count = 0
-        file_paths: list[str] = [] if collect_paths else []
+        file_paths: list[str] = []
 
         try:
             for root, dirs, files in os.walk(path):

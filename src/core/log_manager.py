@@ -516,7 +516,7 @@ class LogEntry:
             status=_sanitize_private_line(raw_status),
             summary=_sanitize_private_line(raw_summary),
             details=_sanitize_private_text(raw_details),
-            path=None if raw_path else None,
+            path=sanitize_log_line(raw_path) if raw_path else None,
             duration=data.get("duration", 0.0),
             scheduled=data.get("scheduled", False),
         )

@@ -107,11 +107,11 @@ def validate_pattern(pattern: str) -> bool:
 
 # Re-export types for backwards compatibility
 __all__ = [
-    "ScanStatus",
     "ScanProgress",
-    "ThreatDetail",
     "ScanResult",
+    "ScanStatus",
     "Scanner",
+    "ThreatDetail",
     "glob_to_regex",
     "validate_pattern",
 ]

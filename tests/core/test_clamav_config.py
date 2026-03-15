@@ -236,12 +236,8 @@ class TestClamAVConfig:
         config.values = {
             "DatabaseDirectory": [ClamAVConfigValue(value="/var/lib/clamav", line_number=1)],
             "DatabaseCustomURL": [
-                ClamAVConfigValue(
-                    value="https://old-url.example.com/sigs.hdb", line_number=2
-                ),
-                ClamAVConfigValue(
-                    value="https://another-old.example.com/sigs.hdb", line_number=3
-                ),
+                ClamAVConfigValue(value="https://old-url.example.com/sigs.hdb", line_number=2),
+                ClamAVConfigValue(value="https://another-old.example.com/sigs.hdb", line_number=3),
             ],
             "Checks": [ClamAVConfigValue(value="12", line_number=4)],
         }

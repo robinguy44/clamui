@@ -99,7 +99,7 @@ def check_symlink_safety(path: Path) -> tuple[bool, str | None]:
         return (True, None)
 
     except (OSError, RuntimeError) as e:
-        return (False, f"Error checking symlink: {str(e)}")
+        return (False, f"Error checking symlink: {e!s}")
 
 
 def validate_path(path: str) -> tuple[bool, str | None]:
@@ -136,7 +136,7 @@ def validate_path(path: str) -> tuple[bool, str | None]:
     try:
         resolved_path = path_obj.resolve()
     except (OSError, RuntimeError) as e:
-        return (False, f"Error resolving path: {str(e)}")
+        return (False, f"Error resolving path: {e!s}")
 
     # Check if path exists
     if not resolved_path.exists():
@@ -157,7 +157,7 @@ def validate_path(path: str) -> tuple[bool, str | None]:
                 f"Permission denied: Cannot access directory contents of {path}",
             )
         except OSError as e:
-            return (False, f"Error accessing directory: {str(e)}")
+            return (False, f"Error accessing directory: {e!s}")
 
     return (True, None)
 
@@ -203,7 +203,7 @@ def validate_dropped_files(paths: list[str | None]) -> tuple[list[str], list[str
                 resolved = str(Path(path).resolve())
                 valid_paths.append(resolved)
             except (OSError, RuntimeError) as e:
-                errors.append(f"Error resolving path: {str(e)}")
+                errors.append(f"Error resolving path: {e!s}")
         else:
             if error:
                 errors.append(error)

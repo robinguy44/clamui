@@ -12,7 +12,7 @@ import os
 import tempfile
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -204,7 +204,7 @@ class ProfileManager:
 
     def _get_timestamp(self) -> str:
         """Get current timestamp in ISO 8601 format."""
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(UTC).isoformat()
 
     def _load_migration_state(self) -> dict[str, int]:
         """

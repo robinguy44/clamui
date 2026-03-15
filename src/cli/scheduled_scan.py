@@ -197,7 +197,7 @@ def send_notification(title: str, body: str, urgency: str = "normal") -> bool:
             "dialog-warning",  # Fallback system icon
         ]
         for icon in icon_paths:
-            if icon.startswith("/") and os.path.exists(icon) or not icon.startswith("/"):
+            if (icon.startswith("/") and os.path.exists(icon)) or not icon.startswith("/"):
                 cmd.extend(["--icon", icon])
                 break
 

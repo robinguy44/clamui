@@ -85,6 +85,10 @@ select = [
     "ARG",    # flake8-unused-arguments
     "SIM",    # flake8-simplify
     "INT",    # flake8-gettext (catches f-strings in gettext calls)
+    "S",      # flake8-bandit (security)
+    "T20",    # flake8-print (enforce logger over print)
+    "PT",     # flake8-pytest-style
+    "RUF",    # Ruff-native rules
 ]
 ignore = [
     "E501",   # line too long (handled by formatter)
@@ -97,7 +101,31 @@ ignore = [
     "ARG001", # unused function argument (common in callbacks)
     "ARG002", # unused method argument (common for test fixtures)
     "ARG005", # unused lambda argument (common in GTK signal handlers)
+    "S603",   # subprocess with shell=False (core to ClamAV CLI wrapping)
+    "S607",   # partial path for process (ClamAV binaries found via PATH)
+    "S606",   # process without shell (same rationale as S603)
+    "S311",   # random not for crypto (used for log sampling)
+    "S103",   # file permissions — intentional security hardening (0o600)
+    "S108",   # hardcoded /tmp paths — used legitimately for temp operations
+    "S110",   # try-except-pass — used in cleanup/fallback code
+    "S112",   # try-except-continue — same rationale
+    "S314",   # XML ElementTree — only parses trusted local config/coverage files
+    "S608",   # SQL-like string — false positives on log messages
+    "PT009",  # unittest-style asserts (existing class-based test convention)
+    "PT027",  # unittest assertRaises (same reason)
+    "RUF005", # collection literal concatenation (stylistic preference)
+    "RUF012", # mutable class default (common in GTK widget classes)
+    "RUF013", # implicit Optional (existing convention)
+    "RUF059", # unused unpacked variable (common ok/error unpacking pattern)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"src/cli/*.py" = ["T201"]              # CLI output is print-based
+"src/ui/tray_service.py" = ["T201"]    # IPC protocol over stdout
+"src/main.py" = ["T201"]              # Startup diagnostic
+"src/core/logging_config.py" = ["T201"] # Fallback when logger itself fails
+"src/core/log_manager.py" = ["T201"]   # Export error handling
+"tests/**/*.py" = ["S101", "S105", "S106", "S107", "PT006", "PT008", "PT011", "PT018", "PT021", "PT022"]  # assert + test credentials + pytest style
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
@@ -154,6 +182,7 @@ directory = "htmlcov"
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
+    "pytest-mock>=3.12.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.14.10",
     "pygobject-stubs>=2.16.0",

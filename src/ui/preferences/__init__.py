@@ -17,4 +17,4 @@ from .exclusions_page import PRESET_EXCLUSIONS
 from .virustotal_page import VirusTotalPage
 from .window import PreferencesWindow
 
-__all__ = ["PreferencesWindow", "PRESET_EXCLUSIONS", "VirusTotalPage"]
+__all__ = ["PRESET_EXCLUSIONS", "PreferencesWindow", "VirusTotalPage"]

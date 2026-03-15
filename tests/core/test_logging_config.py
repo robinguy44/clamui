@@ -571,4 +571,7 @@ class TestLoggingIntegration:
         archived_pending = sorted(log_dir.glob("clamui.log.archived-*"))
         assert archived_pending
         assert REDACTED_PATH in archived_pending[0].read_text(encoding="utf-8")
-        assert clean_backup.read_text(encoding="utf-8") == f"Existing debug entry for {REDACTED_PATH}\n"
+        assert (
+            clean_backup.read_text(encoding="utf-8")
+            == f"Existing debug entry for {REDACTED_PATH}\n"
+        )

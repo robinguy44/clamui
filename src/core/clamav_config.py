@@ -71,7 +71,7 @@ class ClamAVConfig:
         Returns:
             The first value if the key exists, None otherwise
         """
-        if key in self.values and self.values[key]:
+        if self.values.get(key):
             return self.values[key][0].value
         return None
 
@@ -159,10 +159,7 @@ class ClamAVConfig:
         """
         if key in self.values:
             for config_value in self.values[key]:
-                if (
-                    config_value.line_number > 0
-                    and config_value.line_number <= len(self.raw_lines)
-                ):
+                if config_value.line_number > 0 and config_value.line_number <= len(self.raw_lines):
                     self.raw_lines[config_value.line_number - 1] = ""
             del self.values[key]
 
@@ -325,7 +322,7 @@ def parse_config(file_path: str) -> tuple[ClamAVConfig | None, str | None]:
     try:
         resolved_path = Path(file_path).resolve()
     except (OSError, RuntimeError) as e:
-        return (None, f"Invalid file path: {str(e)}")
+        return (None, f"Invalid file path: {e!s}")
 
     # Check if file exists
     if not resolved_path.exists():
@@ -349,11 +346,11 @@ def parse_config(file_path: str) -> tuple[ClamAVConfig | None, str | None]:
             with open(resolved_path, encoding="latin-1") as f:
                 raw_lines = f.readlines()
         except Exception as e:
-            return (None, f"Error reading configuration file: {str(e)}")
+            return (None, f"Error reading configuration file: {e!s}")
     except PermissionError:
         return (None, f"Permission denied: Cannot read {file_path}")
     except OSError as e:
-        return (None, f"Error reading configuration file: {str(e)}")
+        return (None, f"Error reading configuration file: {e!s}")
 
     # Create config object
     config = ClamAVConfig(file_path=resolved_path, raw_lines=raw_lines)
@@ -589,9 +586,9 @@ def write_config(config: ClamAVConfig) -> tuple[bool, str | None]:
     except PermissionError:
         return (False, f"Permission denied: Cannot write to {config.file_path}")
     except OSError as e:
-        return (False, f"Error writing configuration file: {str(e)}")
+        return (False, f"Error writing configuration file: {e!s}")
     except Exception as e:
-        return (False, f"Unexpected error writing configuration: {str(e)}")
+        return (False, f"Unexpected error writing configuration: {e!s}")
 
 
 def validate_config_file(file_path: str) -> tuple[bool, list[str]]:
@@ -767,7 +764,7 @@ def _write_config_direct(file_path: Path, content: str) -> tuple[bool, str | Non
         file_path.chmod(0o644)
         return (True, None)
     except Exception as e:
-        return (False, f"Failed to write config: {str(e)}")
+        return (False, f"Failed to write config: {e!s}")
 
 
 def _get_privileged_writer_path() -> str | None:
@@ -898,7 +895,7 @@ done
     except FileNotFoundError:
         return (False, "pkexec not found - cannot elevate privileges")
     except Exception as e:
-        return (False, f"Unexpected error: {str(e)}")
+        return (False, f"Unexpected error: {e!s}")
 
 
 def write_config_with_elevation(config: ClamAVConfig) -> tuple[bool, str | None]:

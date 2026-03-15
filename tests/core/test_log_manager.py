@@ -116,7 +116,7 @@ class TestLogEntry:
         assert entry.status == "clean"
         assert entry.summary == "No threats found"
         assert entry.details == "Scan complete"
-        assert entry.path is None
+        assert entry.path == "/home/user"
         assert entry.duration == 120.5
 
     def test_from_dict_with_missing_fields(self):
@@ -463,7 +463,11 @@ Scanned directories: 10
             "path": "/home/user\n\x1b[31m/malicious\u202e",
         }
         entry = LogEntry.from_dict(data)
-        assert entry.path is None
+        # Path is sanitized (ANSI, control chars, bidi overrides stripped) but preserved
+        assert entry.path is not None
+        assert "\x1b" not in entry.path
+        assert "\n" not in entry.path
+        assert "\u202e" not in entry.path
 
     def test_from_dict_sanitizes_status(self):
         """Test from_dict sanitizes status field from deserialized data."""
@@ -514,7 +518,10 @@ Scanned directories: 10
         assert "\n" not in entry.status
         assert "\n" not in entry.summary  # Log injection prevented
         assert "\x1b" not in entry.details  # ANSI obfuscation removed
-        assert entry.path is None
+        # Path is sanitized (control chars, bidi overrides stripped) but preserved
+        assert entry.path is not None
+        assert "\n" not in entry.path
+        assert "\u202e" not in entry.path
 
         # Verify sanitized values
         assert entry.status == "clean infected"

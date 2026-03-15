@@ -43,7 +43,7 @@ def _setup_path():
 _setup_path()
 
 # Initialize i18n before any translatable strings are used
-from .core.i18n import _  # noqa: F401, E402
+from .core.i18n import _  # noqa: F401 — initializes i18n at import time
 
 
 def _configure_logging():

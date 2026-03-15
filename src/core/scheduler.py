@@ -351,7 +351,7 @@ class Scheduler:
         except subprocess.TimeoutExpired:
             return (False, "Timeout checking timer status")
         except Exception as e:
-            return (False, f"Error checking timer: {str(e)}")
+            return (False, f"Error checking timer: {e!s}")
 
     def _get_cron_status(self) -> tuple[bool, str | None]:
         """
@@ -379,7 +379,7 @@ class Scheduler:
         except subprocess.TimeoutExpired:
             return (False, "Timeout checking crontab")
         except Exception as e:
-            return (False, f"Error checking crontab: {str(e)}")
+            return (False, f"Error checking crontab: {e!s}")
 
     def _generate_oncalendar(
         self,
@@ -718,11 +718,11 @@ class Scheduler:
         except PermissionError:
             return (False, "Permission denied creating systemd files")
         except OSError as e:
-            return (False, f"Error creating systemd files: {str(e)}")
+            return (False, f"Error creating systemd files: {e!s}")
         except subprocess.TimeoutExpired:
             return (False, "Timeout enabling systemd timer")
         except Exception as e:
-            return (False, f"Error enabling schedule: {str(e)}")
+            return (False, f"Error enabling schedule: {e!s}")
 
     def _generate_service_file(
         self,
@@ -870,7 +870,7 @@ WantedBy=timers.target
         except subprocess.TimeoutExpired:
             return (False, "Timeout updating crontab")
         except Exception as e:
-            return (False, f"Error enabling schedule: {str(e)}")
+            return (False, f"Error enabling schedule: {e!s}")
 
     def disable_schedule(self) -> tuple[bool, str | None]:
         """
@@ -937,11 +937,11 @@ WantedBy=timers.target
         except PermissionError:
             return (False, "Permission denied removing systemd files")
         except OSError as e:
-            return (False, f"Error removing systemd files: {str(e)}")
+            return (False, f"Error removing systemd files: {e!s}")
         except subprocess.TimeoutExpired:
             return (False, "Timeout disabling systemd timer")
         except Exception as e:
-            return (False, f"Error disabling schedule: {str(e)}")
+            return (False, f"Error disabling schedule: {e!s}")
 
     def _disable_cron_schedule(self) -> tuple[bool, str | None]:
         """
@@ -1002,7 +1002,7 @@ WantedBy=timers.target
         except subprocess.TimeoutExpired:
             return (False, "Timeout updating crontab")
         except Exception as e:
-            return (False, f"Error disabling schedule: {str(e)}")
+            return (False, f"Error disabling schedule: {e!s}")
 
     def is_schedule_active(self) -> bool:
         """

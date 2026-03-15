@@ -137,7 +137,7 @@ class TestDebugPageLoadLogLevel:
     def test_load_log_level_from_settings(self, mock_gi_modules):
         """Test loading log level from settings manager."""
         adw = mock_gi_modules["adw"]
-        _ = mock_gi_modules["gtk"]  # noqa: F841
+        _ = mock_gi_modules["gtk"]
 
         settings_manager = MagicMock()
         settings_manager.get.return_value = "DEBUG"
@@ -157,7 +157,7 @@ class TestDebugPageLoadLogLevel:
     def test_load_log_level_default_warning(self, mock_gi_modules):
         """Test default log level is WARNING when not set."""
         adw = mock_gi_modules["adw"]
-        _ = mock_gi_modules["gtk"]  # noqa: F841
+        _ = mock_gi_modules["gtk"]
 
         settings_manager = MagicMock()
         settings_manager.get.return_value = "WARNING"

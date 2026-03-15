@@ -534,7 +534,7 @@ class TestUpdateViewAsyncFreshclamStatus:
         with mock.patch("threading.Thread"):
             with mock.patch.object(UpdateView, "_setup_ui"):
                 with mock.patch.object(UpdateView, "_check_freshclam_status") as mock_check:
-                    view = UpdateView()  # noqa: F841
+                    _view = UpdateView()
 
                     # _check_freshclam_status should NOT be called directly in __init__
                     mock_check.assert_not_called()

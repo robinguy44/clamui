@@ -324,7 +324,6 @@ Time: 10.123 sec (0 m 10 s)"""
         windows_text = "Line 1\r\nLine 2\r\nLine 3"
         assert sanitize_log_text(windows_text) == windows_text
 
-
     def test_sanitize_log_text_mixed_line_endings(self):
         """Test sanitize_log_text preserves mixed line endings."""
         mixed = "Line 1\nLine 2\r\nLine 3\rLine 4"
@@ -461,7 +460,7 @@ class TestSanitizationEdgeCases:
 
         for pattern in patterns:
             result = sanitize_log_line(f"Before{pattern}After")
-            assert result == "BeforeAfter", f"Failed to remove pattern: {repr(pattern)}"
+            assert result == "BeforeAfter", f"Failed to remove pattern: {pattern!r}"
 
     def test_boundary_ascii_values(self):
         """Test handling of boundary ASCII values."""

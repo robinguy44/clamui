@@ -222,6 +222,7 @@ dev = [
     { name = "pygobject-stubs" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "pytest-mock" },
     { name = "ruff" },
 ]
 
@@ -250,6 +251,7 @@ dev = [
     { name = "pygobject-stubs", specifier = ">=2.16.0" },
     { name = "pytest", specifier = ">=8.0.0" },
     { name = "pytest-cov", specifier = ">=4.1.0" },
+    { name = "pytest-mock", specifier = ">=3.12.0" },
     { name = "ruff", specifier = ">=0.14.10" },
 ]
 
