@@ -741,6 +741,32 @@ Infected files: 0
         assert result.skipped_files == ["/root/secret"]
         assert result.warning_message == "1 file(s) could not be accessed"
 
+    def test_parse_results_special_file_warnings_in_stderr(self):
+        """Special-file warnings should be treated as non-fatal skipped paths."""
+        scanner = Scanner()
+
+        stdout = """----------- SCAN SUMMARY -----------
+Scanned files: 10
+Scanned directories: 3
+Infected files: 0
+"""
+        stderr = """WARNING: /home/user/.cache/ibus/dbus-abc: Not supported file type
+LibClamAV Warning: cli_realpath: Invalid arguments.
+WARNING: /home/user/.cache/steam_pipe: Not supported file type
+LibClamAV Warning: cli_realpath: Invalid arguments.
+"""
+
+        result = scanner._parse_results("/home/user", stdout, stderr, 2)
+
+        assert result.status == ScanStatus.CLEAN
+        assert result.infected_count == 0
+        assert result.skipped_count == 2
+        assert result.skipped_files == [
+            "/home/user/.cache/ibus/dbus-abc",
+            "/home/user/.cache/steam_pipe",
+        ]
+        assert result.warning_message == "2 file(s) could not be accessed"
+
     def test_scan_result_has_warnings_property(self):
         """Test ScanResult.has_warnings property works correctly."""
         # No warnings

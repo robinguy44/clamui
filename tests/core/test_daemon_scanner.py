@@ -2,6 +2,7 @@
 """Unit tests for the daemon scanner module."""
 
 import subprocess
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -220,6 +221,29 @@ Infected files: 1
         assert result.status == scan_status_class.CLEAN
         assert result.skipped_count == 1
         assert result.skipped_files == ["/home/user/a.txt"]
+
+    def test_parse_results_special_file_warnings_are_nonfatal(
+        self, daemon_scanner_class, scan_status_class
+    ):
+        """Runtime special-file warnings should be treated as skipped paths."""
+        scanner = daemon_scanner_class()
+
+        stdout = """
+WARNING: /home/user/.cache/ibus/dbus-abc: Not supported file type
+LibClamAV Warning: cli_realpath: Invalid arguments.
+WARNING: /home/user/.cache/steam_pipe: Not supported file type
+LibClamAV Warning: cli_realpath: Invalid arguments.
+"""
+        result = scanner._parse_results("/home/user", stdout, "", 2, file_count=2, dir_count=0)
+
+        assert result.status == scan_status_class.CLEAN
+        assert result.infected_count == 0
+        assert result.skipped_count == 2
+        assert result.skipped_files == [
+            "/home/user/.cache/ibus/dbus-abc",
+            "/home/user/.cache/steam_pipe",
+        ]
+        assert result.warning_message == "2 file(s) could not be accessed"
 
 
 class TestDaemonScannerProgressParsing:
@@ -712,6 +736,52 @@ class TestDaemonScannerCountTargets:
         call_args = mock_sync.call_args
         assert call_args[0][0] == str(test_dir)  # path
         assert call_args[0][3] is False  # count_targets (4th positional arg)
+
+    def test_scan_sync_uses_file_list_when_exclusions_active_without_progress(
+        self, tmp_path, daemon_scanner_class, scan_status_class
+    ):
+        """Daemon scans should use --file-list so exclusions shape the actual scan."""
+        test_dir = tmp_path / "scan_test"
+        included_dir = test_dir / "included"
+        excluded_dir = test_dir / "excluded"
+        included_dir.mkdir(parents=True)
+        excluded_dir.mkdir(parents=True)
+        included_file = included_dir / "keep.txt"
+        excluded_file = excluded_dir / "skip.txt"
+        included_file.write_text("keep")
+        excluded_file.write_text("skip")
+
+        scanner = daemon_scanner_class()
+        profile_exclusions = {"paths": [str(excluded_dir)], "patterns": []}
+
+        with (
+            patch("src.core.daemon_scanner.check_clamdscan_installed") as mock_installed,
+            patch("src.core.daemon_scanner.check_clamd_connection") as mock_connection,
+            patch("src.core.daemon_scanner.os.unlink"),
+            patch("subprocess.Popen") as mock_popen,
+        ):
+            mock_installed.return_value = (True, "ClamAV 1.0.0")
+            mock_connection.return_value = (True, "PONG")
+
+            mock_process = MagicMock()
+            mock_process.communicate.return_value = ("", "")
+            mock_process.returncode = 0
+            mock_popen.return_value = mock_process
+
+            result = scanner.scan_sync(
+                str(test_dir),
+                profile_exclusions=profile_exclusions,
+                count_targets=True,
+                progress_callback=None,
+            )
+
+        assert result.status == scan_status_class.CLEAN
+        cmd = mock_popen.call_args[0][0]
+        assert "--file-list" in cmd
+        file_list_path = cmd[cmd.index("--file-list") + 1]
+        file_list_content = Path(file_list_path).read_text(encoding="utf-8")
+        assert str(included_file) in file_list_content
+        assert str(excluded_file) not in file_list_content
 
     def test_filter_excludes_profile_path_subdirectory(
         self, daemon_scanner_class, scan_status_class, tmp_path

@@ -20,6 +20,7 @@ from .flatpak import get_clamav_database_dir
 from .log_manager import LogManager
 from .scanner_base import (
     cleanup_process,
+    collect_clamav_warnings,
     communicate_with_cancel_check,
     create_cancelled_result,
     create_error_result,
@@ -783,7 +784,7 @@ class Scanner:
         """
         infected_files = []
         threat_details = []
-        skipped_files = []
+        skipped_files, hard_error_lines = collect_clamav_warnings(stdout, stderr)
         scanned_files = 0
         scanned_dirs = 0
         infected_count = 0
@@ -821,14 +822,6 @@ class Scanner:
                     threat_details.append(threat_detail)
                     infected_count += 1
 
-            # Look for "Failed to open file" warnings (permission denied)
-            # Format: "/path/to/file: Failed to open file ERROR"
-            elif ": Failed to open file" in line:
-                # Extract the file path (everything before ": Failed to open file")
-                file_path = line.split(": Failed to open file")[0].strip()
-                if file_path:
-                    skipped_files.append(file_path)
-
             # Regex pattern for statistics: "Scanned files: 123"
             # Captures numeric value after the label
             # Look for individual summary lines from ClamAV output
@@ -850,14 +843,18 @@ class Scanner:
             status = ScanStatus.INFECTED
         elif exit_code == 2:
             # Exit code 2 = warnings/errors
-            # If no infections and all errors are just "Failed to open file", treat as CLEAN
-            if infected_count == 0 and len(skipped_files) > 0:
+            # If no infections and all issues are skipped-file warnings, treat as CLEAN
+            if infected_count == 0 and len(skipped_files) > 0 and not hard_error_lines:
                 status = ScanStatus.CLEAN
                 warning_message = f"{len(skipped_files)} file(s) could not be accessed"
             else:
                 status = ScanStatus.ERROR
         else:
             status = ScanStatus.ERROR
+
+        error_message = None
+        if status == ScanStatus.ERROR:
+            error_message = stderr.strip() or (hard_error_lines[0] if hard_error_lines else None)
 
         return ScanResult(
             status=status,
@@ -869,7 +866,7 @@ class Scanner:
             scanned_files=scanned_files,
             scanned_dirs=scanned_dirs,
             infected_count=infected_count,
-            error_message=stderr if status == ScanStatus.ERROR else None,
+            error_message=error_message,
             threat_details=threat_details,
             skipped_files=skipped_files,
             skipped_count=len(skipped_files),

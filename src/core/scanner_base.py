@@ -28,6 +28,13 @@ TERMINATE_GRACE_TIMEOUT = 5  # Time to wait after SIGTERM before SIGKILL
 KILL_WAIT_TIMEOUT = 2  # Time to wait after SIGKILL
 STREAM_POLL_TIMEOUT = 0.1  # select() timeout for checking cancellation between output reads
 
+_NONFATAL_SKIP_MARKERS = (
+    ": Failed to open file",
+    ": File path check failure:",
+    ": Not supported file type",
+)
+_IGNORABLE_WARNING_LINES = ("LibClamAV Warning: cli_realpath: Invalid arguments.",)
+
 
 def communicate_with_cancel_check(
     process: subprocess.Popen,
@@ -248,6 +255,48 @@ def stream_process_output(
             process.wait()
 
     return "".join(stdout_parts), "".join(stderr_parts), False
+
+
+def _extract_skipped_path(line: str) -> str | None:
+    """Extract a skipped-file path from a known non-fatal ClamAV warning line."""
+    for marker in _NONFATAL_SKIP_MARKERS:
+        if marker in line:
+            file_path = line.split(marker, 1)[0].strip()
+            if file_path.startswith("WARNING:"):
+                file_path = file_path[len("WARNING:") :].strip()
+            if file_path.startswith("ERROR:"):
+                file_path = file_path[len("ERROR:") :].strip()
+            return file_path or None
+    return None
+
+
+def collect_clamav_warnings(stdout: str, stderr: str) -> tuple[list[str], list[str]]:
+    """Collect non-fatal skipped paths and remaining hard-error lines."""
+    skipped_files: list[str] = []
+    seen_skipped: set[str] = set()
+    hard_error_lines: list[str] = []
+
+    for raw_line in [*stdout.splitlines(), *stderr.splitlines()]:
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        skipped_path = _extract_skipped_path(line)
+        if skipped_path is not None:
+            if skipped_path not in seen_skipped:
+                seen_skipped.add(skipped_path)
+                skipped_files.append(skipped_path)
+            continue
+
+        if any(ignored in line for ignored in _IGNORABLE_WARNING_LINES):
+            continue
+
+        if line.startswith(
+            ("WARNING:", "ERROR:", "LibClamAV Error:", "LibClamAV Warning:")
+        ) or line.endswith("ERROR"):
+            hard_error_lines.append(line)
+
+    return skipped_files, hard_error_lines
 
 
 def cleanup_process(process: subprocess.Popen | None) -> None:
