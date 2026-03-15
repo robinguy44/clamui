@@ -120,5 +120,5 @@ jobs:
           print(f'{line_rate * 100:.1f}')
           ")
           echo "Coverage: ${COVERAGE}%"
-          # The pyproject.toml fail_under=80 handles the threshold check
+          # The pyproject.toml fail_under=50 handles the threshold check
           # This just provides visibility in the logs
