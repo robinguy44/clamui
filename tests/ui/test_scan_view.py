@@ -1408,7 +1408,7 @@ class TestScanComplete:
 
             mock_scan_view._on_scan_complete(result)
 
-        callback.assert_called_once_with(False)
+        callback.assert_called_once_with(False, result)
 
 
 class TestScanError:
@@ -2716,7 +2716,7 @@ class TestScanErrorNotifiesCallback:
         with mock.patch("src.ui.scan_view.set_status_class"):
             mock_scan_view._on_scan_error("Error")
 
-        callback.assert_called_once_with(False)
+        callback.assert_called_once_with(False, None)
 
 
 class TestScanViewSharedQuarantineManager:

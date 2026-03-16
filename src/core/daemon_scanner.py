@@ -189,12 +189,8 @@ class DaemonScanner:
             if use_file_list and file_paths:
                 fd, file_list_path = tempfile.mkstemp(prefix="clamui_filelist_", suffix=".txt")
                 os.fchmod(fd, 0o600)
-                try:
-                    with os.fdopen(fd, "w") as f:
-                        f.write("\n".join(file_paths))
-                except Exception:
-                    os.close(fd)
-                    raise
+                with os.fdopen(fd, "w") as f:
+                    f.write("\n".join(file_paths))
 
             # Build clamdscan command (use verbose mode if progress callback provided)
             cmd = self._build_command(

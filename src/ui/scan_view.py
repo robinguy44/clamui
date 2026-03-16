@@ -1933,7 +1933,7 @@ class ScanView(Gtk.Box):
 
         # Notify external handlers
         if self._on_scan_state_changed:
-            self._on_scan_state_changed(self._is_scanning)
+            self._on_scan_state_changed(self._is_scanning, result)
 
         # Show view results button and update status banner
         if result.status == ScanStatus.INFECTED:
@@ -2005,7 +2005,7 @@ class ScanView(Gtk.Box):
 
         # Notify external handlers
         if self._on_scan_state_changed:
-            self._on_scan_state_changed(self._is_scanning)
+            self._on_scan_state_changed(self._is_scanning, None)
 
         self._status_banner.set_title(_("Scan error: {detail}").format(detail=error_msg))
         set_status_class(self._status_banner, StatusLevel.ERROR)

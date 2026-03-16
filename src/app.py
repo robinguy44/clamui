@@ -796,7 +796,7 @@ class ClamUIApp(Adw.Application):
                 from .core.virustotal import VirusTotalClient
 
                 vt_client = VirusTotalClient(api_key)
-                result = vt_client.scan_file(file_path)
+                result = vt_client.scan_file_sync(file_path)
                 GLib.idle_add(on_scan_complete, result)
             except Exception as e:
                 logger.error(f"VirusTotal scan failed: {e}")

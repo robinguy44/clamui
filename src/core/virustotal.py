@@ -352,7 +352,16 @@ class VirusTotalClient:
                 error_message=_("API error: HTTP {code}").format(code=response.status_code),
             )
 
-        return self._parse_file_report(response.json(), sha256)
+        try:
+            data = response.json()
+        except (ValueError, KeyError):
+            return VTScanResult(
+                status=VTScanStatus.ERROR,
+                file_path="",
+                sha256=sha256,
+                error_message=_("Invalid JSON response from API"),
+            )
+        return self._parse_file_report(data, sha256)
 
     def _parse_file_report(self, data: dict, sha256: str) -> VTScanResult:
         """
@@ -510,7 +519,7 @@ class VirusTotalClient:
                 time.sleep(5)
                 return self.check_file_hash(sha256)
 
-        except (KeyError, TypeError) as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Failed to parse upload response: {e}")
             # Try to get results by hash anyway
             time.sleep(5)
@@ -579,7 +588,7 @@ class VirusTotalClient:
                         time.sleep(poll_interval)
                         continue
 
-                except (KeyError, TypeError):
+                except (KeyError, TypeError, ValueError):
                     pass
 
             time.sleep(poll_interval)

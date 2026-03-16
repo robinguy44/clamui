@@ -139,6 +139,7 @@ class FreshclamUpdater:
                          If not provided, a default instance is created.
         """
         self._current_process: subprocess.Popen | None = None
+        self._process_lock = threading.Lock()
         self._update_cancelled = False
         self._force_update_backup_dir: Path | None = None
         self._log_manager = log_manager if log_manager else LogManager()
@@ -501,11 +502,11 @@ class FreshclamUpdater:
 
     def _cleanup_current_process(self) -> None:
         """Clear the active process handle and ensure the process is no longer running."""
-        process = self._current_process
-        if process is None:
-            return
-
-        self._current_process = None
+        with self._process_lock:
+            process = self._current_process
+            if process is None:
+                return
+            self._current_process = None
         try:
             if process.poll() is None:
                 process.kill()
@@ -516,13 +517,14 @@ class FreshclamUpdater:
     def _run_update_process(self, cmd: list[str]) -> tuple[str, str, int, bool]:
         """Execute the freshclam subprocess and return its output and timeout state."""
         self._update_cancelled = False
-        self._current_process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            env=get_clean_env(),
-        )
+        with self._process_lock:
+            self._current_process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env=get_clean_env(),
+            )
 
         timed_out = False
         stdout = ""
@@ -691,7 +693,8 @@ class FreshclamUpdater:
         the grace period.
         """
         self._update_cancelled = True
-        process = self._current_process
+        with self._process_lock:
+            process = self._current_process
         if process is None:
             return
 
