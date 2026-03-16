@@ -19,6 +19,9 @@ on:
         type: boolean
         default: false
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-deb:
     permissions:
@@ -26,7 +29,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -59,7 +62,7 @@ jobs:
           echo "Signature member verified in .deb archive"
 
       - name: Upload Debian package artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: debian-package
           path: clamui_*.deb
