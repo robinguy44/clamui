@@ -19,8 +19,8 @@ finish-args:
   # D-Bus permissions for notifications
   - --talk-name=org.freedesktop.Notifications
 
-  # Accessibility bus (AT-SPI) for screen readers and assistive technologies
-  - --talk-name=org.a11y.Bus
+  # Flatpak exposes the AT-SPI accessibility bus through its own proxy
+  # so no explicit org.a11y.Bus talk permission is required here.
 
   # Secret Service for secure API key storage (GNOME Keyring, KWallet)
   - --talk-name=org.freedesktop.secrets

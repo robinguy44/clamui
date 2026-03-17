@@ -104,8 +104,9 @@ Should include:
 
 ```
 talk=org.freedesktop.Flatpak
-talk=org.a11y.Bus
 ```
+
+Accessibility support still works without an explicit `talk=org.a11y.Bus` entry because Flatpak provides an accessibility bus proxy automatically.
 
 #### Troubleshooting Table
 

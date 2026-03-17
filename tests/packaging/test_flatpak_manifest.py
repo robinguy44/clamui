@@ -142,6 +142,24 @@ class TestRequiredPermissions:
         # Should have some D-Bus permissions for tray
         assert len(talk_args) > 0, "Missing D-Bus talk permissions"
 
+    @pytest.mark.parametrize(
+        "manifest_name",
+        [
+            "io.github.linx_systems.ClamUI.yml",
+            "io.github.linx_systems.ClamUI.local.yml",
+        ],
+    )
+    def test_does_not_request_explicit_a11y_bus_access(self, yaml_parser, manifest_name):
+        """Test manifests rely on Flatpak's accessibility bus proxy."""
+        manifest = PROJECT_ROOT / "flathub" / manifest_name
+        data = yaml_parser.safe_load(manifest.read_text())
+
+        finish_args = data.get("finish-args", [])
+
+        assert (
+            "--talk-name=org.a11y.Bus" not in finish_args
+        ), "Manifest should not request explicit org.a11y.Bus access"
+
 
 class TestModulesSection:
     """Tests for modules section."""
