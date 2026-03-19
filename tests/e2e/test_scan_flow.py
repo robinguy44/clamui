@@ -65,6 +65,20 @@ Time: 2.345 sec (0 m 2 s)
 ERROR_SCAN_STDERR = "LibClamAV Error: Database file not found"
 
 
+@pytest.fixture(autouse=True)
+def _reset_scanner_cache():
+    """Reset Scanner class-level daemon cache between tests.
+
+    Scanner._daemon_cache is a class variable with 60s TTL. Without this reset,
+    test_e2e_auto_backend_prefers_daemon_when_available sets it to (timestamp, True),
+    causing subsequent tests to bypass check_clamd_connection mocks and take the
+    daemon path unexpectedly.
+    """
+    Scanner._daemon_cache = None
+    yield
+    Scanner._daemon_cache = None
+
+
 @pytest.fixture
 def e2e_env():
     """Shared temporary E2E environment."""

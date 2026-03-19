@@ -376,6 +376,14 @@ class VirusTotalClient:
         """
         try:
             attrs = data.get("data", {}).get("attributes", {})
+            if not attrs:
+                return VTScanResult(
+                    status=VTScanStatus.ERROR,
+                    file_path="",
+                    sha256=sha256,
+                    error_message=_("Malformed response: missing report attributes"),
+                )
+
             stats = attrs.get("last_analysis_stats", {})
             results = attrs.get("last_analysis_results", {})
 

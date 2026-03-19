@@ -325,15 +325,18 @@ class TestParseFileReport:
         assert len(result.detection_details) == 2  # Only malicious/suspicious
 
     def test_parse_malformed_report(self, client):
-        """Test parsing a malformed report handles missing data gracefully."""
+        """Test parsing a malformed report returns ERROR, not a false CLEAN."""
         data = {"invalid": "data"}
 
         result = client._parse_file_report(data, "test_hash")
 
-        # The function handles missing keys gracefully with defaults
-        # It will return CLEAN since there are no detections
-        assert result.status == VTScanStatus.CLEAN
-        assert result.detections == 0
+        # Malformed response with no data.attributes should be ERROR,
+        # not silently CLEAN (which would be a dangerous false negative)
+        assert result.status == VTScanStatus.ERROR
+        assert result.error_message is not None
+        assert (
+            "malformed" in result.error_message.lower() or "missing" in result.error_message.lower()
+        )
 
 
 class TestVTDetection:
