@@ -1,6 +1,7 @@
 # ClamUI Flatpak Tests
 """Unit tests for the flatpak module functions."""
 
+import os
 import subprocess
 import threading
 from pathlib import Path
@@ -916,3 +917,350 @@ class TestReadHostFile:
         assert content is None
         assert "Error reading" in error
         assert "broken pipe" in error
+
+
+class TestGetCleanEnv:
+    """Tests for get_clean_env() function."""
+
+    def test_strips_ld_library_path(self):
+        """Test that LD_LIBRARY_PATH is removed from the environment."""
+        with mock.patch.dict(
+            os.environ,
+            {"LD_LIBRARY_PATH": "/app/lib:/usr/lib", "HOME": "/home/user"},
+            clear=True,
+        ):
+            env = flatpak.get_clean_env()
+            assert "LD_LIBRARY_PATH" not in env
+
+    def test_strips_ld_preload(self):
+        """Test that LD_PRELOAD is removed from the environment."""
+        with mock.patch.dict(
+            os.environ,
+            {"LD_PRELOAD": "/app/lib/libfoo.so", "HOME": "/home/user"},
+            clear=True,
+        ):
+            env = flatpak.get_clean_env()
+            assert "LD_PRELOAD" not in env
+
+    def test_strips_appimage_vars(self):
+        """Test that APPIMAGE* and APPDIR* variables are removed."""
+        with mock.patch.dict(
+            os.environ,
+            {
+                "APPIMAGE": "/path/to/ClamUI.AppImage",
+                "APPIMAGE_EXTRACT_AND_RUN": "1",
+                "APPDIR": "/tmp/appimage_mount",
+                "APPDIR_SOME_OTHER": "/tmp/appdir_other",
+                "HOME": "/home/user",
+            },
+            clear=True,
+        ):
+            env = flatpak.get_clean_env()
+            assert "APPIMAGE" not in env
+            assert "APPIMAGE_EXTRACT_AND_RUN" not in env
+            assert "APPDIR" not in env
+            assert "APPDIR_SOME_OTHER" not in env
+
+    def test_preserves_normal_vars(self):
+        """Test that normal environment variables like PATH and HOME are preserved."""
+        with mock.patch.dict(
+            os.environ,
+            {
+                "PATH": "/usr/bin:/usr/local/bin",
+                "HOME": "/home/user",
+                "LANG": "en_US.UTF-8",
+                "XDG_DATA_HOME": "/home/user/.local/share",
+            },
+            clear=True,
+        ):
+            env = flatpak.get_clean_env()
+            assert env["PATH"] == "/usr/bin:/usr/local/bin"
+            assert env["HOME"] == "/home/user"
+            assert env["LANG"] == "en_US.UTF-8"
+            assert env["XDG_DATA_HOME"] == "/home/user/.local/share"
+
+    def test_returns_copy_not_original(self):
+        """Test that get_clean_env returns a copy, not the original os.environ."""
+        env = flatpak.get_clean_env()
+        assert env is not os.environ
+
+    def test_no_appimage_vars_is_noop(self):
+        """Test that calling without AppImage vars doesn't remove anything extra."""
+        with mock.patch.dict(
+            os.environ,
+            {"PATH": "/usr/bin", "HOME": "/home/user"},
+            clear=True,
+        ):
+            env = flatpak.get_clean_env()
+            assert env == {"PATH": "/usr/bin", "HOME": "/home/user"}
+
+    def test_strips_both_ld_vars_and_appimage_vars_together(self):
+        """Test that all problematic variables are stripped in one call."""
+        with mock.patch.dict(
+            os.environ,
+            {
+                "LD_LIBRARY_PATH": "/app/lib",
+                "LD_PRELOAD": "/app/lib/hook.so",
+                "APPIMAGE": "/path/to/app.AppImage",
+                "APPDIR": "/tmp/mount",
+                "PATH": "/usr/bin",
+                "HOME": "/home/user",
+            },
+            clear=True,
+        ):
+            env = flatpak.get_clean_env()
+            assert "LD_LIBRARY_PATH" not in env
+            assert "LD_PRELOAD" not in env
+            assert "APPIMAGE" not in env
+            assert "APPDIR" not in env
+            assert env["PATH"] == "/usr/bin"
+            assert env["HOME"] == "/home/user"
+
+
+class TestGetClamavDatabaseDir:
+    """Tests for get_clamav_database_dir() function."""
+
+    def setup_method(self):
+        """Reset the module-level cache before each test."""
+        flatpak._FLATPAK_DATABASE_DIR = None
+
+    def test_returns_none_when_not_in_flatpak(self):
+        """Test that None is returned when not running in Flatpak."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=False):
+            result = flatpak.get_clamav_database_dir()
+            assert result is None
+
+    def test_returns_correct_path_with_xdg_data_home(self):
+        """Test that the correct path is returned using XDG_DATA_HOME."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=True):
+            with mock.patch.dict(
+                os.environ, {"XDG_DATA_HOME": "/home/user/.var/app/io.github.clamui/data"}
+            ):
+                result = flatpak.get_clamav_database_dir()
+                assert result == Path("/home/user/.var/app/io.github.clamui/data/clamav")
+
+    def test_returns_fallback_path_without_xdg_data_home(self):
+        """Test fallback to ~/.local/share/clamav when XDG_DATA_HOME is unset."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=True):
+            with mock.patch.dict(os.environ, {}, clear=False):
+                # Ensure XDG_DATA_HOME is not set
+                env_copy = os.environ.copy()
+                env_copy.pop("XDG_DATA_HOME", None)
+                with mock.patch.dict(os.environ, env_copy, clear=True):
+                    with mock.patch.object(Path, "home", return_value=Path("/home/testuser")):
+                        result = flatpak.get_clamav_database_dir()
+                        assert result == Path("/home/testuser/.local/share/clamav")
+
+    def test_caches_result(self):
+        """Test that the result is cached after first call."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=True):
+            with mock.patch.dict(
+                os.environ, {"XDG_DATA_HOME": "/home/user/.var/app/io.github.clamui/data"}
+            ):
+                result1 = flatpak.get_clamav_database_dir()
+                result2 = flatpak.get_clamav_database_dir()
+                assert result1 == result2
+                assert result1 is result2  # Same cached object
+
+
+class TestEnsureClamavDatabaseDir:
+    """Tests for ensure_clamav_database_dir() function."""
+
+    def setup_method(self):
+        """Reset the module-level cache before each test."""
+        flatpak._FLATPAK_DATABASE_DIR = None
+
+    def test_returns_none_when_not_in_flatpak(self):
+        """Test that None is returned when not running in Flatpak."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=False):
+            result = flatpak.ensure_clamav_database_dir()
+            assert result is None
+
+    def test_creates_directory_when_missing(self, tmp_path):
+        """Test that the database directory is created when it does not exist."""
+        db_dir = tmp_path / "clamav"
+        assert not db_dir.exists()
+
+        with mock.patch.object(flatpak, "get_clamav_database_dir", return_value=db_dir):
+            result = flatpak.ensure_clamav_database_dir()
+            assert result == db_dir
+            assert db_dir.exists()
+            assert db_dir.is_dir()
+
+    def test_returns_existing_directory(self, tmp_path):
+        """Test that an existing directory is returned without error."""
+        db_dir = tmp_path / "clamav"
+        db_dir.mkdir()
+        assert db_dir.exists()
+
+        with mock.patch.object(flatpak, "get_clamav_database_dir", return_value=db_dir):
+            result = flatpak.ensure_clamav_database_dir()
+            assert result == db_dir
+
+    def test_returns_none_on_creation_failure(self):
+        """Test that None is returned when directory creation fails."""
+        fake_dir = mock.MagicMock(spec=Path)
+        fake_dir.mkdir.side_effect = PermissionError("Permission denied")
+
+        with mock.patch.object(flatpak, "get_clamav_database_dir", return_value=fake_dir):
+            result = flatpak.ensure_clamav_database_dir()
+            assert result is None
+
+    def test_creates_nested_directories(self, tmp_path):
+        """Test that nested parent directories are created (parents=True)."""
+        db_dir = tmp_path / "deep" / "nested" / "clamav"
+        assert not db_dir.exists()
+
+        with mock.patch.object(flatpak, "get_clamav_database_dir", return_value=db_dir):
+            result = flatpak.ensure_clamav_database_dir()
+            assert result == db_dir
+            assert db_dir.exists()
+
+
+class TestGetFreshclamConfigPath:
+    """Tests for get_freshclam_config_path() function."""
+
+    def test_returns_none_when_not_in_flatpak(self):
+        """Test that None is returned when not running in Flatpak."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=False):
+            result = flatpak.get_freshclam_config_path()
+            assert result is None
+
+    def test_returns_correct_path_with_xdg_config_home(self):
+        """Test that the correct path is returned using XDG_CONFIG_HOME."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=True):
+            with mock.patch.dict(
+                os.environ, {"XDG_CONFIG_HOME": "/home/user/.var/app/io.github.clamui/config"}
+            ):
+                result = flatpak.get_freshclam_config_path()
+                assert result == Path(
+                    "/home/user/.var/app/io.github.clamui/config/clamav/freshclam.conf"
+                )
+
+    def test_returns_fallback_path_without_xdg_config_home(self):
+        """Test fallback to ~/.config/clamav/freshclam.conf when XDG_CONFIG_HOME is unset."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=True):
+            env_copy = os.environ.copy()
+            env_copy.pop("XDG_CONFIG_HOME", None)
+            with mock.patch.dict(os.environ, env_copy, clear=True):
+                with mock.patch.object(Path, "home", return_value=Path("/home/testuser")):
+                    result = flatpak.get_freshclam_config_path()
+                    assert result == Path("/home/testuser/.config/clamav/freshclam.conf")
+
+    def test_returns_path_object(self):
+        """Test that a Path object is returned, not a string."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=True):
+            with mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": "/tmp/config"}):
+                result = flatpak.get_freshclam_config_path()
+                assert isinstance(result, Path)
+
+
+class TestEnsureFreshclamConfig:
+    """Tests for ensure_freshclam_config() function."""
+
+    def setup_method(self):
+        """Reset the module-level cache before each test."""
+        flatpak._FLATPAK_DATABASE_DIR = None
+
+    def test_returns_none_when_not_in_flatpak(self):
+        """Test that None is returned when not running in Flatpak."""
+        with mock.patch.object(flatpak, "is_flatpak", return_value=False):
+            result = flatpak.ensure_freshclam_config()
+            assert result is None
+
+    def test_creates_config_when_missing(self, tmp_path):
+        """Test that a config file is created when it does not exist."""
+        config_path = tmp_path / "clamav" / "freshclam.conf"
+        db_dir = tmp_path / "data" / "clamav"
+
+        with (
+            mock.patch.object(flatpak, "is_flatpak", return_value=True),
+            mock.patch.object(flatpak, "get_freshclam_config_path", return_value=config_path),
+            mock.patch.object(flatpak, "ensure_clamav_database_dir", return_value=db_dir),
+        ):
+            result = flatpak.ensure_freshclam_config()
+            assert result == config_path
+            assert config_path.exists()
+
+    def test_config_contains_database_directory(self, tmp_path):
+        """Test that the generated config contains the correct DatabaseDirectory."""
+        config_path = tmp_path / "clamav" / "freshclam.conf"
+        db_dir = tmp_path / "data" / "clamav"
+
+        with (
+            mock.patch.object(flatpak, "is_flatpak", return_value=True),
+            mock.patch.object(flatpak, "get_freshclam_config_path", return_value=config_path),
+            mock.patch.object(flatpak, "ensure_clamav_database_dir", return_value=db_dir),
+        ):
+            flatpak.ensure_freshclam_config()
+            content = config_path.read_text()
+            assert f"DatabaseDirectory {db_dir}" in content
+
+    def test_config_contains_database_mirror(self, tmp_path):
+        """Test that the generated config contains the DatabaseMirror setting."""
+        config_path = tmp_path / "clamav" / "freshclam.conf"
+        db_dir = tmp_path / "data" / "clamav"
+
+        with (
+            mock.patch.object(flatpak, "is_flatpak", return_value=True),
+            mock.patch.object(flatpak, "get_freshclam_config_path", return_value=config_path),
+            mock.patch.object(flatpak, "ensure_clamav_database_dir", return_value=db_dir),
+        ):
+            flatpak.ensure_freshclam_config()
+            content = config_path.read_text()
+            assert "DatabaseMirror database.clamav.net" in content
+
+    def test_does_not_overwrite_existing_config(self, tmp_path):
+        """Test that an existing config file is not overwritten."""
+        config_path = tmp_path / "clamav" / "freshclam.conf"
+        config_path.parent.mkdir(parents=True)
+        original_content = "# Custom user config\nDatabaseDirectory /custom/path\n"
+        config_path.write_text(original_content)
+
+        with (
+            mock.patch.object(flatpak, "is_flatpak", return_value=True),
+            mock.patch.object(flatpak, "get_freshclam_config_path", return_value=config_path),
+        ):
+            result = flatpak.ensure_freshclam_config()
+            assert result == config_path
+            # Content should not have been overwritten
+            assert config_path.read_text() == original_content
+
+    def test_returns_none_when_db_dir_fails(self):
+        """Test that None is returned when ensure_clamav_database_dir fails."""
+        config_path = mock.MagicMock(spec=Path)
+        config_path.exists.return_value = False
+
+        with (
+            mock.patch.object(flatpak, "is_flatpak", return_value=True),
+            mock.patch.object(flatpak, "get_freshclam_config_path", return_value=config_path),
+            mock.patch.object(flatpak, "ensure_clamav_database_dir", return_value=None),
+        ):
+            result = flatpak.ensure_freshclam_config()
+            assert result is None
+
+    def test_returns_none_when_config_path_is_none(self):
+        """Test that None is returned when get_freshclam_config_path returns None."""
+        with (
+            mock.patch.object(flatpak, "is_flatpak", return_value=True),
+            mock.patch.object(flatpak, "get_freshclam_config_path", return_value=None),
+        ):
+            result = flatpak.ensure_freshclam_config()
+            assert result is None
+
+    def test_returns_none_on_write_failure(self, tmp_path):
+        """Test that None is returned when writing the config file fails."""
+        config_path = mock.MagicMock(spec=Path)
+        config_path.exists.return_value = False
+        config_path.parent = tmp_path
+        config_path.write_text.side_effect = PermissionError("Permission denied")
+
+        db_dir = tmp_path / "data" / "clamav"
+
+        with (
+            mock.patch.object(flatpak, "is_flatpak", return_value=True),
+            mock.patch.object(flatpak, "get_freshclam_config_path", return_value=config_path),
+            mock.patch.object(flatpak, "ensure_clamav_database_dir", return_value=db_dir),
+        ):
+            result = flatpak.ensure_freshclam_config()
+            assert result is None

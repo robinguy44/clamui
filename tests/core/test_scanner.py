@@ -2203,6 +2203,470 @@ class TestScannerBackendSelection:
         assert backend == "auto"
 
 
+class TestDaemonAvailableCached:
+    """Tests for Scanner._is_daemon_available_cached method."""
+
+    def setup_method(self):
+        """Reset daemon cache before each test."""
+        Scanner._daemon_cache = None
+
+    def teardown_method(self):
+        """Reset daemon cache after each test to prevent pollution."""
+        Scanner._daemon_cache = None
+
+    def test_cache_miss_calls_check_clamd_connection(self):
+        """Test cache miss triggers check_clamd_connection and caches result."""
+        scanner = Scanner()
+
+        with mock.patch(
+            "src.core.scanner.check_clamd_connection",
+            return_value=(True, "clamd 1.0"),
+        ) as mock_check:
+            result = scanner._is_daemon_available_cached()
+
+        assert result is True
+        mock_check.assert_called_once()
+        # Verify cache was populated
+        assert Scanner._daemon_cache is not None
+        assert Scanner._daemon_cache[1] is True
+
+    def test_cache_hit_returns_cached_value_without_calling_check(self):
+        """Test cache hit returns cached value without calling check_clamd_connection."""
+        import time
+
+        scanner = Scanner()
+
+        # Pre-populate cache with a recent timestamp
+        Scanner._daemon_cache = (time.monotonic(), False)
+
+        with mock.patch(
+            "src.core.scanner.check_clamd_connection",
+            return_value=(True, "clamd 1.0"),
+        ) as mock_check:
+            result = scanner._is_daemon_available_cached()
+
+        # Should return cached False, not the mocked True
+        assert result is False
+        mock_check.assert_not_called()
+
+    def test_cache_expiry_rechecks_after_ttl(self):
+        """Test expired cache entry triggers re-check after TTL."""
+        import time
+
+        scanner = Scanner()
+
+        # Pre-populate cache with an expired timestamp (61 seconds ago)
+        expired_time = time.monotonic() - 61.0
+        Scanner._daemon_cache = (expired_time, False)
+
+        with mock.patch(
+            "src.core.scanner.check_clamd_connection",
+            return_value=(True, "clamd 1.0"),
+        ) as mock_check:
+            result = scanner._is_daemon_available_cached()
+
+        # Should re-check and return True (the new value)
+        assert result is True
+        mock_check.assert_called_once()
+        # Cache should now have the new value
+        assert Scanner._daemon_cache[1] is True
+
+    def test_cache_stores_false_when_daemon_unavailable(self):
+        """Test cache stores False when daemon is unavailable."""
+        scanner = Scanner()
+
+        with mock.patch(
+            "src.core.scanner.check_clamd_connection",
+            return_value=(False, "Connection refused"),
+        ):
+            result = scanner._is_daemon_available_cached()
+
+        assert result is False
+        assert Scanner._daemon_cache is not None
+        assert Scanner._daemon_cache[1] is False
+
+    def test_cache_not_expired_just_before_ttl(self):
+        """Test cache is still valid just before the 60-second TTL."""
+        import time
+
+        scanner = Scanner()
+
+        # Set cache to 59 seconds ago (just under TTL)
+        Scanner._daemon_cache = (time.monotonic() - 59.0, True)
+
+        with mock.patch(
+            "src.core.scanner.check_clamd_connection",
+            return_value=(False, "down"),
+        ) as mock_check:
+            result = scanner._is_daemon_available_cached()
+
+        # Should still use cached value
+        assert result is True
+        mock_check.assert_not_called()
+
+
+class TestCountFiles:
+    """Tests for Scanner._count_files method."""
+
+    def test_count_files_single_file(self, tmp_path):
+        """Test _count_files returns 1 for a single file."""
+        test_file = tmp_path / "test.txt"
+        test_file.write_text("content")
+
+        scanner = Scanner()
+        count = scanner._count_files(str(test_file))
+        assert count == 1
+
+    def test_count_files_directory(self, tmp_path):
+        """Test _count_files counts files in a directory."""
+        (tmp_path / "file1.txt").write_text("a")
+        (tmp_path / "file2.txt").write_text("b")
+        (tmp_path / "file3.log").write_text("c")
+
+        scanner = Scanner()
+        count = scanner._count_files(str(tmp_path))
+        assert count == 3
+
+    def test_count_files_recursive(self, tmp_path):
+        """Test _count_files counts files recursively."""
+        (tmp_path / "file1.txt").write_text("a")
+        sub = tmp_path / "subdir"
+        sub.mkdir()
+        (sub / "file2.txt").write_text("b")
+        subsub = sub / "deep"
+        subsub.mkdir()
+        (subsub / "file3.txt").write_text("c")
+
+        scanner = Scanner()
+        count = scanner._count_files(str(tmp_path))
+        assert count == 3
+
+    def test_count_files_permission_error(self, tmp_path):
+        """Test _count_files handles PermissionError gracefully."""
+        scanner = Scanner()
+
+        with mock.patch("os.walk", side_effect=PermissionError("Access denied")):
+            count = scanner._count_files(str(tmp_path))
+
+        # Should return 0 on PermissionError (not crash)
+        assert count == 0
+
+    def test_count_files_respects_cancellation(self, tmp_path):
+        """Test _count_files respects cancellation event."""
+        (tmp_path / "file1.txt").write_text("a")
+        (tmp_path / "file2.txt").write_text("b")
+
+        scanner = Scanner()
+        scanner._cancel_event.set()
+
+        count = scanner._count_files(str(tmp_path))
+        assert count == 0
+
+    def test_count_files_nonexistent_path(self):
+        """Test _count_files returns None for non-existent path."""
+        scanner = Scanner()
+        count = scanner._count_files("/nonexistent/path/that/doesnt/exist")
+        assert count is None
+
+    def test_count_files_root_level_path_returns_none(self):
+        """Test _count_files returns None for root-level paths to avoid overhead."""
+        scanner = Scanner()
+
+        # Root-level paths should be skipped
+        assert scanner._count_files("/") is None
+        assert scanner._count_files("/home") is None
+        assert scanner._count_files("/usr") is None
+
+    def test_count_files_with_exclusion_patterns(self, tmp_path):
+        """Test _count_files applies exclusion filtering from profile."""
+        (tmp_path / "file1.txt").write_text("a")
+        (tmp_path / "file2.log").write_text("b")
+        (tmp_path / "file3.txt").write_text("c")
+
+        scanner = Scanner()
+        profile_exclusions = {"paths": [], "patterns": ["*.log"]}
+
+        count = scanner._count_files(str(tmp_path), profile_exclusions)
+        assert count == 2  # file2.log excluded
+
+    def test_count_files_with_directory_exclusions(self, tmp_path):
+        """Test _count_files excludes directories from profile."""
+        (tmp_path / "file1.txt").write_text("a")
+        excluded_dir = tmp_path / "node_modules"
+        excluded_dir.mkdir()
+        (excluded_dir / "file2.txt").write_text("b")
+
+        scanner = Scanner()
+        profile_exclusions = {"paths": [str(excluded_dir)], "patterns": []}
+
+        count = scanner._count_files(str(tmp_path), profile_exclusions)
+        assert count == 1  # file in node_modules excluded
+
+    def test_count_files_with_settings_exclusions(self, tmp_path):
+        """Test _count_files applies exclusions from settings manager."""
+        (tmp_path / "file1.txt").write_text("a")
+        (tmp_path / "file2.log").write_text("b")
+
+        mock_settings = mock.MagicMock()
+        mock_settings.get.return_value = [
+            {"pattern": "*.log", "type": "pattern", "enabled": True},
+        ]
+
+        scanner = Scanner(settings_manager=mock_settings)
+        count = scanner._count_files(str(tmp_path))
+        assert count == 1  # file2.log excluded by settings
+
+
+class TestIsPathExcluded:
+    """Tests for Scanner._is_path_excluded method."""
+
+    def test_glob_pattern_matching(self):
+        """Test _is_path_excluded matches glob patterns against filenames."""
+        scanner = Scanner()
+
+        assert (
+            scanner._is_path_excluded("/home/user/file.log", "file.log", ["*.log"], is_dir=False)
+            is True
+        )
+
+        assert (
+            scanner._is_path_excluded("/home/user/file.txt", "file.txt", ["*.log"], is_dir=False)
+            is False
+        )
+
+    def test_absolute_path_pattern(self):
+        """Test _is_path_excluded matches absolute path patterns."""
+        scanner = Scanner()
+
+        assert (
+            scanner._is_path_excluded(
+                "/home/user/Downloads/file.txt",
+                "file.txt",
+                ["/home/user/Downloads"],
+                is_dir=False,
+            )
+            is True
+        )
+
+        assert (
+            scanner._is_path_excluded(
+                "/home/user/Documents/file.txt",
+                "file.txt",
+                ["/home/user/Downloads"],
+                is_dir=False,
+            )
+            is False
+        )
+
+    def test_tilde_expansion_branch(self):
+        """Test _is_path_excluded expands tilde in patterns."""
+        import os
+
+        scanner = Scanner()
+        home = os.path.expanduser("~")
+
+        assert (
+            scanner._is_path_excluded(
+                f"{home}/Downloads/file.txt",
+                "file.txt",
+                ["~/Downloads"],
+                is_dir=False,
+            )
+            is True
+        )
+
+    def test_non_matching_returns_false(self):
+        """Test _is_path_excluded returns False for non-matching paths."""
+        scanner = Scanner()
+
+        assert (
+            scanner._is_path_excluded(
+                "/home/user/file.py", "file.py", ["*.log", "*.tmp", "/var"], is_dir=False
+            )
+            is False
+        )
+
+    def test_empty_patterns_list(self):
+        """Test _is_path_excluded returns False for empty patterns list."""
+        scanner = Scanner()
+
+        assert (
+            scanner._is_path_excluded("/home/user/file.txt", "file.txt", [], is_dir=False) is False
+        )
+
+    def test_directory_pattern_matching(self):
+        """Test _is_path_excluded works for directory entries."""
+        scanner = Scanner()
+
+        assert (
+            scanner._is_path_excluded(
+                "/home/user/node_modules", "node_modules", ["node_modules"], is_dir=True
+            )
+            is True
+        )
+
+    def test_full_path_glob_matching(self):
+        """Test _is_path_excluded matches glob against full path for non-absolute patterns."""
+        scanner = Scanner()
+
+        # Non-absolute glob patterns are matched via fnmatch against full_path
+        assert (
+            scanner._is_path_excluded(
+                "/home/user/logs/app.log",
+                "app.log",
+                ["*/logs/*.log"],
+                is_dir=False,
+            )
+            is True
+        )
+
+    def test_absolute_path_prefix_matching(self):
+        """Test _is_path_excluded uses startswith for absolute path patterns (not glob)."""
+        scanner = Scanner()
+
+        # Absolute patterns use startswith, so /home/user/logs/*.log won't glob-match
+        # but /home/user/logs will match any file under that directory
+        assert (
+            scanner._is_path_excluded(
+                "/home/user/logs/app.log",
+                "app.log",
+                ["/home/user/logs"],
+                is_dir=False,
+            )
+            is True
+        )
+
+
+class TestGetActiveBackend:
+    """Tests for Scanner.get_active_backend method."""
+
+    def setup_method(self):
+        """Reset daemon cache before each test."""
+        Scanner._daemon_cache = None
+
+    def teardown_method(self):
+        """Reset daemon cache after each test."""
+        Scanner._daemon_cache = None
+
+    def test_returns_clamscan_for_clamscan_backend(self):
+        """Test get_active_backend returns 'clamscan' when backend is clamscan."""
+        mock_settings = mock.MagicMock()
+        mock_settings.get.return_value = "clamscan"
+
+        scanner = Scanner(settings_manager=mock_settings)
+        assert scanner.get_active_backend() == "clamscan"
+
+    def test_returns_daemon_when_daemon_available_auto_mode(self):
+        """Test get_active_backend returns 'daemon' when daemon is available in auto mode."""
+        scanner = Scanner()  # No settings = auto mode
+
+        with mock.patch(
+            "src.core.scanner.check_clamd_connection",
+            return_value=(True, "clamd 1.0"),
+        ):
+            result = scanner.get_active_backend()
+
+        assert result == "daemon"
+
+    def test_returns_clamscan_when_daemon_unavailable_auto_mode(self):
+        """Test get_active_backend returns 'clamscan' when daemon unavailable in auto mode."""
+        scanner = Scanner()  # No settings = auto mode
+
+        with mock.patch(
+            "src.core.scanner.check_clamd_connection",
+            return_value=(False, "not running"),
+        ):
+            result = scanner.get_active_backend()
+
+        assert result == "clamscan"
+
+    def test_returns_daemon_for_daemon_backend_when_available(self):
+        """Test get_active_backend returns 'daemon' when daemon backend configured and available."""
+        mock_settings = mock.MagicMock()
+        mock_settings.get.return_value = "daemon"
+
+        scanner = Scanner(settings_manager=mock_settings)
+
+        # Mock the daemon scanner's check_available method
+        mock_daemon_scanner = mock.MagicMock()
+        mock_daemon_scanner.check_available.return_value = (True, "clamd 1.0")
+
+        with mock.patch.object(scanner, "_get_daemon_scanner", return_value=mock_daemon_scanner):
+            result = scanner.get_active_backend()
+
+        assert result == "daemon"
+
+    def test_returns_unavailable_for_daemon_backend_when_down(self):
+        """Test get_active_backend returns 'unavailable' when daemon backend configured but down."""
+        mock_settings = mock.MagicMock()
+        mock_settings.get.return_value = "daemon"
+
+        scanner = Scanner(settings_manager=mock_settings)
+
+        mock_daemon_scanner = mock.MagicMock()
+        mock_daemon_scanner.check_available.return_value = (False, "Connection refused")
+
+        with mock.patch.object(scanner, "_get_daemon_scanner", return_value=mock_daemon_scanner):
+            result = scanner.get_active_backend()
+
+        assert result == "unavailable"
+
+
+class TestSaveScanLog:
+    """Tests for Scanner._save_scan_log method."""
+
+    def test_saves_log_entry_via_log_manager(self):
+        """Test _save_scan_log delegates to save_scan_log with log manager."""
+        mock_log_manager = mock.MagicMock()
+        scanner = Scanner(log_manager=mock_log_manager)
+
+        result = ScanResult(
+            status=ScanStatus.CLEAN,
+            path="/test/path",
+            stdout="",
+            stderr="",
+            exit_code=0,
+            infected_files=[],
+            scanned_files=10,
+            scanned_dirs=1,
+            infected_count=0,
+            error_message=None,
+            threat_details=[],
+        )
+
+        with mock.patch("src.core.scanner.save_scan_log") as mock_save:
+            scanner._save_scan_log(result, 1.5)
+
+        mock_save.assert_called_once_with(mock_log_manager, result, 1.5)
+
+    def test_handles_default_log_manager(self):
+        """Test _save_scan_log works with default LogManager when none provided."""
+        scanner = Scanner()
+
+        result = ScanResult(
+            status=ScanStatus.INFECTED,
+            path="/test/path",
+            stdout="",
+            stderr="",
+            exit_code=1,
+            infected_files=["/test/virus.exe"],
+            scanned_files=5,
+            scanned_dirs=1,
+            infected_count=1,
+            error_message=None,
+            threat_details=[],
+        )
+
+        with mock.patch("src.core.scanner.save_scan_log") as mock_save:
+            scanner._save_scan_log(result, 2.0)
+
+        # Should still call save_scan_log with the default log manager
+        mock_save.assert_called_once()
+        call_args = mock_save.call_args
+        assert call_args[0][1] is result
+        assert call_args[0][2] == 2.0
+
+
 class TestScannerBackendOverride:
     """Tests for one-shot backend overrides during scans."""
 

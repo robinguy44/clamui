@@ -2,8 +2,14 @@
 """Unit tests for the sanitize module functions."""
 
 from src.core.sanitize import (
+    REDACTED_HASH,
     REDACTED_PATH,
     REDACTED_URL,
+    _consume_path,
+    _has_path_boundary,
+    _is_windows_path_start,
+    _looks_like_path_continuation,
+    redact_sensitive_log_data,
     sanitize_log_line,
     sanitize_log_text,
     sanitize_path_for_logging,
@@ -535,3 +541,559 @@ class TestSanitizePathForLogging:
         """Test unrelated text is returned unchanged."""
         text = "Logging configured successfully"
         assert sanitize_path_for_logging(text) == text
+
+
+class TestIsWindowsPathStart:
+    """Tests for _is_windows_path_start helper."""
+
+    def test_valid_windows_path_with_backslash(self):
+        """Test recognises C:\\ as a Windows path start."""
+        assert _is_windows_path_start("C:\\Users\\test", 0) is True
+
+    def test_valid_windows_path_with_forward_slash(self):
+        """Test recognises D:/ as a Windows path start."""
+        assert _is_windows_path_start("D:/Users/test", 0) is True
+
+    def test_various_drive_letters(self):
+        """Test multiple valid drive letters are accepted."""
+        for letter in ("A", "Z", "a", "z", "E"):
+            assert _is_windows_path_start(f"{letter}:\\dir", 0) is True
+
+    def test_offset_index(self):
+        """Test detection works when path starts at a non-zero index."""
+        text = "Open C:\\file.txt"
+        assert _is_windows_path_start(text, 5) is True
+
+    def test_string_too_short(self):
+        """Test returns False when text is too short for a Windows path start."""
+        assert _is_windows_path_start("C:", 0) is False
+        assert _is_windows_path_start("C", 0) is False
+        assert _is_windows_path_start("", 0) is False
+
+    def test_no_colon_after_letter(self):
+        """Test returns False when second character is not a colon."""
+        assert _is_windows_path_start("CC\\dir", 0) is False
+
+    def test_no_separator_after_colon(self):
+        """Test returns False when third character is not / or \\."""
+        assert _is_windows_path_start("C:x", 0) is False
+
+    def test_digit_before_colon(self):
+        """Test returns False when first character is a digit, not a letter."""
+        assert _is_windows_path_start("1:\\dir", 0) is False
+
+    def test_special_char_before_colon(self):
+        """Test returns False when first character is not alphabetic."""
+        assert _is_windows_path_start("@:\\dir", 0) is False
+
+
+class TestHasPathBoundary:
+    """Tests for _has_path_boundary helper."""
+
+    def test_start_of_string(self):
+        """Test index 0 is always a valid boundary."""
+        assert _has_path_boundary("/home/user", 0) is True
+
+    def test_after_space(self):
+        """Test boundary after a space character."""
+        assert _has_path_boundary("text /path", 5) is True
+
+    def test_after_tab(self):
+        """Test boundary after a tab character."""
+        assert _has_path_boundary("text\t/path", 5) is True
+
+    def test_after_single_quote(self):
+        """Test boundary after a single quote."""
+        assert _has_path_boundary("open '/path'", 6) is True
+
+    def test_after_double_quote(self):
+        """Test boundary after a double quote."""
+        assert _has_path_boundary('open "/path"', 6) is True
+
+    def test_after_open_paren(self):
+        """Test boundary after an opening parenthesis."""
+        assert _has_path_boundary("see (/path)", 5) is True
+
+    def test_after_open_bracket(self):
+        """Test boundary after an opening square bracket."""
+        assert _has_path_boundary("[/path]", 1) is True
+
+    def test_after_equals(self):
+        """Test boundary after an equals sign."""
+        assert _has_path_boundary("key=/path", 4) is True
+
+    def test_after_comma(self):
+        """Test boundary after a comma."""
+        assert _has_path_boundary("a,/path", 2) is True
+
+    def test_after_colon(self):
+        """Test boundary after a colon."""
+        assert _has_path_boundary("prefix:/path", 7) is True
+
+    def test_mid_word_not_boundary(self):
+        """Test that a position mid-word is not a boundary."""
+        assert _has_path_boundary("notapath", 3) is False
+
+    def test_after_letter(self):
+        """Test that a position after a letter is not a boundary."""
+        assert _has_path_boundary("x/foo", 1) is False
+
+    def test_after_digit(self):
+        """Test that a position after a digit is not a boundary."""
+        assert _has_path_boundary("3/foo", 1) is False
+
+
+class TestLooksLikePathContinuation:
+    """Tests for _looks_like_path_continuation helper."""
+
+    def test_space_then_path_with_slash(self):
+        """Test space followed by segment with slash looks like continuation."""
+        text = "Documents/file.txt"
+        assert _looks_like_path_continuation(text, 0) is True
+
+    def test_space_then_dotfile(self):
+        """Test space followed by dot-prefixed token looks like continuation."""
+        text = ".bashrc"
+        assert _looks_like_path_continuation(text, 0) is True
+
+    def test_space_then_filename_with_extension(self):
+        """Test space followed by filename with extension looks like continuation."""
+        text = "file.txt"
+        assert _looks_like_path_continuation(text, 0) is True
+
+    def test_space_then_plain_word(self):
+        """Test space followed by plain word does not look like continuation."""
+        text = "now"
+        assert _looks_like_path_continuation(text, 0) is False
+
+    def test_space_then_prose_word(self):
+        """Test space followed by common prose word is not continuation."""
+        text = "should"
+        assert _looks_like_path_continuation(text, 0) is False
+
+    def test_multiple_leading_spaces(self):
+        """Test leading spaces are skipped before analysing the token."""
+        text = "  file.txt"
+        assert _looks_like_path_continuation(text, 0) is True
+
+    def test_at_end_of_string(self):
+        """Test returns False when starting at or past end of string."""
+        assert _looks_like_path_continuation("", 0) is False
+        assert _looks_like_path_continuation("abc", 5) is False
+
+    def test_only_spaces_remain(self):
+        """Test returns False when only trailing spaces remain."""
+        assert _looks_like_path_continuation("   ", 0) is False
+
+    def test_tilde_prefix(self):
+        """Test tilde-prefixed token looks like continuation."""
+        text = "~/Documents"
+        assert _looks_like_path_continuation(text, 0) is True
+
+    def test_word_with_no_dot_or_slash(self):
+        """Test word without dots or slashes is not a path continuation."""
+        text = "continue"
+        assert _looks_like_path_continuation(text, 0) is False
+
+    def test_stop_char_breaks_token(self):
+        """Test stop characters (quotes, angle brackets) end the token scan."""
+        text = 'file"rest'
+        # token is "file" (no dot, no slash) -> not continuation
+        assert _looks_like_path_continuation(text, 0) is False
+
+
+class TestConsumePath:
+    """Tests for _consume_path helper."""
+
+    def test_simple_unix_path(self):
+        """Test consuming a simple Unix path like /foo/bar."""
+        text = "/foo/bar"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/foo/bar"
+
+    def test_path_with_extension(self):
+        """Test consuming a path ending in a file extension."""
+        text = "/home/user/file.txt"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_path_stops_at_space_without_continuation(self):
+        """Test path consumption stops at a space followed by prose."""
+        text = "/home/user/file.txt now"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_path_with_spaces_in_filename(self):
+        """Test path consumption continues through spaces in path-like context."""
+        text = "/home/user/My Documents/file.txt rest"
+        end = _consume_path(text, 0)
+        consumed = text[0:end]
+        assert "My Documents" in consumed
+        assert "file.txt" in consumed
+
+    def test_file_uri(self):
+        """Test consuming a file:// URI."""
+        text = "file:///tmp/test.txt"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "file:///tmp/test.txt"
+
+    def test_home_tilde_path(self):
+        """Test consuming a tilde-prefixed path."""
+        text = "~/Documents/secret.txt"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "~/Documents/secret.txt"
+
+    def test_windows_path_backslash(self):
+        """Test consuming a Windows path with backslashes."""
+        text = "C:\\Users\\test\\file.exe"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "C:\\Users\\test\\file.exe"
+
+    def test_windows_path_forward_slash(self):
+        """Test consuming a Windows path with forward slashes."""
+        text = "C:/Users/test/file.exe"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "C:/Users/test/file.exe"
+
+    def test_path_stops_at_delimiter(self):
+        """Test path stops at delimiter characters like quotes."""
+        text = '/home/user/file.txt"rest'
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_trailing_comma_stripped(self):
+        """Test trailing comma is stripped from consumed path."""
+        text = "/home/user/file.txt, more text"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_trailing_semicolon_stripped(self):
+        """Test trailing semicolon is stripped from consumed path."""
+        text = "/home/user/file.txt; next"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_trailing_close_paren_stripped(self):
+        """Test trailing close paren is stripped from consumed path."""
+        text = "/home/user/file.txt) rest"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_trailing_close_bracket_stripped(self):
+        """Test trailing close bracket is stripped from consumed path."""
+        text = "/home/user/file.txt] rest"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_trailing_close_brace_stripped(self):
+        """Test trailing close brace is stripped from consumed path."""
+        text = "/home/user/file.txt} rest"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/home/user/file.txt"
+
+    def test_path_at_nonzero_offset(self):
+        """Test consuming a path starting at a non-zero offset."""
+        text = "open /etc/config.conf please"
+        end = _consume_path(text, 5)
+        assert text[5:end] == "/etc/config.conf"
+
+    def test_root_path(self):
+        """Test consuming the root path /."""
+        text = "/ rest"
+        end = _consume_path(text, 0)
+        # Just "/" with no continuation, should consume at least the "/"
+        assert end >= 1
+
+    def test_path_stops_at_angle_bracket(self):
+        """Test path stops at < character."""
+        text = "/path/to/file<tag>"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/path/to/file"
+
+    def test_path_stops_at_pipe(self):
+        """Test path stops at | character."""
+        text = "/path/to/file|other"
+        end = _consume_path(text, 0)
+        assert text[0:end] == "/path/to/file"
+
+
+class TestRedactSensitiveLogData:
+    """Tests for the main redact_sensitive_log_data function."""
+
+    # -- None and empty input --
+
+    def test_none_input_returns_empty(self):
+        """Test None input returns an empty string."""
+        assert redact_sensitive_log_data(None) == ""
+
+    def test_empty_string_returns_empty(self):
+        """Test empty string input returns an empty string."""
+        assert redact_sensitive_log_data("") == ""
+
+    # -- Text with no sensitive data --
+
+    def test_plain_text_unchanged(self):
+        """Test plain text without paths or hashes is returned unchanged."""
+        text = "Scan completed successfully with 0 threats"
+        assert redact_sensitive_log_data(text) == text
+
+    def test_text_with_numbers_not_hash_length(self):
+        """Test short hex-like strings below 32 chars are not redacted."""
+        text = "Error code: 0x1f3a status 42"
+        assert redact_sensitive_log_data(text) == text
+
+    # -- Unix paths --
+
+    def test_simple_unix_path(self):
+        """Test redaction of a simple Unix absolute path."""
+        text = "Scanning /home/user/file.txt"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert "/home/user/file.txt" not in result
+
+    def test_unix_path_with_deep_nesting(self):
+        """Test redaction of a deeply nested Unix path."""
+        text = "Found /var/lib/clamav/daily.cld"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Found {REDACTED_PATH}"
+
+    def test_unix_path_at_start_of_string(self):
+        """Test redaction of a path at the very start of the string."""
+        text = "/etc/clamav/clamd.conf loaded"
+        result = redact_sensitive_log_data(text)
+        assert result == f"{REDACTED_PATH} loaded"
+
+    def test_unix_path_at_end_of_string(self):
+        """Test redaction of a path at the end of the string."""
+        text = "Reading /etc/clamav/freshclam.conf"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Reading {REDACTED_PATH}"
+
+    def test_unix_path_is_entire_string(self):
+        """Test redaction when the entire string is a path."""
+        text = "/home/user/Documents/file.txt"
+        result = redact_sensitive_log_data(text)
+        assert result == REDACTED_PATH
+
+    # -- Windows paths --
+
+    def test_windows_path_backslash(self):
+        """Test redaction of a Windows path with backslashes."""
+        text = "Scanning C:\\Users\\test\\file.exe"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert "C:\\Users" not in result
+
+    def test_windows_path_forward_slash(self):
+        """Test redaction of a Windows path with forward slashes."""
+        text = "Found D:/Projects/build/output.dll"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert "D:/Projects" not in result
+
+    # -- Home paths --
+
+    def test_tilde_home_path(self):
+        """Test redaction of a tilde-prefixed home path."""
+        text = "Checking ~/Documents/secret.txt"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Checking {REDACTED_PATH}"
+
+    def test_tilde_path_at_start(self):
+        """Test redaction of tilde path at start of string."""
+        text = "~/Downloads/report.pdf was scanned"
+        result = redact_sensitive_log_data(text)
+        assert result == f"{REDACTED_PATH} was scanned"
+
+    # -- File URIs --
+
+    def test_file_uri_simple(self):
+        """Test redaction of a file:// URI."""
+        text = "Opening file:///tmp/test"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Opening {REDACTED_PATH}"
+
+    def test_file_uri_with_spaces_in_path(self):
+        """Test redaction of a file:// URI with path components."""
+        text = "Loaded file:///home/user/My Documents/file.txt done"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert "file:///" not in result
+
+    # -- Hash values --
+
+    def test_sha256_hash_redacted(self):
+        """Test SHA-256 hash (64 hex chars) is redacted."""
+        sha256 = "a" * 64
+        text = f"Hash: {sha256}"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Hash: {REDACTED_HASH}"
+        assert sha256 not in result
+
+    def test_md5_hash_redacted(self):
+        """Test MD5 hash (32 hex chars) is redacted."""
+        md5 = "d41d8cd98f00b204e9800998ecf8427e"
+        text = f"MD5: {md5}"
+        result = redact_sensitive_log_data(text)
+        assert result == f"MD5: {REDACTED_HASH}"
+        assert md5 not in result
+
+    def test_sha1_hash_redacted(self):
+        """Test SHA-1 hash (40 hex chars) is redacted."""
+        sha1 = "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+        text = f"SHA1: {sha1}"
+        result = redact_sensitive_log_data(text)
+        assert result == f"SHA1: {REDACTED_HASH}"
+
+    def test_mixed_case_hex_hash(self):
+        """Test hash with mixed case hex digits is redacted."""
+        mixed_hash = "aAbBcCdDeEfF" * 4  # 48 hex chars
+        text = f"Value: {mixed_hash}"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_HASH in result
+
+    def test_short_hex_not_redacted(self):
+        """Test that hex strings shorter than 32 chars are not treated as hashes."""
+        short_hex = "abcdef1234567890"  # 16 chars
+        text = f"Code: {short_hex}"
+        result = redact_sensitive_log_data(text)
+        assert short_hex in result
+        assert REDACTED_HASH not in result
+
+    # -- VirusTotal URLs --
+
+    def test_virustotal_url_redacted(self):
+        """Test VirusTotal URL with hash is redacted."""
+        vt_hash = "a" * 64
+        text = f"Report: https://www.virustotal.com/gui/file/{vt_hash}"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Report: {REDACTED_URL}"
+        assert vt_hash not in result
+
+    def test_virustotal_url_http(self):
+        """Test VirusTotal URL with http (not https) is redacted."""
+        text = "See http://virustotal.com/gui/file/abc123"
+        result = redact_sensitive_log_data(text)
+        assert result == f"See {REDACTED_URL}"
+
+    def test_virustotal_url_without_www(self):
+        """Test VirusTotal URL without www prefix is redacted."""
+        text = "Link https://virustotal.com/gui/file/abc123"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Link {REDACTED_URL}"
+
+    # -- Multiple sensitive values --
+
+    def test_multiple_paths_in_one_string(self):
+        """Test multiple paths in a single string are all redacted."""
+        text = "Copied /home/user/a.txt to /tmp/b.txt"
+        result = redact_sensitive_log_data(text)
+        assert result.count(REDACTED_PATH) == 2
+        assert "/home/user/a.txt" not in result
+        assert "/tmp/b.txt" not in result
+
+    def test_path_and_hash_in_same_string(self):
+        """Test both a path and a hash are redacted in the same string."""
+        sha256 = "b" * 64
+        text = f"File /home/user/malware.exe hash {sha256}"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert REDACTED_HASH in result
+        assert "/home/user/malware.exe" not in result
+        assert sha256 not in result
+
+    def test_path_hash_and_url_together(self):
+        """Test path, hash, and VT URL are all redacted in the same string."""
+        sha256 = "c" * 64
+        text = (
+            f"Scanned /home/user/file.bin with hash {sha256} "
+            f"see https://www.virustotal.com/gui/file/{sha256}"
+        )
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert REDACTED_HASH in result or REDACTED_URL in result
+        assert "/home/user/file.bin" not in result
+
+    # -- Edge cases --
+
+    def test_path_followed_by_comma(self):
+        """Test path followed by comma: comma is not consumed as part of path."""
+        text = "Found /tmp/a.txt, continuing"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Found {REDACTED_PATH}, continuing"
+
+    def test_path_followed_by_semicolon(self):
+        """Test path followed by semicolon preserves the semicolon."""
+        text = "Target /tmp/a.txt; scanning"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Target {REDACTED_PATH}; scanning"
+
+    def test_path_in_parentheses(self):
+        """Test path within parentheses redacts correctly."""
+        text = "error (see /var/log/syslog) for details"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert "/var/log/syslog" not in result
+
+    def test_path_in_quotes(self):
+        """Test path within quotes redacts the path."""
+        text = 'file "/home/user/test.txt" found'
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_PATH in result
+        assert "/home/user/test.txt" not in result
+
+    def test_slash_in_prose_not_redacted(self):
+        """Test that a standalone slash in mid-word is not redacted as a path."""
+        # "and/or" has no boundary before the slash
+        text = "true and/or false"
+        result = redact_sensitive_log_data(text)
+        assert "and" in result
+        assert "false" in result
+
+    def test_no_false_positive_on_plain_text(self):
+        """Test plain text without slashes is not redacted."""
+        text = "ClamAV engine version 1.0.0"
+        assert redact_sensitive_log_data(text) == text
+
+    def test_idempotent(self):
+        """Test redacting twice gives the same result."""
+        text = "Scan /home/user/file.txt hash " + "a" * 64
+        result1 = redact_sensitive_log_data(text)
+        result2 = redact_sensitive_log_data(result1)
+        assert result1 == result2
+
+    def test_path_with_special_chars_in_filename(self):
+        """Test paths with dots, hyphens, underscores in filenames."""
+        text = "Loading /etc/clamav/freshclam-custom_v2.conf"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Loading {REDACTED_PATH}"
+
+    def test_multiple_adjacent_paths(self):
+        """Test two paths separated only by a space."""
+        text = "/path/one /path/two"
+        result = redact_sensitive_log_data(text)
+        # Both should be redacted; we just need to verify no path text leaks
+        assert "/path/one" not in result
+        assert "/path/two" not in result
+
+    def test_hash_at_word_boundary(self):
+        """Test hash redaction respects word boundaries."""
+        # 31 hex chars should NOT be redacted (below 32 threshold)
+        text = "value " + "f" * 31 + " end"
+        result = redact_sensitive_log_data(text)
+        assert REDACTED_HASH not in result
+
+    def test_128_char_hex_redacted(self):
+        """Test very long hex string (128 chars) is still redacted as hash."""
+        long_hash = "a" * 128
+        text = f"Token: {long_hash}"
+        result = redact_sensitive_log_data(text)
+        assert result == f"Token: {REDACTED_HASH}"
+
+    def test_hex_over_128_not_redacted(self):
+        """Test hex string over 128 chars is not redacted (exceeds pattern)."""
+        too_long = "a" * 129
+        text = f"Data: {too_long}"
+        result = redact_sensitive_log_data(text)
+        # The 129-char string should not match the 32-128 char hash pattern
+        assert REDACTED_HASH not in result
