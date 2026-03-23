@@ -9,6 +9,7 @@ on:
   workflow_dispatch:
   workflow_call:
 
+# TODO: Remove once flatpak/flatpak-github-actions releases a Node 24 tag (>v6.6)
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
