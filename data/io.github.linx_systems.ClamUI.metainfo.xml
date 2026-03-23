@@ -96,6 +96,20 @@
     </keywords>
 
     <releases>
+        <release version="0.1.15b" date="2026-03-23">
+            <description>
+                <p>Bug fixes, Flatpak hardening, and test coverage improvements</p>
+                <ul>
+                    <li>Update ClamAV to 1.5.2 (security patch)</li>
+                    <li>Read system config files across Flatpak sandbox boundary</li>
+                    <li>Forward CLI args through local-run.sh to ClamUI</li>
+                    <li>Fix i18n: add compat.py to POTFILES.in</li>
+                    <li>Remove unnecessary org.a11y.Bus Flatpak permission</li>
+                    <li>Upgrade GitHub Actions to Node.js 24 runtime</li>
+                    <li>Add 236 tests for previously uncovered modules</li>
+                </ul>
+            </description>
+        </release>
         <release version="0.1.5" date="2026-03-16">
             <description>
                 <p>CLI pipeline, security hardening, and broad compatibility improvements</p>
