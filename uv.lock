@@ -193,7 +193,7 @@ wheels = [
 
 [[package]]
 name = "clamui"
-version = "0.1.15b0"
+version = "0.1.5b0"
 source = { editable = "." }
 dependencies = [
     { name = "cairosvg" },
