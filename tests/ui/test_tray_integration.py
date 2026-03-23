@@ -68,3 +68,36 @@ def test_toggle_window_activates_app_when_no_window_is_active():
 
     app.activate.assert_called_once()
     win.show_window.assert_called_once()
+
+
+def test_do_tray_profile_select_switches_to_scan_view_and_sets_profile():
+    """Tray profile selection should navigate to scan view and apply the profile."""
+    win = mock.MagicMock()
+    scan_view = mock.MagicMock()
+    app = _make_app(win)
+    app._scan_view = scan_view
+    app.scan_view = scan_view
+    app._view_coordinator = mock.MagicMock()
+
+    integration = TrayIntegration(app)
+
+    result = integration._do_tray_profile_select("profile-123")
+
+    app._view_coordinator.switch_to_view.assert_called_once_with("scan", scan_view)
+    scan_view.set_selected_profile.assert_called_once_with("profile-123")
+    assert result is False
+
+
+def test_do_tray_profile_select_returns_false_without_scan_view():
+    """Tray profile selection should no-op cleanly when scan view is unavailable."""
+    app = _make_app(mock.MagicMock())
+    app._scan_view = None
+    app._view_coordinator = mock.MagicMock()
+
+    integration = TrayIntegration(app)
+
+    result = integration._do_tray_profile_select("profile-123")
+
+    app._view_coordinator.switch_to_view.assert_not_called()
+    app.scan_view.set_selected_profile.assert_not_called()
+    assert result is False

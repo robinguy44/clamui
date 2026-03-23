@@ -199,10 +199,11 @@ class TrayIntegration:
     def _do_tray_profile_select(self, profile_id):
         """Execute profile selection from the tray."""
         if self._app._scan_view is None:
-            return
+            return False
 
-            self._app._view_coordinator.switch_to_view("scan", self._app.scan_view)
+        self._app._view_coordinator.switch_to_view("scan", self._app.scan_view)
         self._app.scan_view.set_selected_profile(profile_id)
+        return False
 
     def handle_device_scan_event(self, event_type, info):
         """Handle device scan events from the device monitor."""
