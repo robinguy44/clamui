@@ -5,7 +5,7 @@
 # Main dependencies
 psutil==7.2.2
 matplotlib==3.10.8
-requests==2.32.5
+requests==2.33.0
 keyring==25.7.0
 
 # matplotlib dependencies
