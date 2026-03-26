@@ -1,0 +1,36 @@
+name: Dependency Audit
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Export locked dependencies for audit
+        run: |
+          uv export --frozen --all-groups --format requirements.txt \
+            --no-hashes --no-emit-local \
+            -o requirements-audit.txt
+
+      - name: Audit dependencies for known CVEs
+        run: uvx pip-audit -r requirements-audit.txt
