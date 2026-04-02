@@ -770,12 +770,16 @@ class FreshclamUpdater:
                 if force:
                     # Force update: Delete databases first, then run freshclam
                     # This all happens via pkexec with root privileges
+                    # freshclam is passed as $1 (positional arg) to avoid
+                    # shell injection — the script string is a constant.
                     cmd = [
                         pkexec,
                         "sh",
                         "-c",
                         # Delete all ClamAV database files, then run freshclam
-                        f"rm -f /var/lib/clamav/*.cvd /var/lib/clamav/*.cld /var/lib/clamav/*.cud 2>/dev/null; {freshclam} --verbose",
+                        'rm -f /var/lib/clamav/*.cvd /var/lib/clamav/*.cld /var/lib/clamav/*.cud 2>/dev/null; "$1" --verbose',
+                        "clamui-force-update",  # $0 (script name for error messages)
+                        freshclam,  # $1 (safe — not interpreted as shell syntax)
                     ]
                     return wrap_host_command(cmd)
                 else:

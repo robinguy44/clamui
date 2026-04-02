@@ -356,6 +356,61 @@ class TestFreshclamUpdaterBuildCommand:
                         assert "--verbose" in cmd
                         assert "--no-dns" not in cmd
 
+    def test_build_command_force_with_pkexec_no_shell_injection(self, updater_module):
+        """Test force+pkexec path passes freshclam as positional arg, not interpolated."""
+        FreshclamUpdater = updater_module["FreshclamUpdater"]
+        with patch("src.core.updater.is_flatpak", return_value=False):
+            with patch(
+                "src.core.updater.get_freshclam_path",
+                return_value="/usr/bin/freshclam",
+            ):
+                with patch(
+                    "src.core.updater.get_pkexec_path",
+                    return_value="/usr/bin/pkexec",
+                ):
+                    with patch(
+                        "src.core.updater.wrap_host_command",
+                        side_effect=lambda x: x,
+                    ):
+                        updater = FreshclamUpdater(log_manager=MagicMock())
+                        cmd = updater._build_command(force=True)
+                        # Must use sh -c with a constant shell script
+                        assert cmd[0] == "/usr/bin/pkexec"
+                        assert cmd[1] == "sh"
+                        assert cmd[2] == "-c"
+                        # The shell script string (cmd[3]) must NOT contain
+                        # the freshclam path -- it should use "$1" instead
+                        shell_script = cmd[3]
+                        assert "/usr/bin/freshclam" not in shell_script
+                        assert '"$1"' in shell_script
+                        # freshclam path must be passed as a separate positional arg
+                        assert "/usr/bin/freshclam" in cmd[4:]
+
+    def test_build_command_force_with_pkexec_metachar_path(self, updater_module):
+        """Test force+pkexec is safe even if freshclam path has shell metacharacters."""
+        FreshclamUpdater = updater_module["FreshclamUpdater"]
+        malicious_path = "/usr/bin/freshclam; rm -rf /"
+        with patch("src.core.updater.is_flatpak", return_value=False):
+            with patch(
+                "src.core.updater.get_freshclam_path",
+                return_value=malicious_path,
+            ):
+                with patch(
+                    "src.core.updater.get_pkexec_path",
+                    return_value="/usr/bin/pkexec",
+                ):
+                    with patch(
+                        "src.core.updater.wrap_host_command",
+                        side_effect=lambda x: x,
+                    ):
+                        updater = FreshclamUpdater(log_manager=MagicMock())
+                        cmd = updater._build_command(force=True)
+                        # The shell script must be a constant string
+                        shell_script = cmd[3]
+                        assert malicious_path not in shell_script
+                        # The malicious path is passed as a data argument, not code
+                        assert malicious_path in cmd[4:]
+
 
 # =============================================================================
 # FreshclamUpdater._parse_results() Tests
