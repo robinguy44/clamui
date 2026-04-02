@@ -36,6 +36,37 @@ def _parse_path_pairs(args: list[str]) -> list[tuple[Path, Path]]:
     return pairs
 
 
+_ALLOWED_DEST_DIRS: tuple[Path, ...] = (
+    Path("/etc/clamav"),
+    Path("/etc/clamd.d"),
+    Path("/etc/clamav-unofficial-sigs"),
+)
+
+
+def _validate_destination(destination: Path) -> None:
+    """
+    Validate that a destination path is within the ClamAV config allowlist.
+
+    The resolved path must:
+    - Have a parent directory that exactly matches one of the allowed directories
+    - End with a ``.conf`` extension
+
+    Args:
+        destination: Proposed destination file path
+
+    Raises:
+        ValueError: If the destination is outside the allowlist or has a
+            disallowed extension
+    """
+    resolved = destination.resolve()
+
+    if resolved.suffix != ".conf":
+        raise ValueError(f"Destination must have a .conf extension: {resolved}")
+
+    if resolved.parent not in _ALLOWED_DEST_DIRS:
+        raise ValueError(f"Destination is not in allowed config directories: {resolved}")
+
+
 def _apply_config_file(source: Path, destination: Path) -> None:
     """
     Copy one staged config file to destination and set expected permissions.
@@ -49,6 +80,7 @@ def _apply_config_file(source: Path, destination: Path) -> None:
     if not source.is_file():
         raise OSError(f"Staged path is not a file: {source}")
 
+    _validate_destination(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(source, destination)
     os.chmod(destination, 0o644)
