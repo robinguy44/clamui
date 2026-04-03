@@ -34,7 +34,7 @@ dependencies = [
     "urllib3>=2.6.3",
     "certifi>=2024.7.4",
     "keyring>=25.0.0",
-    "Pillow>=12.1.1",
+    "Pillow>=12.2.0",
     "cairosvg>=2.9.0",
 ]
 
