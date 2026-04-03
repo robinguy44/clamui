@@ -162,6 +162,24 @@ class TestRequiredPermissions:
             "Manifest should not request explicit org.a11y.Bus access"
         )
 
+    @pytest.mark.parametrize(
+        "manifest_name",
+        [
+            "io.github.linx_systems.ClamUI.yml",
+            "io.github.linx_systems.ClamUI.local.yml",
+        ],
+    )
+    def test_does_not_request_redundant_app_id_own_name(self, yaml_parser, manifest_name):
+        """Test manifests do not request Flatpak's default app-id own-name permission."""
+        manifest = PROJECT_ROOT / "flathub" / manifest_name
+        data = yaml_parser.safe_load(manifest.read_text())
+
+        finish_args = data.get("finish-args", [])
+
+        assert "--own-name=io.github.linx_systems.ClamUI.tray" not in finish_args, (
+            "Manifest should not request app-id scoped own-name access explicitly"
+        )
+
 
 class TestModulesSection:
     """Tests for modules section."""
