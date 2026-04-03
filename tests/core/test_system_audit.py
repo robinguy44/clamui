@@ -262,12 +262,14 @@ class TestCheckClamavHealth:
 class TestCheckFirewall:
     """Tests for check_firewall function."""
 
+    @patch("src.core.system_audit._check_firewall_gui")
     @patch("src.core.system_audit._check_open_ports")
     @patch("src.core.system_audit._run_command")
     @patch("src.core.system_audit._check_systemd_service")
-    def test_ufw_active(self, mock_systemd, mock_run_cmd, mock_ports):
+    def test_ufw_active(self, mock_systemd, mock_run_cmd, mock_ports, mock_gui):
         mock_systemd.return_value = (True, "active")
         mock_ports.return_value = None
+        mock_gui.return_value = None
 
         with patch("src.core.system_audit._check_ufw_enabled", return_value=True):
             result = check_firewall()
@@ -278,14 +280,16 @@ class TestCheckFirewall:
             for c in result.checks
         )
 
+    @patch("src.core.system_audit._check_firewall_gui")
     @patch("src.core.system_audit._check_open_ports")
     @patch("src.core.system_audit._run_command")
     @patch("src.core.system_audit._check_systemd_service")
-    def test_no_firewall(self, mock_systemd, mock_run_cmd, mock_ports):
+    def test_no_firewall(self, mock_systemd, mock_run_cmd, mock_ports, mock_gui):
         # No firewall found
         mock_systemd.return_value = (False, "inactive")
         mock_run_cmd.return_value = (-1, "", "command not found")
         mock_ports.return_value = None
+        mock_gui.return_value = None
 
         result = check_firewall()
         assert any(c.status == AuditStatus.FAIL for c in result.checks)

@@ -113,6 +113,8 @@ class AuditCheckResult:
     recommendation: str | None = None
     install_command: str | None = None
     info_url: str | None = None
+    launch_command: str | None = None
+    launch_label: str | None = None
 
 
 @dataclass
@@ -549,7 +551,45 @@ def check_firewall() -> AuditSectionResult:
     # Check open ports
     _check_open_ports(section)
 
+    # Detect firewall GUI tools
+    _check_firewall_gui(section)
+
     return section
+
+
+# Firewall GUI tools: (binary, display_name, desktop_file_or_command)
+_FIREWALL_GUIS = [
+    ("gufw", "Gufw", "gufw"),
+    ("firewall-config", "Firewall Config", "firewall-config"),
+]
+
+
+def _check_firewall_gui(section: AuditSectionResult) -> None:
+    """Detect installed firewall GUI tools and add a launch entry."""
+    for binary, display_name, command in _FIREWALL_GUIS:
+        if is_binary_installed(binary):
+            section.checks.append(
+                AuditCheckResult(
+                    name=_("Firewall Manager"),
+                    status=AuditStatus.PASS,
+                    detail=_("{name} is available").format(name=display_name),
+                    launch_command=command,
+                    launch_label=_("Open {name}").format(name=display_name),
+                )
+            )
+            return
+
+    # No GUI found — informational only, not a warning
+    section.checks.append(
+        AuditCheckResult(
+            name=_("Firewall Manager"),
+            status=AuditStatus.UNKNOWN,
+            detail=_("No graphical firewall manager detected"),
+            recommendation=_("Install a GUI for easier firewall management"),
+            install_command="sudo apt install gufw",
+            info_url=_URLS["ufw"],
+        )
+    )
 
 
 def _check_ufw_enabled() -> bool:

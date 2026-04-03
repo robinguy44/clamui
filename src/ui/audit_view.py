@@ -466,6 +466,14 @@ class AuditView(Gtk.Box):
         suffix_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         suffix_box.set_valign(Gtk.Align.CENTER)
 
+        # Launch button (e.g., "Open Gufw")
+        if check.launch_command:
+            launch_button = Gtk.Button()
+            launch_button.set_label(check.launch_label or _("Open"))
+            launch_button.add_css_class("flat")
+            launch_button.connect("clicked", self._on_launch_clicked, check.launch_command)
+            suffix_box.append(launch_button)
+
         # Info link button (opens docs in browser)
         if check.info_url:
             info_button = Gtk.Button()
@@ -668,6 +676,22 @@ class AuditView(Gtk.Box):
             return
         self._cached_report = None
         self._run_audit()
+
+    def _on_launch_clicked(self, button: Gtk.Button, command: str):
+        """Launch an application (e.g., firewall GUI) in the background."""
+        import subprocess
+
+        try:
+            subprocess.Popen(
+                [command],
+                start_new_session=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except FileNotFoundError:
+            logger.warning("Could not launch: %s (not found)", command)
+        except OSError as e:
+            logger.warning("Could not launch %s: %s", command, e)
 
     def _on_info_clicked(self, button: Gtk.Button, url: str):
         """Open info URL in the default browser."""
