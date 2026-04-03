@@ -99,6 +99,7 @@ class DaemonScanner:
         profile_exclusions: dict | None = None,
         count_targets: bool = True,
         progress_callback: Callable[[ScanProgress], None] | None = None,
+        force_stream: bool = False,
     ) -> ScanResult:
         """
         Execute a synchronous scan using clamdscan.
@@ -117,6 +118,8 @@ class DaemonScanner:
             progress_callback: Optional callback for real-time progress updates.
                               If provided, verbose mode is used and callback receives
                               ScanProgress updates as files are scanned.
+            force_stream: Force clamdscan to use the INSTREAM protocol for this
+                          scan instead of the faster fdpass/multiscan path.
 
         Returns:
             ScanResult with scan details
@@ -199,6 +202,7 @@ class DaemonScanner:
                 profile_exclusions,
                 verbose=progress_callback is not None,
                 file_list_path=file_list_path,
+                force_stream=force_stream,
             )
 
             with self._process_lock:
@@ -354,25 +358,19 @@ class DaemonScanner:
         profile_exclusions: dict | None = None,
         verbose: bool = False,
         file_list_path: str | None = None,
+        force_stream: bool = False,
     ) -> list[str]:
         """
         Build the clamdscan command arguments.
 
-        Uses the INSTREAM protocol by forcing clamdscan's --stream mode so it
-        reads files client-side and streams their content to clamd over the
-        socket. In verbose mode, prepends
-        stdbuf -oL and uses --file-list so clamdscan emits per-file results
-        on stdout (scanning a directory only produces one summary line).
-
-        We intentionally do NOT use --fdpass / --multiscan. Those flags
-        switch clamd to the FILDES protocol where it reads files server-side
-        via passed file descriptors. While faster for bulk I/O, FILDES
-        silently fails to detect the EICAR test signature — clamd reports
-        the file as clean (exit 0) regardless of its location. This makes
-        it impossible for users to verify that daemon scanning works.
-        The INSTREAM protocol detects EICAR reliably, and the daemon's main
-        performance advantage (in-memory virus database, no 3-10s load time)
-        is preserved.
+        Uses --multiscan for parallel scanning and --fdpass for file
+        descriptor passing during regular daemon scans. In verbose mode,
+        prepends stdbuf -oL and uses --file-list so clamdscan emits
+        per-file results on stdout (scanning a directory only produces
+        one summary line). File-list scans still use --fdpass by default,
+        because bare "-v --file-list" may fall back to daemon-side path
+        checks that fail with permission errors. When force_stream is set,
+        uses clamdscan's --stream mode for this scan instead of fdpass.
 
         Args:
             path: Path to scan (used as target when file_list_path is None)
@@ -382,6 +380,7 @@ class DaemonScanner:
                     When True, clamdscan outputs each file as it's scanned.
             file_list_path: Path to temp file containing one file path per line.
                     Used in verbose mode for per-file progress output.
+            force_stream: Whether to force client-side streaming for this scan.
 
         Returns:
             List of command arguments (wrapped with flatpak-spawn if in Flatpak)
@@ -398,16 +397,23 @@ class DaemonScanner:
         else:
             cmd = ["clamdscan"]
 
+        # For file-list scans, keep --fdpass enabled so clamdscan uses passed
+        # descriptors instead of daemon-side path checks. This preserves the
+        # per-file verbose output needed for progress updates while avoiding
+        # permission-denied results on otherwise readable files.
+        if force_stream:
+            cmd.append("--stream")
+        elif file_list_path is not None:
+            cmd.append("--fdpass")
+        elif not verbose:
+            cmd.append("--multiscan")
+            cmd.append("--fdpass")
+
         if verbose:
             cmd.append("-v")
         else:
             # Show infected files only
             cmd.append("-i")
-
-        # Force client-side streaming. Without --stream, clamdscan can still
-        # fall back to server-side file access, which breaks scans of temp files
-        # owned by the UI user when clamd runs as a different account.
-        cmd.append("--stream")
 
         # NOTE: clamdscan does NOT support --exclude or --exclude-dir options
         # (it silently ignores them with a warning). Exclusion filtering is

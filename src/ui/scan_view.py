@@ -100,6 +100,8 @@ class ScanView(Gtk.Box):
         self._eicar_temp_path: str = ""
         # Optional one-shot backend override for the current scan session.
         self._scan_backend_override: str | None = None
+        # Optional one-shot daemon mode override for the current scan session.
+        self._scan_daemon_force_stream = False
 
         # Current scan result (for dialog)
         self._current_result: ScanResult | None = None
@@ -1496,6 +1498,7 @@ class ScanView(Gtk.Box):
             return
 
         self._scan_backend_override = None
+        self._scan_daemon_force_stream = False
         self._start_scanning()
 
     def _check_database_and_prompt(self) -> bool:
@@ -1544,6 +1547,7 @@ class ScanView(Gtk.Box):
         """
         # Refresh backend-dependent UI text before running the test.
         self._update_backend_label()
+        active_backend = self._scanner.get_active_backend()
 
         # Check if virus database is available before creating test file
         if not self._check_database_and_prompt():
@@ -1569,6 +1573,17 @@ class ScanView(Gtk.Box):
             ) as f:
                 f.write(EICAR_TEST_STRING)
                 self._eicar_temp_path = f.name
+
+            # The daemon fast path may ask clamd to open the temporary file
+            # server-side, which can fail for fresh user-owned EICAR files.
+            # Keep normal scans on the daemon backend, but force clamdscan to
+            # use --stream for the self-test so the verification path is reliable.
+            if active_backend == "daemon":
+                self._scan_backend_override = "daemon"
+                self._scan_daemon_force_stream = True
+            else:
+                self._scan_backend_override = None
+                self._scan_daemon_force_stream = False
 
             # Set the EICAR file as scan target and start scan
             self._set_selected_path(self._eicar_temp_path)
@@ -1738,6 +1753,7 @@ class ScanView(Gtk.Box):
 
             target_count = len(self._selected_paths)
             backend_override = self._scan_backend_override
+            daemon_force_stream = self._scan_daemon_force_stream
 
             for idx, target_path in enumerate(self._selected_paths, start=1):
                 # Check if cancel all was requested before starting next target
@@ -1774,6 +1790,7 @@ class ScanView(Gtk.Box):
                     profile_exclusions=profile_exclusions,
                     progress_callback=progress_callback,
                     backend_override=backend_override,
+                    daemon_force_stream=daemon_force_stream,
                 )
 
                 # Check if scan was cancelled (either this target or cancel all)
@@ -1916,6 +1933,7 @@ class ScanView(Gtk.Box):
                 logger.warning(f"Failed to clean up EICAR file: {e}")
             self._eicar_temp_path = ""
         self._scan_backend_override = None
+        self._scan_daemon_force_stream = False
 
         # Stop progress animation and hide progress section
         self._stop_progress_pulse()
@@ -1990,6 +2008,7 @@ class ScanView(Gtk.Box):
                 os.remove(self._eicar_temp_path)
             self._eicar_temp_path = ""
         self._scan_backend_override = None
+        self._scan_daemon_force_stream = False
 
         # Stop progress animation and hide progress section
         self._stop_progress_pulse()

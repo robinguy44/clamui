@@ -98,10 +98,8 @@ class TestDaemonScannerBuildCommand:
 
         # Now uses binary name directly (not full path from which_host_command)
         assert cmd[0] == "clamdscan"
-        # Force INSTREAM explicitly: no --fdpass/--multiscan, but yes --stream
-        assert "--fdpass" not in cmd
-        assert "--multiscan" not in cmd
-        assert "--stream" in cmd
+        assert "--multiscan" in cmd
+        assert "--fdpass" in cmd
         assert "-i" in cmd
         assert str(test_file) in cmd
 
@@ -119,6 +117,45 @@ class TestDaemonScannerBuildCommand:
             # Must use force_host=True so clamdscan talks to host's daemon
             mock_wrap.assert_called_once()
             assert mock_wrap.call_args[1].get("force_host") is True
+
+    def test_build_command_force_stream_uses_stream_mode(self, tmp_path, daemon_scanner_class):
+        """Test force_stream switches daemon scans to clamdscan --stream."""
+        test_file = tmp_path / "test.txt"
+        test_file.write_text("test content")
+
+        scanner = daemon_scanner_class()
+
+        with patch("src.core.daemon_scanner.wrap_host_command", side_effect=lambda x, **kw: x):
+            cmd = scanner._build_command(str(test_file), recursive=True, force_stream=True)
+
+        assert cmd[0] == "clamdscan"
+        assert "--stream" in cmd
+        assert "--multiscan" not in cmd
+        assert "--fdpass" not in cmd
+
+    def test_build_command_verbose_file_list_uses_fdpass(self, tmp_path, daemon_scanner_class):
+        """Verbose file-list scans should keep fdpass for reliable access."""
+        test_file = tmp_path / "test.txt"
+        test_file.write_text("test content")
+        file_list = tmp_path / "files.txt"
+        file_list.write_text(str(test_file), encoding="utf-8")
+
+        scanner = daemon_scanner_class()
+
+        with patch("src.core.daemon_scanner.wrap_host_command", side_effect=lambda x, **kw: x):
+            cmd = scanner._build_command(
+                str(test_file),
+                recursive=True,
+                verbose=True,
+                file_list_path=str(file_list),
+            )
+
+        assert cmd[:3] == ["stdbuf", "-oL", "clamdscan"]
+        assert "-v" in cmd
+        assert "--file-list" in cmd
+        assert "--fdpass" in cmd
+        assert "--multiscan" not in cmd
+        assert "--stream" not in cmd
 
     def test_build_command_without_exclusions(self, tmp_path, daemon_scanner_class):
         """Test _build_command does NOT include --exclude (clamdscan doesn't support it)."""
@@ -1487,13 +1524,8 @@ class TestDaemonScannerExclusionHelpers:
 class TestDaemonScannerFlatpakSupport:
     """Tests for DaemonScanner Flatpak mode support."""
 
-    def test_build_command_uses_instream_in_flatpak(self, tmp_path, daemon_scanner_class):
-        """Test _build_command uses INSTREAM protocol (no --fdpass) in Flatpak mode.
-
-        clamdscan runs on the host via flatpak-spawn --host. We use the
-        INSTREAM protocol (no --fdpass/--multiscan) because the FILDES
-        protocol silently fails to detect the EICAR test signature.
-        """
+    def test_build_command_uses_optimal_flags_in_flatpak(self, tmp_path, daemon_scanner_class):
+        """Test _build_command uses --multiscan --fdpass in Flatpak mode."""
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
@@ -1513,13 +1545,13 @@ class TestDaemonScannerFlatpakSupport:
         # Now uses binary name only, not full path
         assert cmd[2] == "clamdscan"
 
-        # Verify INSTREAM protocol is forced explicitly with --stream
-        assert "--fdpass" not in cmd
-        assert "--multiscan" not in cmd
-        assert "--stream" in cmd
+        # Verify optimal flags are used (not --stream)
+        assert "--multiscan" in cmd
+        assert "--fdpass" in cmd
+        assert "--stream" not in cmd
 
-    def test_build_command_uses_instream_in_native(self, tmp_path, daemon_scanner_class):
-        """Test _build_command uses INSTREAM protocol (no --fdpass) in native mode."""
+    def test_build_command_uses_optimal_flags_in_native(self, tmp_path, daemon_scanner_class):
+        """Test _build_command uses --multiscan --fdpass in native mode."""
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
@@ -1535,9 +1567,9 @@ class TestDaemonScannerFlatpakSupport:
 
         # Now uses binary name only
         assert cmd[0] == "clamdscan"
-        assert "--fdpass" not in cmd
-        assert "--multiscan" not in cmd
-        assert "--stream" in cmd
+        assert "--multiscan" in cmd
+        assert "--fdpass" in cmd
+        assert "--stream" not in cmd
 
     def test_build_command_wraps_with_flatpak_spawn(self, tmp_path, daemon_scanner_class):
         """Test _build_command wraps command for Flatpak execution on host."""

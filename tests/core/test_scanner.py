@@ -2702,3 +2702,26 @@ class TestScannerBackendOverride:
         assert result.status == ScanStatus.CLEAN
         mock_installed.assert_called_once()
         mock_daemon.assert_not_called()
+
+    def test_scan_sync_daemon_force_stream_passes_through(self, tmp_path):
+        """Test daemon_force_stream reaches the daemon scanner for one scan."""
+        test_file = tmp_path / "eicar.txt"
+        test_file.write_text("test content")
+
+        mock_settings = mock.MagicMock()
+        mock_settings.get.side_effect = lambda key, default=None: (
+            "daemon" if key == "scan_backend" else default
+        )
+        scanner = Scanner(settings_manager=mock_settings)
+
+        daemon_result = mock.MagicMock()
+        daemon_result.status = ScanStatus.CLEAN
+
+        with mock.patch.object(scanner, "_get_daemon_scanner") as mock_daemon:
+            mock_daemon.return_value.scan_sync.return_value = daemon_result
+
+            result = scanner.scan_sync(str(test_file), daemon_force_stream=True)
+
+        assert result is daemon_result
+        mock_daemon.return_value.scan_sync.assert_called_once()
+        assert mock_daemon.return_value.scan_sync.call_args[1]["force_stream"] is True

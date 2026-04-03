@@ -85,6 +85,7 @@ def mock_scan_view(scan_view_class):
     view._total_target_count = 1
     view._cumulative_files_scanned = 0
     view._scan_backend_override = None
+    view._scan_daemon_force_stream = False
 
     # Mock UI elements
     view._path_label = mock.MagicMock()
@@ -953,6 +954,7 @@ class TestScanWorker:
             assert call_args[0][0] == "/home/user/test.txt"
             assert call_args[1]["recursive"] is True
             assert call_args[1]["backend_override"] is None
+            assert call_args[1]["daemon_force_stream"] is False
 
             # Verify _on_scan_complete was scheduled
             assert len(captured_callbacks) >= 1
@@ -990,6 +992,7 @@ class TestScanWorker:
         mock_scan_view._scanner.scan_sync.assert_called_once()
         call_args = mock_scan_view._scanner.scan_sync.call_args
         assert call_args[1]["backend_override"] == "clamscan"
+        assert call_args[1]["daemon_force_stream"] is False
 
     def test_scan_worker_no_paths_returns_error(self, mock_scan_view):
         """Test scan worker with no paths returns an error result."""
@@ -1952,6 +1955,28 @@ class TestEicarTest:
             call_arg = mock_scan_view._status_banner.set_title.call_args[0][0]
             assert "Failed" in call_arg or "error" in call_arg.lower()
 
+    def test_eicar_test_forces_daemon_stream_when_daemon_active(self, mock_scan_view, tmp_path):
+        """EICAR self-test should keep clamdscan but force --stream."""
+        self._setup_eicar_mocks(mock_scan_view)
+        mock_scan_view._scanner.get_active_backend.return_value = "daemon"
+        mock_scan_view._set_selected_path = mock.MagicMock()
+        mock_scan_view._start_scanning = mock.MagicMock()
+
+        with mock.patch("src.ui.scan_view.tempfile") as mock_tempfile:
+            mock_file = mock.MagicMock()
+            mock_file.name = str(tmp_path / "eicar_test.txt")
+            mock_file.__enter__ = mock.MagicMock(return_value=mock_file)
+            mock_file.__exit__ = mock.MagicMock(return_value=False)
+            mock_tempfile.NamedTemporaryFile.return_value = mock_file
+
+            with mock.patch("src.ui.scan_view.is_flatpak", return_value=False):
+                mock_scan_view._on_eicar_test_clicked(mock.MagicMock())
+
+        assert mock_scan_view._scan_backend_override == "daemon"
+        assert mock_scan_view._scan_daemon_force_stream is True
+        mock_scan_view._set_selected_path.assert_called_once_with(str(tmp_path / "eicar_test.txt"))
+        mock_scan_view._start_scanning.assert_called_once()
+
 
 class TestBackendIndicator:
     """Tests for backend indicator functionality."""
@@ -2640,6 +2665,7 @@ class TestScanCompleteEicarCleanupError:
         fake_path = str(tmp_path / "nonexistent_eicar.txt")
         mock_scan_view._eicar_temp_path = fake_path
         mock_scan_view._scan_backend_override = "clamscan"
+        mock_scan_view._scan_daemon_force_stream = True
 
         clean_status = mock.MagicMock()
         result = mock.MagicMock()
@@ -2661,6 +2687,7 @@ class TestScanCompleteEicarCleanupError:
         # EICAR path should still be cleared
         assert mock_scan_view._eicar_temp_path == ""
         assert mock_scan_view._scan_backend_override is None
+        assert mock_scan_view._scan_daemon_force_stream is False
 
 
 class TestScanErrorEicarCleanup:
@@ -2680,6 +2707,7 @@ class TestScanErrorEicarCleanup:
         fake_path = str(tmp_path / "nonexistent_eicar.txt")
         mock_scan_view._eicar_temp_path = fake_path
         mock_scan_view._scan_backend_override = "clamscan"
+        mock_scan_view._scan_daemon_force_stream = True
 
         with mock.patch("src.ui.scan_view.set_status_class"):
             with mock.patch("os.path.exists", return_value=True):
@@ -2690,6 +2718,7 @@ class TestScanErrorEicarCleanup:
         # EICAR path should still be cleared
         assert mock_scan_view._eicar_temp_path == ""
         assert mock_scan_view._scan_backend_override is None
+        assert mock_scan_view._scan_daemon_force_stream is False
 
 
 class TestScanErrorNotifiesCallback:
