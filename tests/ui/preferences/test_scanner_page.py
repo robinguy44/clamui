@@ -833,7 +833,14 @@ class TestScannerPagePopulateFields:
         """Test populate_fields sets performance numeric values."""
         from src.ui.preferences.scanner_page import ScannerPage
 
-        mock_config.get_value.return_value = "100"
+        def custom_get_value(key):
+            if key in ("MaxFileSize", "MaxScanSize"):
+                return "100M"
+            if key in ("MaxRecursion", "MaxFiles"):
+                return "100"
+            return "yes"
+
+        mock_config.get_value.side_effect = custom_get_value
 
         ScannerPage.populate_fields(mock_config, mock_widgets)
 
@@ -981,8 +988,8 @@ class TestScannerPageCollectData:
 
         result = ScannerPage.collect_data(mock_widgets, True)
 
-        assert result["MaxFileSize"] == "100"
-        assert result["MaxScanSize"] == "200"
+        assert result["MaxFileSize"] == "100M"
+        assert result["MaxScanSize"] == "200M"
         assert result["MaxRecursion"] == "16"
         assert result["MaxFiles"] == "10000"
         assert isinstance(result["MaxFileSize"], str)

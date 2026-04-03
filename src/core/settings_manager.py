@@ -47,6 +47,7 @@ class SettingsManager:
         "daemon_socket_path": "",  # Empty = auto-detect
         "clamd_conf_path": "",  # Empty = auto-detect
         "freshclam_conf_path": "",  # Empty = auto-detect
+        "clamd_size_limit_unit_migration_done": False,
         # VirusTotal settings
         "virustotal_api_key": None,  # Fallback storage if keyring unavailable
         "virustotal_remember_no_key_action": "none",  # "none", "open_website", "prompt"

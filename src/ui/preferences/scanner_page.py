@@ -25,6 +25,7 @@ except (TypeError, AttributeError):
     _HAS_FILE_DIALOG = False
 
 from ...core.clamav_detection import detect_clamd_conf_path
+from ...core.clamav_config import megabytes_to_size_value, size_value_to_megabytes
 from ...core.flatpak import (
     format_flatpak_portal_path,
     is_flatpak,
@@ -765,7 +766,13 @@ class ScannerPage(PreferencesPageMixin):
             populate_bool_field(config, widgets_dict, key)
 
         # Populate performance settings
-        for key in ("MaxFileSize", "MaxScanSize", "MaxRecursion", "MaxFiles"):
+        for key in ("MaxFileSize", "MaxScanSize"):
+            if config.has_key(key):
+                value_mb = size_value_to_megabytes(config.get_value(key))
+                if value_mb is not None:
+                    widgets_dict[key].set_value(value_mb)
+
+        for key in ("MaxRecursion", "MaxFiles"):
             populate_int_field(config, widgets_dict, key)
 
         # Populate logging settings
@@ -800,7 +807,12 @@ class ScannerPage(PreferencesPageMixin):
                 updates[key] = "yes" if value else "no"
 
         # Collect performance settings
-        for key in ("MaxFileSize", "MaxScanSize", "MaxRecursion", "MaxFiles"):
+        for key in ("MaxFileSize", "MaxScanSize"):
+            value = get_widget_int_value(widgets_dict, key)
+            if value is not None:
+                updates[key] = megabytes_to_size_value(value)
+
+        for key in ("MaxRecursion", "MaxFiles"):
             value = get_widget_int_value(widgets_dict, key)
             if value is not None:
                 updates[key] = str(value)

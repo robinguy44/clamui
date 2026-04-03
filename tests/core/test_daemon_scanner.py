@@ -98,9 +98,10 @@ class TestDaemonScannerBuildCommand:
 
         # Now uses binary name directly (not full path from which_host_command)
         assert cmd[0] == "clamdscan"
-        # --fdpass/--multiscan removed: INSTREAM protocol detects EICAR reliably
+        # Force INSTREAM explicitly: no --fdpass/--multiscan, but yes --stream
         assert "--fdpass" not in cmd
         assert "--multiscan" not in cmd
+        assert "--stream" in cmd
         assert "-i" in cmd
         assert str(test_file) in cmd
 
@@ -1512,10 +1513,10 @@ class TestDaemonScannerFlatpakSupport:
         # Now uses binary name only, not full path
         assert cmd[2] == "clamdscan"
 
-        # Verify INSTREAM protocol (no --fdpass/--multiscan/--stream)
+        # Verify INSTREAM protocol is forced explicitly with --stream
         assert "--fdpass" not in cmd
         assert "--multiscan" not in cmd
-        assert "--stream" not in cmd
+        assert "--stream" in cmd
 
     def test_build_command_uses_instream_in_native(self, tmp_path, daemon_scanner_class):
         """Test _build_command uses INSTREAM protocol (no --fdpass) in native mode."""
@@ -1536,7 +1537,7 @@ class TestDaemonScannerFlatpakSupport:
         assert cmd[0] == "clamdscan"
         assert "--fdpass" not in cmd
         assert "--multiscan" not in cmd
-        assert "--stream" not in cmd
+        assert "--stream" in cmd
 
     def test_build_command_wraps_with_flatpak_spawn(self, tmp_path, daemon_scanner_class):
         """Test _build_command wraps command for Flatpak execution on host."""

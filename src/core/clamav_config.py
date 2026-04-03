@@ -6,6 +6,7 @@ Supports reading and modifying freshclam.conf and clamd.conf files.
 
 import logging
 import os
+import math
 import shutil
 import subprocess
 import sys
@@ -498,6 +499,92 @@ CONFIG_OPTION_TYPES = {
     # Additional boolean options
     "ScriptedUpdates": {"type": "boolean"},  # Enable/disable scripted updates
 }
+
+_SIZE_SUFFIX_TO_MB = {
+    "K": 1 / 1024,
+    "M": 1,
+    "G": 1024,
+    "T": 1024 * 1024,
+}
+
+
+def size_value_to_megabytes(value: str | None) -> int | None:
+    """
+    Convert a ClamAV size value into an integer number of megabytes.
+
+    For ClamUI's scanner settings UI, bare integer values are interpreted as
+    megabytes for backward compatibility with older buggy saves that wrote
+    "10" instead of "10M".
+
+    Args:
+        value: Raw ClamAV size value (e.g. "10M", "1G", "0", "10")
+
+    Returns:
+        Integer megabyte value, or None if the value cannot be parsed
+    """
+    if value is None:
+        return None
+
+    raw = value.strip()
+    if not raw:
+        return None
+
+    if raw.isdigit():
+        return int(raw)
+
+    suffix = raw[-1].upper()
+    number_part = raw[:-1].strip()
+    if suffix not in _SIZE_SUFFIX_TO_MB or not number_part.isdigit():
+        return None
+
+    size_mb = int(number_part) * _SIZE_SUFFIX_TO_MB[suffix]
+    return math.ceil(size_mb)
+
+
+def megabytes_to_size_value(value_mb: int) -> str:
+    """
+    Serialize a UI megabyte value into a ClamAV size string.
+
+    Args:
+        value_mb: Integer size in megabytes
+
+    Returns:
+        ClamAV config value ("0" for unlimited, otherwise "<n>M")
+    """
+    return "0" if value_mb <= 0 else f"{value_mb}M"
+
+
+def normalize_clamd_size_limit_units(config: ClamAVConfig | None) -> bool:
+    """
+    Normalize buggy bare-integer clamd size limits to explicit megabyte values.
+
+    Older ClamUI versions saved MaxFileSize/MaxScanSize as plain integers even
+    though the UI labels them in megabytes. ClamAV interprets those plain
+    integers as bytes, so "10" becomes 10 bytes instead of 10 MB.
+
+    Args:
+        config: Parsed clamd.conf configuration
+
+    Returns:
+        True if any values were rewritten, False otherwise
+    """
+    if config is None:
+        return False
+
+    changed = False
+    for key in ("MaxFileSize", "MaxScanSize"):
+        raw_value = config.get_value(key)
+        if raw_value is None:
+            continue
+
+        normalized = raw_value.strip()
+        if normalized.isdigit():
+            value_mb = int(normalized)
+            if value_mb > 0:
+                config.set_value(key, megabytes_to_size_value(value_mb))
+                changed = True
+
+    return changed
 
 
 def validate_option(key: str, value: str) -> tuple[bool, str | None]:

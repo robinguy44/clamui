@@ -358,8 +358,9 @@ class DaemonScanner:
         """
         Build the clamdscan command arguments.
 
-        Uses the INSTREAM protocol: clamdscan reads files and streams their
-        content to clamd over the socket. In verbose mode, prepends
+        Uses the INSTREAM protocol by forcing clamdscan's --stream mode so it
+        reads files client-side and streams their content to clamd over the
+        socket. In verbose mode, prepends
         stdbuf -oL and uses --file-list so clamdscan emits per-file results
         on stdout (scanning a directory only produces one summary line).
 
@@ -402,6 +403,11 @@ class DaemonScanner:
         else:
             # Show infected files only
             cmd.append("-i")
+
+        # Force client-side streaming. Without --stream, clamdscan can still
+        # fall back to server-side file access, which breaks scans of temp files
+        # owned by the UI user when clamd runs as a different account.
+        cmd.append("--stream")
 
         # NOTE: clamdscan does NOT support --exclude or --exclude-dir options
         # (it silently ignores them with a warning). Exclusion filtering is

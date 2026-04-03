@@ -39,6 +39,12 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk
 
 from .app_lifecycle import AppLifecycleManager
+from .core.clamav_config import (
+    normalize_clamd_size_limit_units,
+    parse_config,
+    write_config_with_elevation,
+)
+from .core.clamav_detection import resolve_clamd_conf_path
 from .core.i18n import _, ngettext
 from .core.notification_manager import NotificationManager
 from .core.settings_manager import SettingsManager
@@ -55,6 +61,7 @@ logger = logging.getLogger(__name__)
 LOG_PRIVACY_BANNER_DELAY_SECONDS = 1.0
 LOG_PRIVACY_BANNER_MIN_VISIBLE_SECONDS = 5.0
 LOG_PRIVACY_BANNER_POLL_INTERVAL_MS = 200
+CLAMD_SIZE_LIMIT_MIGRATION_KEY = "clamd_size_limit_unit_migration_done"
 
 
 class ClamUIApp(Adw.Application):
@@ -445,6 +452,7 @@ class ClamUIApp(Adw.Application):
         Adw.Application.do_startup(self)
 
         self._configure_icon_theme()
+        self._migrate_clamd_size_limits_once()
 
         self._lifecycle_manager.ensure_clamav_database_dir()
         self._lifecycle_manager.setup_device_monitor()
@@ -455,6 +463,50 @@ class ClamUIApp(Adw.Application):
         self._setup_actions()
 
         self._preinit_heavy_resources()
+
+    def _migrate_clamd_size_limits_once(self) -> None:
+        """
+        Repair buggy clamd size-limit values once on startup.
+
+        Older ClamUI versions wrote MaxFileSize/MaxScanSize as bare integers
+        even though the UI represented them in megabytes. This one-time
+        migration rewrites positive bare integers to explicit megabyte values.
+        """
+        if self._settings_manager.get(CLAMD_SIZE_LIMIT_MIGRATION_KEY, False):
+            return
+
+        try:
+            clamd_conf_path = resolve_clamd_conf_path(self._settings_manager)
+            if not clamd_conf_path:
+                logger.debug("Skipping clamd size-limit migration: no clamd.conf path found")
+                return
+
+            config, error = parse_config(clamd_conf_path)
+            if error or config is None:
+                logger.warning(
+                    "Skipping clamd size-limit migration for %s: %s",
+                    clamd_conf_path,
+                    error or "parse failed",
+                )
+                return
+
+            if not normalize_clamd_size_limit_units(config):
+                logger.debug("No clamd size-limit migration needed for %s", clamd_conf_path)
+                return
+
+            success, error = write_config_with_elevation(config)
+            if success:
+                logger.info("Normalized clamd size-limit units in %s", clamd_conf_path)
+            else:
+                logger.warning(
+                    "Failed to normalize clamd size-limit units in %s: %s",
+                    clamd_conf_path,
+                    error,
+                )
+        except Exception:
+            logger.exception("Unexpected error during clamd size-limit migration")
+        finally:
+            self._settings_manager.set(CLAMD_SIZE_LIMIT_MIGRATION_KEY, True)
 
     def _configure_icon_theme(self) -> None:
         """Force a stable icon theme so icons render consistently across runtimes."""
