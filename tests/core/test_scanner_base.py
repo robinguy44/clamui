@@ -9,6 +9,7 @@ from src.core.scanner_base import (
     STREAM_POLL_TIMEOUT,
     TERMINATE_GRACE_TIMEOUT,
     cleanup_process,
+    collect_clamav_warnings,
     communicate_with_cancel_check,
     create_cancelled_result,
     create_error_result,
@@ -413,3 +414,57 @@ class TestConstants:
 
         assert STREAM_POLL_TIMEOUT > 0
         assert STREAM_POLL_TIMEOUT <= 1  # Should be responsive
+
+
+class TestCollectClamavWarnings:
+    """Tests for collect_clamav_warnings classification of ClamAV output."""
+
+    def test_nonfatal_libclamav_zip_offset_error_not_hard_error(self):
+        """LibClamAV Error about ZIP offset validation should not be a hard error."""
+        stderr = (
+            "LibClamAV Error: index_local_file_headers_within_bounds: "
+            "Invalid offset arguments: start_offset=123, end_offset=456, fsize=100\n"
+        )
+        skipped, hard_errors = collect_clamav_warnings("", stderr)
+        assert hard_errors == []
+        assert skipped == []
+
+    def test_nonfatal_invalid_offset_pattern_not_hard_error(self):
+        """LibClamAV Error with 'Invalid offset arguments' should not be a hard error."""
+        stderr = (
+            "LibClamAV Error: Invalid offset arguments: start_offset=0, end_offset=0, fsize=50\n"
+        )
+        skipped, hard_errors = collect_clamav_warnings("", stderr)
+        assert hard_errors == []
+
+    def test_genuine_libclamav_error_still_hard_error(self):
+        """Other LibClamAV Error lines should still be classified as hard errors."""
+        stderr = "LibClamAV Error: Can't open database directory\n"
+        skipped, hard_errors = collect_clamav_warnings("", stderr)
+        assert len(hard_errors) == 1
+        assert "Can't open database" in hard_errors[0]
+
+    def test_ignorable_cli_realpath_warning(self):
+        """The known-ignorable cli_realpath warning should be silently dropped."""
+        stderr = "LibClamAV Warning: cli_realpath: Invalid arguments.\n"
+        skipped, hard_errors = collect_clamav_warnings("", stderr)
+        assert hard_errors == []
+
+    def test_nonfatal_skip_markers_classified_as_skipped(self):
+        """Files that couldn't be opened should go into skipped_files, not hard errors."""
+        stdout = "/some/file: Failed to open file ERROR\n"
+        skipped, hard_errors = collect_clamav_warnings(stdout, "")
+        assert len(skipped) == 1
+        assert "/some/file" in skipped[0]
+        assert hard_errors == []
+
+    def test_mixed_nonfatal_and_hard_errors(self):
+        """Non-fatal ZIP parse errors should be filtered while real errors remain."""
+        stderr = (
+            "LibClamAV Error: index_local_file_headers_within_bounds: "
+            "Invalid offset arguments: start_offset=0, end_offset=0, fsize=50\n"
+            "ERROR: Can't open file or directory\n"
+        )
+        skipped, hard_errors = collect_clamav_warnings("", stderr)
+        assert len(hard_errors) == 1
+        assert "Can't open file" in hard_errors[0]

@@ -10,10 +10,42 @@ import logging
 import os
 import tempfile
 import threading
+import weakref
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+class _ListenerRef:
+    """Track a settings listener without unnecessarily retaining bound methods."""
+
+    def __init__(self, callback: Callable[[Any], None]):
+        self._strong_callback: Callable[[Any], None] | None = None
+
+        if getattr(callback, "__self__", None) is not None:
+            self._ref = weakref.WeakMethod(callback)
+            return
+
+        try:
+            self._ref = weakref.ref(callback)
+        except TypeError:
+            # Fallback for callables that cannot be weak-referenced.
+            self._ref = None
+            self._strong_callback = callback
+
+    def get(self) -> Callable[[Any], None] | None:
+        """Return the live callback, if it still exists."""
+        if self._strong_callback is not None:
+            return self._strong_callback
+        if self._ref is None:
+            return None
+        return self._ref()
+
+    def matches(self, callback: Callable[[Any], None]) -> bool:
+        """Check whether this reference points at the provided callback."""
+        return self.get() == callback
 
 
 class SettingsManager:
@@ -25,6 +57,7 @@ class SettingsManager:
     """
 
     DEFAULT_SETTINGS = {
+        "language": "auto",  # "auto" = system default, or ISO code e.g. "de", "zh_CN"
         "notifications_enabled": True,
         "minimize_to_tray": False,
         "start_minimized": False,
@@ -85,6 +118,7 @@ class SettingsManager:
 
         # Thread lock for safe concurrent access
         self._lock = threading.Lock()
+        self._listeners: dict[str, list[_ListenerRef]] = {}
 
         # Load settings on initialization
         self._settings = self._load()
@@ -216,9 +250,16 @@ class SettingsManager:
         Returns:
             True if saved successfully, False otherwise
         """
+        should_notify = False
         with self._lock:
+            previous = self._settings.get(key)
             self._settings[key] = value
-        return self.save()
+            should_notify = previous != value
+
+        saved = self.save()
+        if should_notify:
+            self._notify_listeners(key, value)
+        return saved
 
     def reset_to_defaults(self) -> bool:
         """
@@ -227,9 +268,20 @@ class SettingsManager:
         Returns:
             True if saved successfully, False otherwise
         """
+        changed_values: dict[str, Any] = {}
         with self._lock:
+            previous_settings = dict(self._settings)
             self._settings = dict(self.DEFAULT_SETTINGS)
-        return self.save()
+            changed_keys = set(previous_settings) | set(self._settings)
+            for key in changed_keys:
+                new_value = self._settings.get(key)
+                if previous_settings.get(key) != new_value:
+                    changed_values[key] = new_value
+
+        saved = self.save()
+        for key, value in changed_values.items():
+            self._notify_listeners(key, value)
+        return saved
 
     def get_all(self) -> dict:
         """
@@ -240,3 +292,68 @@ class SettingsManager:
         """
         with self._lock:
             return dict(self._settings)
+
+    def add_listener(self, key: str, callback: Callable[[Any], None]) -> None:
+        """
+        Register a callback for changes to a specific setting key.
+
+        Args:
+            key: Setting key to observe
+            callback: Called with the new value after the setting changes
+        """
+        with self._lock:
+            listeners = self._listeners.setdefault(key, [])
+            listeners.append(_ListenerRef(callback))
+
+    def remove_listener(self, key: str, callback: Callable[[Any], None]) -> None:
+        """
+        Remove a previously registered setting listener.
+
+        Args:
+            key: Setting key being observed
+            callback: Callback previously passed to add_listener()
+        """
+        with self._lock:
+            listeners = self._listeners.get(key)
+            if not listeners:
+                return
+
+            remaining = [
+                listener
+                for listener in listeners
+                if listener.get() is not None and not listener.matches(callback)
+            ]
+
+            if remaining:
+                self._listeners[key] = remaining
+            else:
+                self._listeners.pop(key, None)
+
+    def _notify_listeners(self, key: str, value: Any) -> None:
+        """Notify listeners registered for a changed setting key."""
+        with self._lock:
+            listeners = list(self._listeners.get(key, []))
+
+        stale_listeners = False
+        for listener in listeners:
+            callback = listener.get()
+            if callback is None:
+                stale_listeners = True
+                continue
+
+            try:
+                callback(value)
+            except Exception:
+                logger.exception("Settings listener failed for key %s", key)
+
+        if stale_listeners:
+            with self._lock:
+                current = self._listeners.get(key)
+                if current is None:
+                    return
+
+                remaining = [listener for listener in current if listener.get() is not None]
+                if remaining:
+                    self._listeners[key] = remaining
+                else:
+                    self._listeners.pop(key, None)

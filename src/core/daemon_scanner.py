@@ -18,6 +18,7 @@ from gi.repository import GLib
 
 from .flatpak import wrap_host_command
 from .log_manager import LogManager
+from .sanitize import sanitize_surrogate_path
 from .scanner_base import (
     cleanup_process,
     collect_clamav_warnings,
@@ -193,7 +194,7 @@ class DaemonScanner:
                 fd, file_list_path = tempfile.mkstemp(prefix="clamui_filelist_", suffix=".txt")
                 os.fchmod(fd, 0o600)
                 with os.fdopen(fd, "w") as f:
-                    f.write("\n".join(file_paths))
+                    f.write("\n".join(sanitize_surrogate_path(p) for p in file_paths))
 
             # Build clamdscan command (use verbose mode if progress callback provided)
             cmd = self._build_command(

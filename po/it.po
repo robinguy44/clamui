@@ -1,136 +1,139 @@
+# ITALIAN TRANSLATION.
 # Copyright (C) YEAR ClamUI Contributors
 # This file is distributed under the same license as the ClamUI package.
+# Albano Battistella <albanobattistella@gmail.com>, 2026.
 #
-# SPDX-FileCopyrightText: 2026 Markson Hosben <marksonhosben@proton.me>
 msgid ""
 msgstr ""
 "Project-Id-Version: ClamUI 0.1.6\n"
 "Report-Msgid-Bugs-To: https://github.com/linx-systems/clamui/issues\n"
 "POT-Creation-Date: 2026-04-04 13:22+0200\n"
-"PO-Revision-Date: 2026-02-25 15:25+0800\n"
-"Last-Translator: Markson Hosben <marksonhosben@proton.me>\n"
-"Language-Team: Chinese <>\n"
-"Language: zh_CN\n"
+"PO-Revision-Date: 2026-04-03 19:20+0200\n"
+"Last-Translator: Albano Battistella\n"
+"Language-Team: Italian\n"
+"Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Lokalize 23.08.5\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: src/app.py:327
 msgid "Updating stored logs for privacy"
-msgstr "正在为保护隐私更新已保存的日志"
+msgstr "Aggiornamento dei log memorizzati per la privacy"
 
 #: src/app.py:330
 #, python-brace-format
 msgid "Updating stored log for privacy ({processed}/{total})"
 msgid_plural "Updating stored logs for privacy ({processed}/{total})"
-msgstr[0] "正在为保护隐私更新已保存的日志 ({processed}/{total})"
+msgstr[0] ""
+"Aggiornamento del log memorizzato per la privacy ({processed}/{total})"
+msgstr[1] ""
+"Aggiornamento dei log memorizzati per la privacy ({processed}/{total})"
 
 #: src/app.py:649
-#, fuzzy
 msgid "Select File or Folder"
-msgstr "扫描文件或文件夹"
+msgstr "Seleziona File o Cartella"
 
 #: src/cli/help_cmd.py:23 src/cli/scan_cmd.py:32
 msgid "Scan files or directories for threats"
-msgstr ""
+msgstr "Scansiona file o directory per rilevare minacce"
 
 #: src/cli/help_cmd.py:32 src/cli/quarantine_cmd.py:26
-#, fuzzy
 msgid "Manage quarantined files"
-msgstr "已隔离的文件"
+msgstr "Gestisci i file in quarantena"
 
 #: src/cli/help_cmd.py:41 src/cli/profile_cmd.py:26
-#, fuzzy
 msgid "Manage scan profiles"
-msgstr "管理配置"
+msgstr "Gestisci i profili di scansione"
 
 #: src/cli/help_cmd.py:50 src/cli/status_cmd.py:27
 msgid "Show ClamAV and ClamUI status"
-msgstr ""
+msgstr "Mostra lo stato di ClamAV e ClamUI"
 
 #: src/cli/help_cmd.py:57 src/cli/history_cmd.py:25
-#, fuzzy
 msgid "View scan history"
-msgstr "目前还没有扫描历史"
+msgstr "Visualizza la cronologia delle scansioni"
 
 #: src/cli/help_cmd.py:65
 msgid "Show this help message"
-msgstr ""
+msgstr "Mostra questo messaggio di aiuto"
 
 #: src/cli/help_cmd.py:78
 msgid "Show detailed help and usage examples"
-msgstr ""
+msgstr "Mostra aiuto dettagliato ed esempi di utilizzo"
 
 #: src/cli/help_cmd.py:79
 msgid ""
 "Display an overview of all commands or detailed help for a specific one."
 msgstr ""
+"Visualizza una panoramica di tutti i comandi o aiuto dettagliato per uno "
+"specifico."
 
 #: src/cli/help_cmd.py:85
 msgid "Command to show help for"
-msgstr ""
+msgstr "Comando per cui mostrare l'aiuto"
 
 #: src/cli/help_cmd.py:92
 msgid "ClamUI — ClamAV antivirus management\n"
-msgstr ""
+msgstr "ClamUI — Gestione antivirus ClamAV\n"
 
 #: src/cli/help_cmd.py:93
 msgid "Usage:"
-msgstr ""
+msgstr "Utilizzo:"
 
 #: src/cli/help_cmd.py:94
 msgid "  clamui                   Launch the graphical interface"
-msgstr ""
+msgstr "  clamui                   Avvia l'interfaccia grafica"
 
 #: src/cli/help_cmd.py:95
 msgid "  clamui <command> [args]   Run a CLI command\n"
-msgstr ""
+msgstr "  clamui <comando> [argomenti]   Esegui un comando CLI\n"
 
 #: src/cli/help_cmd.py:96
 msgid "Commands:"
-msgstr ""
+msgstr "Comandi:"
 
 #: src/cli/help_cmd.py:104
 msgid ""
 "\n"
 "Global options:"
 msgstr ""
+"\n"
+"Opzioni globali:"
 
 #: src/cli/help_cmd.py:105
 msgid "  --json                   Machine-readable JSON output"
-msgstr ""
+msgstr "  --json                   Output JSON leggibile dalla macchina"
 
 #: src/cli/help_cmd.py:106
 msgid "  -v, --verbose            Verbose output"
-msgstr ""
+msgstr "  -v, --verbose            Output dettagliato"
 
 #: src/cli/help_cmd.py:107
 msgid "  -h, --help               Show help for any command\n"
-msgstr ""
+msgstr "  -h, --help               Mostra aiuto per qualsiasi comando\n"
 
 #: src/cli/help_cmd.py:108
 msgid "Run 'clamui help <command>' for usage examples."
-msgstr ""
+msgstr "Esegui 'clamui help <comando>' per esempi di utilizzo."
 
 #: src/cli/help_cmd.py:109
 msgid "Run 'clamui' without arguments to launch the GUI."
-msgstr ""
+msgstr "Esegui 'clamui' senza argomenti per avviare la GUI."
 
 #: src/cli/help_cmd.py:125
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Unknown command: {name}\n"
-msgstr "未知文件管理器：{name}"
+msgstr "Comando sconosciuto: {name}\n"
 
 #: src/cli/help_cmd.py:132
 #, python-brace-format
 msgid "clamui {name} — {summary}\n"
-msgstr ""
+msgstr "clamui {name} — {summary}\n"
 
 #: src/cli/help_cmd.py:133
 msgid "Examples:"
-msgstr ""
+msgstr "Esempi:"
 
 #: src/cli/help_cmd.py:136
 #, python-brace-format
@@ -138,51 +141,52 @@ msgid ""
 "\n"
 "Run 'clamui {name} --help' for full option reference."
 msgstr ""
+"\n"
+"Esegui 'clamui {name} --help' per il riferimento completo delle opzioni."
 
 #: src/cli/history_cmd.py:26
 msgid "Display recent scan, update, and VirusTotal results."
-msgstr ""
+msgstr "Visualizza risultati recenti di scansione, aggiornamento e VirusTotal."
 
 #: src/cli/history_cmd.py:33
 msgid "Number of entries to show (default: 20)"
-msgstr ""
+msgstr "Numero di voci da mostrare (predefinito: 20)"
 
 #: src/cli/history_cmd.py:40
 msgid "Filter by log type"
-msgstr ""
+msgstr "Filtra per tipo di log"
 
 #: src/cli/history_cmd.py:46 src/cli/profile_cmd.py:37
 #: src/cli/profile_cmd.py:48 src/cli/quarantine_cmd.py:37
 #: src/cli/status_cmd.py:34
 msgid "Output as JSON"
-msgstr ""
+msgstr "Output come JSON"
 
 #: src/cli/history_cmd.py:66
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Failed to load history: {error}"
-msgstr "无法保存：{error}"
+msgstr "Impossibile caricare la cronologia: {error}"
 
 #: src/cli/history_cmd.py:74
-#, fuzzy
 msgid "No scan history found."
-msgstr "目前还没有扫描历史"
+msgstr "Nessuna cronologia di scansione trovata."
 
 #: src/cli/history_cmd.py:77 src/cli/quarantine_cmd.py:77
 #: src/ui/statistics_view.py:497
 msgid "Date"
-msgstr "日期"
+msgstr "Data"
 
 #: src/cli/history_cmd.py:77
 msgid "Type"
-msgstr ""
+msgstr "Tipo"
 
 #: src/cli/history_cmd.py:77 src/ui/preferences/virustotal_page.py:117
 msgid "Status"
-msgstr "状态"
+msgstr "Stato"
 
 #: src/cli/history_cmd.py:77 src/core/result_formatters.py:87
 msgid "Summary"
-msgstr "小结"
+msgstr "Riepilogo"
 
 #: src/cli/history_cmd.py:101
 #, python-brace-format
@@ -190,219 +194,210 @@ msgid ""
 "\n"
 "Showing {shown} of {total} entries. Use --limit to see more."
 msgstr ""
+"\n"
+"Visualizzazione di {shown} di {total} voci. Usa --limit per vedere altre."
 
 #: src/cli/profile_cmd.py:27
 msgid "List, view, export, or import scan profiles."
-msgstr ""
+msgstr "Elenca, visualizza, esporta o importa profili di scansione."
 
 #: src/cli/profile_cmd.py:32
-#, fuzzy
 msgid "List all scan profiles"
-msgstr "扫描配置文件"
+msgstr "Elenca tutti i profili di scansione"
 
 #: src/cli/profile_cmd.py:42
 msgid "Show details of a scan profile"
-msgstr ""
+msgstr "Mostra dettagli di un profilo di scansione"
 
 #: src/cli/profile_cmd.py:43 src/cli/profile_cmd.py:54
-#, fuzzy
 msgid "Profile name"
-msgstr "配置"
+msgstr "Nome profilo"
 
 #: src/cli/profile_cmd.py:53
-#, fuzzy
 msgid "Export a profile to a JSON file"
-msgstr "导出为 JSON 文件"
+msgstr "Esporta un profilo in un file JSON"
 
 #: src/cli/profile_cmd.py:55
-#, fuzzy
 msgid "Output file path"
-msgstr "复制文件路径"
+msgstr "Percorso file di output"
 
 #: src/cli/profile_cmd.py:59
-#, fuzzy
 msgid "Import a profile from a JSON file"
-msgstr "从文件中导入配置"
+msgstr "Importa un profilo da un file JSON"
 
 #: src/cli/profile_cmd.py:60
-#, fuzzy
 msgid "Input file path"
-msgstr "复制文件路径"
+msgstr "Percorso file di input"
 
 #: src/cli/profile_cmd.py:84
-#, fuzzy
 msgid "No scan profiles configured."
-msgstr "未记录扫描"
+msgstr "Nessun profilo di scansione configurato."
 
 #: src/cli/profile_cmd.py:87 src/ui/profile_dialogs.py:167
 msgid "Name"
-msgstr "名称"
+msgstr "Nome"
 
 #: src/cli/profile_cmd.py:87
-#, fuzzy
 msgid "Targets"
-msgstr "扫描目标"
+msgstr "Destinazioni"
 
 #: src/cli/profile_cmd.py:87
-#, fuzzy
 msgid "Default"
-msgstr "默认配置文件"
+msgstr "Predefinito"
 
 #: src/cli/profile_cmd.py:87
-#, fuzzy
 msgid "Updated"
-msgstr "强制更新"
+msgstr "Aggiornato"
 
 #: src/cli/profile_cmd.py:92
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid " (+{n} more)"
-msgstr "再显示 {count} 个"
+msgstr " (+{n} altri)"
 
 #: src/cli/profile_cmd.py:96
 msgid "(none)"
-msgstr ""
+msgstr "(nessuno)"
 
 #: src/cli/profile_cmd.py:97 src/cli/profile_cmd.py:131
 msgid "yes"
-msgstr ""
+msgstr "sì"
 
 #: src/cli/profile_cmd.py:97 src/cli/profile_cmd.py:131
 msgid "no"
-msgstr ""
+msgstr "no"
 
 #: src/cli/profile_cmd.py:103
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "\n"
 "{count} profile(s)"
-msgstr "{count} 个文件"
+msgstr ""
+"\n"
+"{count} profilo(i)"
 
 #: src/cli/profile_cmd.py:121 src/cli/profile_cmd.py:175
 #: src/cli/scan_cmd.py:112
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Profile not found: {name}"
-msgstr "未找到文件"
+msgstr "Profilo non trovato: {name}"
 
 #: src/cli/profile_cmd.py:129
 #, python-brace-format
 msgid "Name:        {name}"
-msgstr ""
+msgstr "Nome:        {name}"
 
 #: src/cli/profile_cmd.py:130
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "ID:          {id}"
-msgstr "ID：{id}"
+msgstr "ID:          {id}"
 
 #: src/cli/profile_cmd.py:131
 #, python-brace-format
 msgid "Default:     {value}"
-msgstr ""
+msgstr "Predefinito: {value}"
 
 #: src/cli/profile_cmd.py:133
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Description: {desc}"
-msgstr "描述"
+msgstr "Descrizione: {desc}"
 
 #: src/cli/profile_cmd.py:134
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Created:     {date}"
-msgstr "隔离日期：{date}"
+msgstr "Creato:      {date}"
 
 #: src/cli/profile_cmd.py:135
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Updated:     {date}"
-msgstr "隔离日期：{date}"
+msgstr "Aggiornato:  {date}"
 
 #: src/cli/profile_cmd.py:137
-#, fuzzy
 msgid ""
 "\n"
 "Targets:"
-msgstr "扫描目标"
+msgstr ""
+"\n"
+"Destinazioni:"
 
 #: src/cli/profile_cmd.py:142
 msgid "  (none)"
-msgstr ""
+msgstr "  (nessuna)"
 
 #: src/cli/profile_cmd.py:147
-#, fuzzy
 msgid ""
 "\n"
 "Exclusions:"
-msgstr "排除项"
+msgstr ""
+"\n"
+"Esclusioni:"
 
 #: src/cli/profile_cmd.py:149
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  path:    {path}"
-msgstr "路径：{path}"
+msgstr "  percorso: {path}"
 
 #: src/cli/profile_cmd.py:151
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  pattern: {pattern}"
-msgstr "  电池供电时跳过扫描：{value}"
+msgstr "  pattern: {pattern}"
 
 #: src/cli/profile_cmd.py:154
-#, fuzzy
 msgid ""
 "\n"
 "Options:"
-msgstr "选项"
+msgstr ""
+"\n"
+"Opzioni:"
 
 #: src/cli/profile_cmd.py:180
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Exported '{name}' to {file}"
-msgstr "已导出到 {filename}"
+msgstr "Esportato '{name}' in {file}"
 
 #: src/cli/profile_cmd.py:201
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Imported profile: {name}"
-msgstr "已导出到 {filename}"
+msgstr "Profilo importato: {name}"
 
 #: src/cli/quarantine_cmd.py:27
 msgid "List, restore, or permanently delete quarantined files."
-msgstr ""
+msgstr "Elenca, ripristina o elimina definitivamente i file in quarantena."
 
 #: src/cli/quarantine_cmd.py:32
-#, fuzzy
 msgid "List all quarantined files"
-msgstr "已隔离的文件"
+msgstr "Elenca tutti i file in quarantena"
 
 #: src/cli/quarantine_cmd.py:43
-#, fuzzy
 msgid "Restore a quarantined file to its original location"
-msgstr "无法将隔离记录写入数据库。文件已还原至原始位置。"
+msgstr "Ripristina un file in quarantena nella sua posizione originale"
 
 #: src/cli/quarantine_cmd.py:45 src/cli/quarantine_cmd.py:50
-#, fuzzy
 msgid "Quarantine entry ID"
-msgstr "隔离区"
+msgstr "ID voce quarantena"
 
 #: src/cli/quarantine_cmd.py:49
-#, fuzzy
 msgid "Permanently delete a quarantined file"
-msgstr "无法删除默认配置文件"
+msgstr "Elimina definitivamente un file in quarantena"
 
 #: src/cli/quarantine_cmd.py:74
-#, fuzzy
 msgid "No quarantined files."
-msgstr "没有已隔离的文件"
+msgstr "Nessun file in quarantena."
 
 #: src/cli/quarantine_cmd.py:77
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 #: src/cli/quarantine_cmd.py:77 src/ui/virustotal_results_dialog.py:236
 msgid "File"
-msgstr "文件"
+msgstr "File"
 
 #: src/cli/quarantine_cmd.py:77
-#, fuzzy
 msgid "Threat"
-msgstr "威胁"
+msgstr "Minaccia"
 
 #: src/cli/quarantine_cmd.py:77
 msgid "Size"
-msgstr ""
+msgstr "Dimensione"
 
 #: src/cli/quarantine_cmd.py:94
 #, python-brace-format
@@ -410,151 +405,160 @@ msgid ""
 "\n"
 "{count} entry/entries ({size} total)"
 msgstr ""
+"\n"
+"{count} voce/voci ({size} totale)"
 
 #: src/cli/quarantine_cmd.py:114 src/cli/quarantine_cmd.py:140
 #: src/core/quarantine/manager.py:268 src/core/quarantine/manager.py:373
 #: src/core/quarantine/manager.py:545
 #, python-brace-format
 msgid "Quarantine entry not found: {id}"
-msgstr "未找到隔离记录：{id}"
+msgstr "Voce quarantena non trovata: {id}"
 
 #: src/cli/quarantine_cmd.py:119
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Restored: {path}"
-msgstr "检测到的：{path}"
+msgstr "Ripristinato: {path}"
 
 #: src/cli/quarantine_cmd.py:123
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Restore failed: {error}"
-msgstr "请求失败：{error}"
+msgstr "Ripristino fallito: {error}"
 
 #: src/cli/quarantine_cmd.py:145
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Deleted: {path}"
-msgstr "检测到的：{path}"
+msgstr "Eliminato: {path}"
 
 #: src/cli/quarantine_cmd.py:149
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Delete failed: {error}"
-msgstr "请求失败：{error}"
+msgstr "Eliminazione fallita: {error}"
 
 #: src/cli/router.py:38
 msgid "ClamUI — ClamAV antivirus management"
-msgstr ""
+msgstr "ClamUI — Gestione antivirus ClamAV"
 
 #: src/cli/router.py:40
 msgid ""
 "Run 'clamui <command> --help' for details on a specific command.\n"
 "Run 'clamui' without arguments to launch the graphical interface."
 msgstr ""
+"Esegui 'clamui <comando> --help' per dettagli su un comando specifico.\n"
+"Esegui 'clamui' senza argomenti per avviare l'interfaccia grafica."
 
 #: src/cli/router.py:48
 msgid "commands"
-msgstr ""
+msgstr "comandi"
 
 #: src/cli/scan_cmd.py:34
 msgid ""
 "Scan one or more files or directories with ClamAV.\n"
 "Exit codes: 0 = clean, 1 = threats found, 2 = error."
 msgstr ""
+"Scansiona uno o più file o directory con ClamAV.\n"
+"Codici di uscita: 0 = pulito, 1 = minacce trovate, 2 = errore."
 
 #: src/cli/scan_cmd.py:43
-#, fuzzy
 msgid "Files or directories to scan"
-msgstr "要扫描的目录和文件"
+msgstr "File o directory da scansionare"
 
 #: src/cli/scan_cmd.py:49
 msgid "Do not scan directories recursively"
-msgstr ""
+msgstr "Non scansionare le directory ricorsivamente"
 
 #: src/cli/scan_cmd.py:55
 msgid "Use a named scan profile for exclusions"
-msgstr ""
+msgstr "Usa un profilo di scansione nominato per le esclusioni"
 
 #: src/cli/scan_cmd.py:61 src/cli/scheduled_scan.py:127
 #: src/ui/preferences/scheduled_page.py:182
 msgid "Automatically quarantine detected threats"
-msgstr "自动隔离检测到的威胁"
+msgstr "Metti automaticamente in quarantena le minacce rilevate"
 
 #: src/cli/scan_cmd.py:67
-#, fuzzy
 msgid "Output results as JSON"
-msgstr "导出结果为 JSON 文件"
+msgstr "Output risultati come JSON"
 
 #: src/cli/scan_cmd.py:73 src/cli/scheduled_scan.py:144
 msgid "Enable verbose output"
-msgstr "启用详细输出"
+msgstr "Abilita output dettagliato"
 
 #: src/cli/scan_cmd.py:94
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Path not found: {path}"
-msgstr "路径：{path}"
+msgstr "Percorso non trovato: {path}"
 
 #: src/cli/scan_cmd.py:115
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Using profile: {name}"
-msgstr "未知文件管理器：{name}"
+msgstr "Utilizzo profilo: {name}"
 
 #: src/cli/scan_cmd.py:143
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Scanning: {path}"
-msgstr "正在扫描 {path}"
+msgstr "Scansione: {path}"
 
 #: src/cli/scan_cmd.py:226
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Scanned {count} files in {duration:.1f}s"
-msgstr "扫描完成，用时 {duration:.1f} 秒"
+msgstr "Scansionati {count} file in {duration:.1f}s"
 
 #: src/cli/scan_cmd.py:230
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "\n"
 "Threats found: {count}"
-msgstr "已发现威胁：{count} 个"
+msgstr ""
+"\n"
+"Minacce trovate: {count}"
 
 #: src/cli/scan_cmd.py:237
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid ""
 "\n"
 "Quarantined: {count} file(s)"
-msgstr "已隔离：{count} 个"
+msgstr ""
+"\n"
+"In quarantena: {count} file"
 
 #: src/cli/scan_cmd.py:239
-#, fuzzy
 msgid ""
 "\n"
 "Failed to quarantine:"
-msgstr "  无法隔离：{count} 个文件"
+msgstr ""
+"\n"
+"Impossibile mettere in quarantena:"
 
 #: src/cli/scan_cmd.py:243
-#, fuzzy
 msgid ""
 "\n"
 "Scan completed with errors:"
-msgstr "定期扫描已完成，但有错误"
+msgstr ""
+"\n"
+"Scansione completata con errori:"
 
 #: src/cli/scan_cmd.py:248
-#, fuzzy
 msgid "No threats found."
-msgstr "未发现威胁"
+msgstr "Nessuna minaccia trovata."
 
 #: src/cli/scan_cmd.py:264
 msgid "No valid paths to scan"
-msgstr ""
+msgstr "Nessun percorso valido da scansionare"
 
 #: src/cli/scan_cmd.py:272
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "ClamAV not available: {error}"
-msgstr "错误：ClamAV 不可用 - {error}"
+msgstr "ClamAV non disponibile: {error}"
 
 #: src/cli/scan_cmd.py:275 src/cli/scheduled_scan.py:323
 #, python-brace-format
 msgid "ClamAV version: {version}"
-msgstr "ClamAV 版本：{version}"
+msgstr "Versione ClamAV: {version}"
 
 #: src/cli/scheduled_scan.py:105
 msgid "ClamUI Scheduled Scan - Headless antivirus scanning"
-msgstr "ClamUI 定期扫描——无前端的防病毒扫描"
+msgstr "ClamUI Scansione Programmata - Scansione antivirus senza interfaccia"
 
 #: src/cli/scheduled_scan.py:108
 #, python-format
@@ -567,36 +571,38 @@ msgid ""
 "threats\n"
 msgstr ""
 "\n"
-"用法示例:\n"
-"  %(prog)s                                    # 使用配置中的设置\n"
-"  %(prog)s --target /home/user/Documents      # 扫描指定的目录\n"
-"  %(prog)s --skip-on-battery --auto-quarantine # 电池供电时跳过，自动隔离威"
-"胁\n"
+"Esempi:\n"
+"  %(prog)s                                    # Usa impostazioni dalla "
+"configurazione\n"
+"  %(prog)s --target /home/user/Documents      # Scansiona directory "
+"specifica\n"
+"  %(prog)s --skip-on-battery --auto-quarantine # Salta su batteria, metti in "
+"quarantena\n"
 
 #: src/cli/scheduled_scan.py:120
 msgid "Skip scan if running on battery power"
-msgstr "电池供电时跳过扫描"
+msgstr "Salta scansione se in esecuzione con batteria"
 
 #: src/cli/scheduled_scan.py:135
 msgid "Path to scan (can be specified multiple times)"
-msgstr "要扫描的路径（可添加多个）"
+msgstr "Percorso da scansionare (può essere specificato più volte)"
 
 #: src/cli/scheduled_scan.py:141
 msgid "Show what would be done without executing"
-msgstr "仅显示将要执行的操作，而不实际执行"
+msgstr "Mostra cosa verrebbe fatto senza eseguire"
 
 #: src/cli/scheduled_scan.py:228
 msgid "Checking battery status..."
-msgstr "正在检查电池状态……"
+msgstr "Controllo stato batteria..."
 
 #: src/cli/scheduled_scan.py:236
 #, python-brace-format
 msgid "Skipping scan: running on battery power ({percent:.0f}%)"
-msgstr "跳过扫描：当前使用电池供电（电量{percent:.0f}%）"
+msgstr "Scansione saltata: in esecuzione con batteria ({percent:.0f}%)"
 
 #: src/cli/scheduled_scan.py:243
 msgid "Scheduled scan skipped (on battery power)"
-msgstr "已跳过定期扫描（电池供电）"
+msgstr "Scansione programmata saltata (su batteria)"
 
 #: src/cli/scheduled_scan.py:245
 #, python-brace-format
@@ -604,305 +610,307 @@ msgid ""
 "Battery level: {percent:.0f}%\n"
 "Scan skipped due to battery-aware settings."
 msgstr ""
-"电量：{percent:.0f}%\n"
-"由于电池感知设置，已跳过扫描。"
+"Livello batteria: {percent:.0f}%\n"
+"Scansione saltata a causa delle impostazioni sensibili alla batteria."
 
 #: src/cli/scheduled_scan.py:267
 msgid "Error: No scan targets specified"
-msgstr "错误：未指定扫描目标"
+msgstr "Errore: Nessuna destinazione di scansione specificata"
 
 #: src/cli/scheduled_scan.py:277
 #, python-brace-format
 msgid "Warning: Target does not exist: {target}"
-msgstr "警告：目标不存在：{target}"
+msgstr "Avviso: La destinazione non esiste: {target}"
 
 #: src/cli/scheduled_scan.py:282
 msgid "Error: No valid scan targets found"
-msgstr "错误：未找到有效扫描目标"
+msgstr "Errore: Nessuna destinazione di scansione valida trovata"
 
 #: src/cli/scheduled_scan.py:299
 msgid "Dry run mode - scan not executed"
-msgstr "模拟运行 - 扫描不实际执行"
+msgstr "Modalità simulazione - scansione non eseguita"
 
 #: src/cli/scheduled_scan.py:300
 #, python-brace-format
 msgid "  Skip on battery: {value}"
-msgstr "  电池供电时跳过扫描：{value}"
+msgstr "  Salta su batteria: {value}"
 
 #: src/cli/scheduled_scan.py:301
 #, python-brace-format
 msgid "  Auto quarantine: {value}"
-msgstr "  自动隔离：{value}"
+msgstr "  Quarantena automatica: {value}"
 
 #: src/cli/scheduled_scan.py:302
 #, python-brace-format
 msgid "  Targets: {targets}"
-msgstr "  扫描目标：{targets}"
+msgstr "  Destinazioni: {targets}"
 
 #: src/cli/scheduled_scan.py:330
 #, python-brace-format
 msgid "Error: ClamAV not available - {error}"
-msgstr "错误：ClamAV 不可用 - {error}"
+msgstr "Errore: ClamAV non disponibile - {error}"
 
 #: src/cli/scheduled_scan.py:337
 msgid "Scheduled scan failed: ClamAV not available"
-msgstr "定期扫描失败：ClamAV 不可用"
+msgstr "Scansione programmata fallita: ClamAV non disponibile"
 
 #: src/cli/scheduled_scan.py:338
 msgid "ClamAV is not installed or not accessible"
-msgstr "ClamAV 未安装或不可用"
+msgstr "ClamAV non è installato o non è accessibile"
 
 #: src/cli/scheduled_scan.py:345
 msgid "Scheduled Scan Failed"
-msgstr "定期扫描失败"
+msgstr "Scansione Programmata Fallita"
 
 #: src/cli/scheduled_scan.py:346
 msgid "ClamAV is not available. Please install ClamAV."
-msgstr "ClamAV 不可用。请安装 ClamAV。"
+msgstr "ClamAV non è disponibile. Installa ClamAV."
 
 #: src/cli/scheduled_scan.py:363
 #, python-brace-format
 msgid "Scanning {count} target(s)..."
-msgstr "正在扫描 {count} 个目标……"
+msgstr "Scansione di {count} destinazione(i)..."
 
 #: src/cli/scheduled_scan.py:371 src/notification_dispatcher.py:67
 #, python-brace-format
 msgid "Scanning: {target}"
-msgstr "正在扫描：{target}"
+msgstr "Scansione: {target}"
 
 #: src/cli/scheduled_scan.py:381
 #, python-brace-format
 msgid "  Error: {error}"
-msgstr "  错误：{error}"
+msgstr "  Errore: {error}"
 
 #: src/cli/scheduled_scan.py:384
 #, python-brace-format
 msgid "  Found {count} threat(s)"
-msgstr "  已找到 {count} 个威胁"
+msgstr "  Trovate {count} minaccia(e)"
 
 #: src/cli/scheduled_scan.py:389
 #, python-brace-format
 msgid "  Clean ({count} files scanned)"
-msgstr "  未检测到威胁（已扫描 {count} 个文件）"
+msgstr "  Pulito ({count} file scansionati)"
 
 #: src/cli/scheduled_scan.py:414
 #, python-brace-format
 msgid "Quarantining {count} infected file(s)..."
-msgstr "正在隔离 {count} 个受感染文件……"
+msgstr "Messa in quarantena di {count} file infetto(i)..."
 
 #: src/cli/scheduled_scan.py:436
 #, python-brace-format
 msgid "  Successfully quarantined: {count} file(s)"
-msgstr "  已成功隔离：{count} 个文件"
+msgstr "  Messo in quarantena con successo: {count} file"
 
 #: src/cli/scheduled_scan.py:441
 #, python-brace-format
 msgid "  Failed to quarantine: {count} file(s)"
-msgstr "  无法隔离：{count} 个文件"
+msgstr "  Impossibile mettere in quarantena: {count} file"
 
 #: src/cli/scheduled_scan.py:467
 #, python-brace-format
 msgid "Scheduled scan found {infected} threat(s), {quarantined} quarantined"
-msgstr "定期扫描找到了 {infected} 个威胁，其中 {quarantined} 个已隔离"
+msgstr ""
+"Scansione programmata trovate {infected} minaccia(e), {quarantined} in "
+"quarantena"
 
 #: src/cli/scheduled_scan.py:473
 #, python-brace-format
 msgid "Scheduled scan found {count} threat(s)"
-msgstr "定期扫描找到了 {count} 个威胁"
+msgstr "Scansione programmata trovate {count} minaccia(e)"
 
 #: src/cli/scheduled_scan.py:476
 msgid "Scheduled scan completed with errors"
-msgstr "定期扫描已完成，但有错误"
+msgstr "Scansione programmata completata con errori"
 
 #: src/cli/scheduled_scan.py:479
 #, python-brace-format
 msgid "Scheduled scan completed - {count} files scanned, no threats"
-msgstr "定期扫描已完成 - 已扫描 {count} 个文件，未发现威胁"
+msgstr ""
+"Scansione programmata completata - {count} file scansionati, nessuna minaccia"
 
 #: src/cli/scheduled_scan.py:502
 #, python-brace-format
 msgid "Scan Duration: {duration:.1f} seconds"
-msgstr "扫描已用时：{duration:.1f} 秒"
+msgstr "Durata scansione: {duration:.1f} secondi"
 
 #: src/cli/scheduled_scan.py:503 src/core/result_formatters.py:89
 #, python-brace-format
 msgid "Files Scanned: {count}"
-msgstr "已扫描文件：{count} 个"
+msgstr "File Scansionati: {count}"
 
 #: src/cli/scheduled_scan.py:504 src/core/result_formatters.py:91
 #, python-brace-format
 msgid "Threats Found: {count}"
-msgstr "已发现威胁：{count} 个"
+msgstr "Minacce Trovate: {count}"
 
 #: src/cli/scheduled_scan.py:505
 #, python-brace-format
 msgid "Targets: {targets}"
-msgstr "目标：{targets} 个"
+msgstr "Destinazioni: {targets}"
 
 #: src/cli/scheduled_scan.py:509
 #, python-brace-format
 msgid "Quarantined: {count}"
-msgstr "已隔离：{count} 个"
+msgstr "In Quarantena: {count}"
 
 #: src/cli/scheduled_scan.py:511
 #, python-brace-format
 msgid "Quarantine Failed: {count}"
-msgstr "隔离失败：{count} 个"
+msgstr "Quarantena Fallita: {count}"
 
 #: src/cli/scheduled_scan.py:514
 msgid "Infected Files"
-msgstr "受感染的文件"
+msgstr "File Infetti"
 
 #: src/cli/scheduled_scan.py:526
 #, python-brace-format
 msgid "Scan Output ({target})"
-msgstr "扫描输出（{target}）"
+msgstr "Output Scansione ({target})"
 
 #: src/cli/scheduled_scan.py:530
 #, python-brace-format
 msgid "Errors ({target})"
-msgstr "错误（{target}）"
+msgstr "Errori ({target})"
 
 #: src/cli/scheduled_scan.py:584 src/core/notification_manager.py:179
 #, python-brace-format
 msgid "{infected} infected file(s) found, {quarantined} quarantined"
-msgstr "已发现 {infected} 个受感染的文件，其中 {quarantined} 个已隔离"
+msgstr "{infected} file infetto(i) trovato(i), {quarantined} in quarantena"
 
 #: src/cli/scheduled_scan.py:589
 #, python-brace-format
 msgid "{count} infected file(s) found"
-msgstr "已发现 {count} 个受感染的文件"
+msgstr "{count} file infetto(i) trovato(i)"
 
 #: src/cli/scheduled_scan.py:590 src/core/notification_manager.py:177
 msgid "Scheduled Scan: Threats Detected!"
-msgstr "定期扫描：检测到威胁！"
+msgstr "Scansione Programmata: Minacce Rilevate!"
 
 #: src/cli/scheduled_scan.py:593
 msgid "Scheduled Scan Completed"
-msgstr "定期扫描已完成"
+msgstr "Scansione Programmata Completata"
 
 #: src/cli/scheduled_scan.py:594
 msgid "Scan completed with some errors. Check logs for details."
-msgstr "扫描已完成，但出现部分错误。查看日志以获取详情。"
+msgstr ""
+"Scansione completata con alcuni errori. Controlla i log per i dettagli."
 
 #: src/cli/scheduled_scan.py:599 src/core/notification_manager.py:166
 msgid "Scheduled Scan Complete"
-msgstr "定期扫描已完成"
+msgstr "Scansione Programmata Completata"
 
 #: src/cli/scheduled_scan.py:600
 #, python-brace-format
 msgid "No threats found ({count} files scanned)"
-msgstr "未发现威胁（已扫描 {count} 个文件）"
+msgstr "Nessuna minaccia trovata ({count} file scansionati)"
 
 #: src/cli/scheduled_scan.py:655
 msgid "ClamUI scheduled scan starting..."
-msgstr "正在启动 ClamUI 定期扫描……"
+msgstr "Avvio scansione programmata ClamUI..."
 
 #: src/cli/scheduled_scan.py:691
 #, python-brace-format
 msgid "Scan completed in {duration:.1f} seconds"
-msgstr "扫描完成，用时 {duration:.1f} 秒"
+msgstr "Scansione completata in {duration:.1f} secondi"
 
 #: src/cli/status_cmd.py:28
 msgid "Display ClamAV availability, backend, daemon, and statistics."
-msgstr ""
+msgstr "Visualizza disponibilità, backend, demone e statistiche di ClamAV."
 
 #: src/cli/status_cmd.py:121
-#, fuzzy
 msgid "ClamAV"
-msgstr "ClamAV 守护进程"
+msgstr "ClamAV"
 
 #: src/cli/status_cmd.py:123
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  Version:  {version}"
-msgstr "ClamAV 版本：{version}"
+msgstr "  Versione: {version}"
 
 #: src/cli/status_cmd.py:125
 msgid "  Status:   not available"
-msgstr ""
+msgstr "  Stato:    non disponibile"
 
 #: src/cli/status_cmd.py:126
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  Error:    {error}"
-msgstr "  错误：{error}"
+msgstr "  Errore:   {error}"
 
 #: src/cli/status_cmd.py:127
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  Backend:  {backend}"
-msgstr "后端：{name}"
+msgstr "  Backend:  {backend}"
 
 #: src/cli/status_cmd.py:128
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  Daemon:   {status}"
-msgstr "守护进程状态"
+msgstr "  Demone:   {status}"
 
 #: src/cli/status_cmd.py:130
-#, fuzzy
 msgid ""
 "\n"
 "Quarantine"
-msgstr "隔离"
+msgstr ""
+"\n"
+"Quarantena"
 
 #: src/cli/status_cmd.py:131 src/cli/status_cmd.py:135
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  Entries:  {count}"
-msgstr "已隔离：{count} 个"
+msgstr "  Voci:     {count}"
 
 #: src/cli/status_cmd.py:132
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "  Size:     {size}"
-msgstr "大小：{size}"
+msgstr "  Dimensione: {size}"
 
 #: src/cli/status_cmd.py:134
-#, fuzzy
 msgid ""
 "\n"
 "Scan History"
-msgstr "目前还没有扫描历史"
+msgstr ""
+"\n"
+"Cronologia Scansioni"
 
 #: src/notification_dispatcher.py:29
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Scan Complete: {count} threats found"
-msgstr "扫描完成 — 未发现威胁"
+msgstr "Scansione Completata: {count} minacce trovate"
 
 #: src/notification_dispatcher.py:32
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Scanned {count} files. Action taken on threats."
-msgstr "定期扫描已完成 - 已扫描 {count} 个文件，未发现威胁"
+msgstr "Scansionati {count} file. Azione intrapresa sulle minacce."
 
 #: src/notification_dispatcher.py:36
-#, fuzzy
 msgid "Scan Complete: No threats found"
-msgstr "扫描完成 — 未发现威胁"
+msgstr "Scansione Completata: Nessuna minaccia trovata"
 
 #: src/notification_dispatcher.py:37
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Scanned {count} files. System appears clean."
-msgstr "已扫描 {scanned} 个文件"
+msgstr "Scansionati {count} file. Il sistema sembra pulito."
 
 #: src/notification_dispatcher.py:41 src/core/result_formatters.py:128
 #: src/ui/scan_results_dialog.py:207
 msgid "Scan Cancelled"
-msgstr "扫描已取消"
+msgstr "Scansione Annullata"
 
 #: src/notification_dispatcher.py:42
-#, fuzzy
 msgid "The scan was cancelled by the user."
-msgstr "扫描在完成前被取消。"
+msgstr "La scansione è stata annullata dall'utente."
 
 #: src/notification_dispatcher.py:44 src/core/result_formatters.py:120
 #: src/ui/scan_results_dialog.py:222 src/ui/virustotal_results_dialog.py:196
 msgid "Scan Error"
-msgstr "扫描错误"
+msgstr "Errore Scansione"
 
 #: src/notification_dispatcher.py:45
 msgid "An error occurred during the scan."
-msgstr ""
+msgstr "Si è verificato un errore durante la scansione."
 
 #: src/notification_dispatcher.py:55
-#, fuzzy
 msgid "Threat Quarantined"
-msgstr "已隔离"
+msgstr "Minaccia in Quarantena"
 
 #: src/notification_dispatcher.py:56
 #, python-brace-format
@@ -910,380 +918,392 @@ msgid ""
 "Removed and quarantined: {threat}\n"
 "Location: {path}"
 msgstr ""
+"Rimosso e messo in quarantena: {threat}\n"
+"Posizione: {path}"
 
 #: src/notification_dispatcher.py:66
 #, python-brace-format
 msgid "{scan_type} Scan Started"
-msgstr ""
+msgstr "Scansione {scan_type} Avviata"
 
 #: src/notification_dispatcher.py:75
-#, fuzzy
 msgid "Update Available"
-msgstr "不可用"
+msgstr "Aggiornamento Disponibile"
 
 #: src/notification_dispatcher.py:76
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "ClamAV database update available. Version: {version}"
-msgstr "ClamAV 版本：{version}"
+msgstr "Aggiornamento database ClamAV disponibile. Versione: {version}"
 
 #: src/notification_dispatcher.py:84
-#, fuzzy
 msgid "VirusTotal Analysis Complete"
-msgstr "VirusTotal 请求频率超限"
+msgstr "Analisi VirusTotal Completata"
 
 #: src/notification_dispatcher.py:86
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{positives}/{total} engines detected threats"
-msgstr "{count} 个引擎检测到威胁"
+msgstr "{positives}/{total} motori hanno rilevato minacce"
 
 #: src/notification_dispatcher.py:90
-#, fuzzy
 msgid "No threats detected by VirusTotal"
-msgstr "未检测到威胁"
+msgstr "Nessuna minaccia rilevata da VirusTotal"
 
 #: src/core/clamav_detection.py:46
 msgid ""
 "ClamAV is not installed. Please install it with: sudo apt install clamav"
-msgstr "未安装 ClamAV。请用以下命令安装：sudo apt install clamav"
+msgstr "ClamAV non è installato. Installalo con: sudo apt install clamav"
 
 #: src/core/clamav_detection.py:65
 #, python-brace-format
 msgid "ClamAV found but returned error: {error}"
-msgstr "已找到 ClamAV，但返回错误：{error}"
+msgstr "ClamAV trovato ma ha restituito errore: {error}"
 
 #: src/core/clamav_detection.py:69
 msgid "ClamAV check timed out"
-msgstr "ClamAV 检查已超时"
+msgstr "Timeout controllo ClamAV"
 
 #: src/core/clamav_detection.py:71
 msgid "ClamAV executable not found"
-msgstr "未找到 ClamAV 可执行文件"
+msgstr "Eseguibile ClamAV non trovato"
 
 #: src/core/clamav_detection.py:73
 msgid "Permission denied when accessing ClamAV"
-msgstr "访问 ClamAV 时出错：权限不够"
+msgstr "Permesso negato nell'accesso a ClamAV"
 
 #: src/core/clamav_detection.py:75
 #, python-brace-format
 msgid "Error checking ClamAV: {error}"
-msgstr "检查 ClamAV 时出错：{error}"
+msgstr "Errore controllo ClamAV: {error}"
 
 #: src/core/clamav_detection.py:94
 msgid ""
 "freshclam is not installed. Please install it with: sudo apt install clamav-"
 "freshclam"
-msgstr "未安装 freshclam。请使用以下命令安装：clamav-freshclam"
+msgstr ""
+"freshclam non è installato. Installalo con: sudo apt install clamav-freshclam"
 
 #: src/core/clamav_detection.py:129
 #, python-brace-format
 msgid "freshclam found but returned error: {error}"
-msgstr "已找到 freshclam，但返回错误：{error}"
+msgstr "freshclam trovato ma ha restituito errore: {error}"
 
 #: src/core/clamav_detection.py:135
 msgid "freshclam check timed out"
-msgstr "freshclam 检查已超时"
+msgstr "Timeout controllo freshclam"
 
 #: src/core/clamav_detection.py:137 src/core/updater.py:563
 msgid "freshclam executable not found"
-msgstr "未找到 freshclam 可执行文件"
+msgstr "Eseguibile freshclam non trovato"
 
 #: src/core/clamav_detection.py:139
 msgid "Permission denied when accessing freshclam"
-msgstr "访问 freshclam 时出错：权限不够"
+msgstr "Permesso negato nell'accesso a freshclam"
 
 #: src/core/clamav_detection.py:141
 #, python-brace-format
 msgid "Error checking freshclam: {error}"
-msgstr "检查 freshclam 时出错：{error}"
+msgstr "Errore controllo freshclam: {error}"
 
 #: src/core/clamav_detection.py:159 src/core/clamav_detection.py:189
 msgid ""
 "clamdscan is not installed. Please install it with: sudo apt install clamav-"
 "daemon"
-msgstr "未安装 clamdscan。请使用以下命令安装：sudo apt install clamav-daemon"
+msgstr ""
+"clamdscan non è installato. Installalo con: sudo apt install clamav-daemon"
 
 #: src/core/clamav_detection.py:181
 #, python-brace-format
 msgid "clamdscan returned error: {error}"
-msgstr "clamdscan 返回错误：{error}"
+msgstr "clamdscan ha restituito errore: {error}"
 
 #: src/core/clamav_detection.py:185
 msgid "clamdscan check timed out"
-msgstr "clamdscan 检查已超时"
+msgstr "Timeout controllo clamdscan"
 
 #: src/core/clamav_detection.py:192
 msgid "Permission denied when accessing clamdscan"
-msgstr "访问 clamdscan 时出错：权限不够"
+msgstr "Permesso negato nell'accesso a clamdscan"
 
 #: src/core/clamav_detection.py:194
 #, python-brace-format
 msgid "Error checking clamdscan: {error}"
-msgstr "检查 clamdscan 时出错：{error}"
+msgstr "Errore controllo clamdscan: {error}"
 
 #: src/core/clamav_detection.py:245
 msgid "Could not find clamd socket. Is clamav-daemon installed?"
-msgstr "未找到 clamd 套接字。是否已安装 clamav-daemon？"
+msgstr "Impossibile trovare il socket clamd. È installato clamav-daemon?"
 
 #: src/core/clamav_detection.py:261
 #, python-brace-format
 msgid "Daemon not responding: {error}"
-msgstr "守护进程未响应：{error}"
+msgstr "Demone non risponde: {error}"
 
 #: src/core/clamav_detection.py:264
 msgid "Connection to clamd timed out"
-msgstr "连接到 clamd 超时"
+msgstr "Timeout connessione a clamd"
 
 #: src/core/clamav_detection.py:266
 msgid "clamdscan executable not found"
-msgstr "未找到 clamdscan 可执行文件"
+msgstr "Eseguibile clamdscan non trovato"
 
 #: src/core/clamav_detection.py:268
 #, python-brace-format
 msgid "Error connecting to clamd: {error}"
-msgstr "连接 clamd 时出错：{error}"
+msgstr "Errore connessione a clamd: {error}"
 
 #: src/core/clamav_detection.py:311
 msgid "Could not determine Flatpak database directory"
-msgstr "无法确定 Flatpak 数据库所在目录"
+msgstr "Impossibile determinare la directory del database Flatpak"
 
 #: src/core/clamav_detection.py:318
 #, python-brace-format
 msgid "Database directory does not exist: {path}"
-msgstr "数据库所在目录不存在：{path}"
+msgstr "La directory del database non esiste: {path}"
 
 #: src/core/clamav_detection.py:326
 #, python-brace-format
 msgid "Permission denied accessing: {path}"
-msgstr "无权限访问：{path}"
+msgstr "Permesso negato nell'accesso a: {path}"
 
 #: src/core/clamav_detection.py:328
 #, python-brace-format
 msgid "Error accessing database: {error}"
-msgstr "访问数据库时出错：{error}"
+msgstr "Errore accesso al database: {error}"
 
 #: src/core/clamav_detection.py:330
 msgid "No virus database files found. Please download the database first."
-msgstr "未找到病毒数据库文件。请先下载数据库。"
+msgstr "Nessun file database virus trovato. Scarica prima il database."
 
 #: src/core/file_manager_integration.py:370
 msgid "Linux Mint / Cinnamon file manager"
-msgstr "Linux Mint / Cinnamon 文件管理器"
+msgstr "Gestore file Linux Mint / Cinnamon"
 
 #: src/core/file_manager_integration.py:385
 msgid "GNOME Files"
-msgstr "GNOME 文件"
+msgstr "File GNOME"
 
 #: src/core/file_manager_integration.py:400
 msgid "KDE file manager"
-msgstr "KDE 文件管理器"
+msgstr "Gestore file KDE"
 
 #: src/core/file_manager_integration.py:425
 #: src/core/file_manager_integration.py:497
 msgid "Not running as Flatpak"
-msgstr "当前不是 Flatpak 运行环境"
+msgstr "Non in esecuzione come Flatpak"
 
 #: src/core/file_manager_integration.py:428
 #: src/core/file_manager_integration.py:500
 msgid "Integration files not found"
-msgstr "未找到集成文件"
+msgstr "File di integrazione non trovati"
 
 #: src/core/file_manager_integration.py:439
 #: src/core/file_manager_integration.py:511
 #: src/core/file_manager_integration.py:572
 #, python-brace-format
 msgid "Unknown file manager: {name}"
-msgstr "未知文件管理器：{name}"
+msgstr "Gestore file sconosciuto: {name}"
 
 #: src/core/file_manager_integration.py:467
 #: src/core/file_manager_integration.py:539
 #: src/core/file_manager_integration.py:588 src/core/updater.py:573
 #, python-brace-format
 msgid "Permission denied: {error}"
-msgstr "权限不够：{error}"
+msgstr "Permesso negato: {error}"
 
 #: src/core/file_manager_integration.py:472
 #, python-brace-format
 msgid "Failed to install integration: {error}"
-msgstr "无法安装集成：{error}"
+msgstr "Impossibile installare l'integrazione: {error}"
 
 #: src/core/file_manager_integration.py:544
 #, python-brace-format
 msgid "Failed to repair integration: {error}"
-msgstr "无法修复集成：{error}"
+msgstr "Impossibile riparare l'integrazione: {error}"
 
 #: src/core/file_manager_integration.py:593
 #, python-brace-format
 msgid "Failed to remove integration: {error}"
-msgstr "无法移除集成：{error}"
+msgstr "Impossibile rimuovere l'integrazione: {error}"
 
 #: src/core/keyring_manager.py:101 src/core/keyring_manager.py:216
 msgid "API key cannot be empty"
-msgstr "API 密钥不能为空"
+msgstr "La chiave API non può essere vuota"
 
 #: src/core/keyring_manager.py:105
 msgid "Invalid API key format (expected 64 hexadecimal characters)"
-msgstr "无效 API 密钥格式（需要64个十六进制字符）"
+msgstr "Formato chiave API non valido (attesi 64 caratteri esadecimali)"
 
 #: src/core/keyring_manager.py:125
 msgid "Stored in settings file (keyring unavailable — less secure)"
-msgstr "已存储在设置文件中（密钥环不可用，安全性较低）"
+msgstr ""
+"Memorizzata nel file delle impostazioni (keyring non disponibile — meno "
+"sicuro)"
 
 #: src/core/keyring_manager.py:127
 msgid "Failed to save API key to settings"
-msgstr "无法保存 API 密钥设置"
+msgstr "Impossibile salvare la chiave API nelle impostazioni"
 
 #: src/core/keyring_manager.py:197
 msgid "Not set"
-msgstr "未设置"
+msgstr "Non impostata"
 
 #: src/core/keyring_manager.py:219
 #, python-brace-format
 msgid "API key must be 64 characters (got {length})"
-msgstr "API 密钥必须为64个字符长（当前有 {length} 个）"
+msgstr "La chiave API deve essere di 64 caratteri (ottenuti {length})"
 
 #: src/core/keyring_manager.py:222
 msgid "API key must contain only hexadecimal characters"
-msgstr "API 密钥必须只包含十六进制字符"
+msgstr "La chiave API deve contenere solo caratteri esadecimali"
 
 #: src/core/device_monitor.py:196
 msgid "Unknown Device"
-msgstr "未知设备"
+msgstr "Dispositivo Sconosciuto"
 
 #: src/core/notification_manager.py:78 src/ui/scan_results_dialog.py:185
 msgid "Scan Complete"
-msgstr "扫描完成"
+msgstr "Scansione Completata"
 
 #: src/core/notification_manager.py:81 src/core/notification_manager.py:169
 #, python-brace-format
 msgid "No threats found ({count} file scanned)"
 msgid_plural "No threats found ({count} files scanned)"
-msgstr[0] "未发现威胁（已扫描 {count} 个文件）"
+msgstr[0] "Nessuna minaccia trovata ({count} file scansionato)"
+msgstr[1] "Nessuna minaccia trovata ({count} file scansionati)"
 
 #: src/core/notification_manager.py:86 src/core/notification_manager.py:174
 #: src/ui/scan_results_dialog.py:193
 msgid "No threats found"
-msgstr "未发现威胁"
+msgstr "Nessuna minaccia trovata"
 
 #: src/core/notification_manager.py:89
 msgid "Threats Detected!"
-msgstr "检测到威胁！"
+msgstr "Minacce Rilevate!"
 
 #: src/core/notification_manager.py:91 src/core/notification_manager.py:184
 #, python-brace-format
 msgid "{count} infected file found"
 msgid_plural "{count} infected files found"
-msgstr[0] "已发现 {count} 个受感染的文件"
+msgstr[0] "{count} file infetto trovato"
+msgstr[1] "{count} file infetti trovati"
 
 #: src/core/notification_manager.py:120
 msgid "Database Updated"
-msgstr "数据库已更新"
+msgstr "Database Aggiornato"
 
 #: src/core/notification_manager.py:123
 #, python-brace-format
 msgid "{count} database updated successfully"
 msgid_plural "{count} databases updated successfully"
-msgstr[0] "已成功更新 {count} 个数据库"
+msgstr[0] "{count} database aggiornato con successo"
+msgstr[1] "{count} database aggiornati con successo"
 
 #: src/core/notification_manager.py:128
 msgid "Virus definitions are up to date"
-msgstr "病毒定义已是最新"
+msgstr "Le definizioni virus sono aggiornate"
 
 #: src/core/notification_manager.py:130
 msgid "Database Update Failed"
-msgstr "数据库更新失败"
+msgstr "Aggiornamento Database Fallito"
 
 #: src/core/notification_manager.py:131
 msgid "Check the update view for details"
-msgstr "详情请查看更新视图"
+msgstr "Controlla la vista aggiornamento per i dettagli"
 
 #: src/core/notification_manager.py:223
 msgid "VirusTotal: No Threats"
-msgstr "VirusTotal：没有威胁"
+msgstr "VirusTotal: Nessuna Minaccia"
 
 #: src/core/notification_manager.py:225
 #, python-brace-format
 msgid "'{file_name}' appears safe (0/{total} detections)"
-msgstr "'{file_name}' 似乎是安全的（0/{total} 个引擎报毒）"
+msgstr "'{file_name}' sembra sicuro (0/{total} rilevamenti)"
 
 #: src/core/notification_manager.py:229
 #, python-brace-format
 msgid "File appears safe (0/{total} detections)"
-msgstr "文件似乎是安全的（0/{total} 个引擎报毒）"
+msgstr "Il file sembra sicuro (0/{total} rilevamenti)"
 
 #: src/core/notification_manager.py:232
 msgid "VirusTotal: Threats Detected!"
-msgstr "VirusTotal：检测到威胁！"
+msgstr "VirusTotal: Minacce Rilevate!"
 
 #: src/core/notification_manager.py:234
 #, python-brace-format
 msgid "'{file_name}' flagged by {detections}/{total} engines"
-msgstr "‘{file_name}’ 被 {detections}/{total} 个引擎标记为可疑"
+msgstr "'{file_name}' segnalato da {detections}/{total} motori"
 
 #: src/core/notification_manager.py:238
 #, python-brace-format
 msgid "File flagged by {detections}/{total} engines"
-msgstr "文件被 {detections}/{total} 个引擎标记为可疑"
+msgstr "File segnalato da {detections}/{total} motori"
 
 #: src/core/notification_manager.py:263
 msgid "VirusTotal Rate Limit"
-msgstr "VirusTotal 请求频率超限"
+msgstr "Limite VirusTotal"
 
 #: src/core/notification_manager.py:264
 msgid "Too many requests. Try again in a minute or use the website."
-msgstr "请求过多，请一分钟后重试或访问官网查询。"
+msgstr "Troppe richieste. Riprova tra un minuto o usa il sito web."
 
 #: src/core/notification_manager.py:281
 msgid "VirusTotal Not Configured"
-msgstr "未配置 VirusTotal"
+msgstr "VirusTotal Non Configurato"
 
 #: src/core/notification_manager.py:282
 msgid "Add your API key in Preferences to scan with VirusTotal."
-msgstr "在首选项中添加你的 API 密钥以使用 VirusTotal 扫描。"
+msgstr ""
+"Aggiungi la tua chiave API nelle Preferenze per scansionare con VirusTotal."
 
 #: src/core/notification_manager.py:306
 msgid "Scanning Device"
-msgstr "正在扫描设备"
+msgstr "Scansione Dispositivo"
 
 #: src/core/notification_manager.py:307
 #, python-brace-format
 msgid "Scanning {device} ({path})"
-msgstr "正在扫描 {device}（位于 {path}）"
+msgstr "Scansione {device} ({path})"
 
 #: src/core/notification_manager.py:340
 msgid "Device Scan Complete"
-msgstr "设备扫描完成"
+msgstr "Scansione Dispositivo Completata"
 
 #: src/core/notification_manager.py:343
 #, python-brace-format
 msgid "{device}: No threats ({count} file scanned)"
 msgid_plural "{device}: No threats ({count} files scanned)"
-msgstr[0] "{device}：未发现威胁（已扫描 {count} 个文件）"
+msgstr[0] "{device}: Nessuna minaccia ({count} file scansionato)"
+msgstr[1] "{device}: Nessuna minaccia ({count} file scansionati)"
 
 #: src/core/notification_manager.py:348
 #, python-brace-format
 msgid "{device}: No threats found"
-msgstr "{device}：未发现威胁"
+msgstr "{device}: Nessuna minaccia trovata"
 
 #: src/core/notification_manager.py:351
 msgid "Device Scan: Threats Detected!"
-msgstr "设备扫描：检测到威胁！"
+msgstr "Scansione Dispositivo: Minacce Rilevate!"
 
 #: src/core/notification_manager.py:353
 #, python-brace-format
 msgid "{device}: {infected} threat(s) found, {quarantined} quarantined"
-msgstr "{device}：已发现 {infected} 个威胁，其中 {quarantined} 个已隔离"
+msgstr ""
+"{device}: {infected} minaccia(e) trovata(e), {quarantined} in quarantena"
 
 #: src/core/notification_manager.py:360
 #, python-brace-format
 msgid "{device}: {count} infected file found"
 msgid_plural "{device}: {count} infected files found"
-msgstr[0] "{device}：已发现 {count} 个受感染的文件"
+msgstr[0] "{device}: {count} file infetto trovato"
+msgstr[1] "{device}: {count} file infetti trovati"
 
 #: src/core/quarantine/manager.py:192
 msgid ""
 "Failed to record quarantine entry in database. File has been restored to "
 "original location."
-msgstr "无法将隔离记录写入数据库。文件已还原至原始位置。"
+msgstr ""
+"Impossibile registrare la voce di quarantena nel database. Il file è stato "
+"ripristinato nella posizione originale."
 
 #: src/core/quarantine/manager.py:196
 #, python-brace-format
@@ -1291,41 +1311,41 @@ msgid ""
 "Failed to record quarantine entry in database. Rollback also failed: "
 "{error}. File may be orphaned at: {path}"
 msgstr ""
-"无法将隔离记录写入数据库，回滚操作也失败：{error}。文件可能处于孤立状态，位"
-"置：{path}"
+"Impossibile registrare la voce di quarantena nel database. Anche il rollback "
+"è fallito: {error}. Il file potrebbe essere orfano in: {path}"
 
 #: src/core/quarantine/manager.py:280
 #, python-brace-format
 msgid "File integrity verification failed: {error}"
-msgstr "文件完整性验证失败：{error}"
+msgstr "Verifica integrità file fallita: {error}"
 
 #: src/core/result_formatters.py:78
 msgid "ClamUI Scan Report"
-msgstr "ClamUI 扫描报告"
+msgstr "Report Scansione ClamUI"
 
 #: src/core/result_formatters.py:80
 #, python-brace-format
 msgid "Scan Date: {timestamp}"
-msgstr "扫描日期：{timestamp}"
+msgstr "Data Scansione: {timestamp}"
 
 #: src/core/result_formatters.py:81
 #, python-brace-format
 msgid "Scanned Path: {path}"
-msgstr "扫描路径：{path}"
+msgstr "Percorso Scansionato: {path}"
 
 #: src/core/result_formatters.py:82 src/ui/logs_view.py:762
 #, python-brace-format
 msgid "Status: {status}"
-msgstr "状态：{status}"
+msgstr "Stato: {status}"
 
 #: src/core/result_formatters.py:90
 #, python-brace-format
 msgid "Directories Scanned: {count}"
-msgstr "已扫描的目录：{count} 个"
+msgstr "Directory Scansionate: {count}"
 
 #: src/core/result_formatters.py:97 src/ui/scan_results_dialog.py:333
 msgid "Detected Threats"
-msgstr "检测到的威胁"
+msgstr "Minacce Rilevate"
 
 #: src/core/result_formatters.py:104
 #, python-brace-format
@@ -1335,106 +1355,106 @@ msgstr "[{index}] {severity} - {category}"
 #: src/core/result_formatters.py:108
 #, python-brace-format
 msgid "    File: {path}"
-msgstr "    文件：{path}"
+msgstr "    File: {path}"
 
 #: src/core/result_formatters.py:109
 #, python-brace-format
 msgid "    Threat: {name}"
-msgstr "    威胁：{name}"
+msgstr "    Minaccia: {name}"
 
 #: src/core/result_formatters.py:113
 msgid "No Threats Detected"
-msgstr "未检测到威胁"
+msgstr "Nessuna Minaccia Rilevata"
 
 #: src/core/result_formatters.py:116
 msgid "All scanned files are clean."
-msgstr "所有已扫描的文件均未发现威胁。"
+msgstr "Tutti i file scansionati sono puliti."
 
 #: src/core/result_formatters.py:124 src/ui/update_view.py:654
 #, python-brace-format
 msgid "Error: {message}"
-msgstr "错误：{message}"
+msgstr "Errore: {message}"
 
 #: src/core/result_formatters.py:131
 msgid "The scan was cancelled before completion."
-msgstr "扫描在完成前被取消。"
+msgstr "La scansione è stata annullata prima del completamento."
 
 #: src/core/result_formatters.py:175
 msgid "File Path"
-msgstr "文件路径"
+msgstr "Percorso File"
 
 #: src/core/result_formatters.py:175
 msgid "Threat Name"
-msgstr "威胁名称"
+msgstr "Nome Minaccia"
 
 #: src/core/result_formatters.py:175
 msgid "Category"
-msgstr "类别"
+msgstr "Categoria"
 
 #: src/core/result_formatters.py:175
 msgid "Severity"
-msgstr "严重性"
+msgstr "Gravità"
 
 #: src/core/result_formatters.py:175
 msgid "Timestamp"
-msgstr "时间戳"
+msgstr "Marca Temporale"
 
 #: src/core/scanner_base.py:484
 msgid "Scan cancelled by user"
-msgstr "扫描被用户取消"
+msgstr "Scansione annullata dall'utente"
 
 #: src/core/updater.py:239
 #, python-brace-format
 msgid "Freshclam service not running (status: {status})"
-msgstr "Freshclam 服务未运行（状态：{status}）"
+msgstr "Servizio freshclam non in esecuzione (stato: {status})"
 
 #: src/core/updater.py:255
 msgid "Could not determine freshclam PID"
-msgstr "无法确定 freshclam PID"
+msgstr "Impossibile determinare il PID di freshclam"
 
 #: src/core/updater.py:257
 #, python-brace-format
 msgid "Failed to get freshclam PID: {error}"
-msgstr "无法获取 freshclam PID：{error}"
+msgstr "Impossibile ottenere il PID di freshclam: {error}"
 
 #: src/core/updater.py:271 src/core/updater.py:291
 #, python-brace-format
 msgid "Update signal sent to freshclam service (PID {pid})"
-msgstr "已向 freshclam 服务（PID {pid}）发送更新信号"
+msgstr "Segnale di aggiornamento inviato al servizio freshclam (PID {pid})"
 
 #: src/core/updater.py:296 src/core/updater.py:306
 #, python-brace-format
 msgid "Failed to send signal: {error}"
-msgstr "无法发送信号：{error}"
+msgstr "Impossibile inviare segnale: {error}"
 
 #: src/core/updater.py:300
 msgid "Timeout sending elevated signal to freshclam"
-msgstr "向 freshclam 发送提权信号超时"
+msgstr "Timeout nell'invio del segnale elevato a freshclam"
 
 #: src/core/updater.py:309
 msgid "Timeout sending signal to freshclam"
-msgstr "向 freshclam 发送信号超时"
+msgstr "Timeout nell'invio del segnale a freshclam"
 
 #: src/core/updater.py:311
 #, python-brace-format
 msgid "Error sending signal: {error}"
-msgstr "发送信号时出错：{error}"
+msgstr "Errore invio segnale: {error}"
 
 #: src/core/updater.py:418
 msgid ""
 "Could not trigger freshclam service update. Try restarting the service: sudo "
 "systemctl restart clamav-freshclam"
 msgstr ""
-"无法触发 freshclam 服务更新。请尝试重启服务：sudo systemctl restart clamav-"
-"freshclam"
+"Impossibile attivare l'aggiornamento del servizio freshclam. Prova a "
+"riavviare il servizio: sudo systemctl restart clamav-freshclam"
 
 #: src/core/updater.py:444
 msgid "Backup failed"
-msgstr "备份失败"
+msgstr "Backup fallito"
 
 #: src/core/updater.py:453
 msgid "Delete failed"
-msgstr "删除失败"
+msgstr "Eliminazione fallita"
 
 #: src/core/updater.py:472
 #, python-brace-format
@@ -1442,274 +1462,289 @@ msgid ""
 "Another freshclam instance is running (PID {pid}). Stop it first: sudo "
 "systemctl stop clamav-freshclam"
 msgstr ""
-"另一个 freshclam 实例正在运行（PID {pid}）。请先终止它：sudo systemctl stop "
-"clamav-freshclam"
+"Un'altra istanza di freshclam è in esecuzione (PID {pid}). Fermala prima: "
+"sudo systemctl stop clamav-freshclam"
 
 #: src/core/updater.py:583
 #, python-brace-format
 msgid "Update failed: {error}"
-msgstr "更新失败：{error}"
+msgstr "Aggiornamento fallito: {error}"
 
 #: src/core/updater.py:595
 msgid "Update timed out after 10 minutes"
-msgstr "更新超时（10 分钟无响应）"
+msgstr "Aggiornamento scaduto dopo 10 minuti"
 
 #: src/core/updater.py:608
 msgid "Update cancelled by user"
-msgstr "更新被用户取消"
+msgstr "Aggiornamento annullato dall'utente"
 
 #: src/core/updater.py:956 src/ui/update_view.py:633
 #, python-brace-format
 msgid "{database} until {cooldown}"
-msgstr ""
+msgstr "{database} fino a {cooldown}"
 
 #: src/core/updater.py:993
 msgid ""
 "Authentication cancelled. Database update requires administrator privileges."
-msgstr "身份验证已取消。更新数据库需要管理员权限。"
+msgstr ""
+"Autenticazione annullata. L'aggiornamento del database richiede privilegi di "
+"amministratore."
 
 #: src/core/updater.py:995
 msgid "Authorization failed. You are not authorized to update the database."
-msgstr "验证失败。您没有更新数据库的权限。"
+msgstr "Autorizzazione fallita. Non sei autorizzato ad aggiornare il database."
 
 #: src/core/updater.py:1002
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Updated: {databases}"
-msgstr "更新数据库"
+msgstr "Aggiornato: {databases}"
 
 #: src/core/updater.py:1008
 #, python-brace-format
 msgid "Already current: {databases}"
-msgstr ""
+msgstr "Già aggiornato: {databases}"
 
 #: src/core/updater.py:1015
 #, python-brace-format
 msgid ""
 "Database update partially completed. {progress}. Rate limited: {details}."
 msgstr ""
+"Aggiornamento database parzialmente completato. {progress}. Limite di "
+"velocità: {details}."
 
 #: src/core/updater.py:1018
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Update rate limited for: {details}."
-msgstr "详情请查看更新视图"
+msgstr "Limite di velocità aggiornamento per: {details}."
 
 #: src/core/updater.py:1022
 msgid "Update rate limited by mirror. Please wait a few minutes and try again."
-msgstr "更新请求被镜像站限流，请等待几分钟后重试。"
+msgstr ""
+"Limite di velocità aggiornamento dal mirror. Attendi qualche minuto e "
+"riprova."
 
 #: src/core/updater.py:1027
 msgid ""
 "Update blocked by CDN. This may be due to rate limiting. Please wait and try "
 "again later."
-msgstr "更新请求被 CDN 阻止，这或许是限流导致的。请等待几分钟后重试。"
+msgstr ""
+"Aggiornamento bloccato dal CDN. Questo potrebbe essere dovuto a un limite di "
+"velocità. Attendi e riprova più tardi."
 
 #: src/core/updater.py:1033
 msgid "ClamAV mirror is currently unavailable. Please try again later."
-msgstr "ClamAV 镜像站目前不可用"
+msgstr "Il mirror ClamAV è attualmente non disponibile. Riprova più tardi."
 
 #: src/core/updater.py:1039
 msgid "SSL/TLS certificate error. The mirror may have configuration issues."
-msgstr "SSL/TLS 证书错误，镜像服务器可能存在配置问题。"
+msgstr ""
+"Errore certificato SSL/TLS. Il mirror potrebbe avere problemi di "
+"configurazione."
 
 #: src/core/updater.py:1043
 msgid "Connection timed out. Please check your network connection."
-msgstr "连接超时。请检查网络连接。"
+msgstr "Timeout connessione. Controlla la tua connessione di rete."
 
 #: src/core/updater.py:1047
 msgid "Authorization failed. Please try again and enter your password."
-msgstr "验证失败。请重新输入密码后再试。"
+msgstr "Autorizzazione fallita. Riprova e inserisci la tua password."
 
 #: src/core/updater.py:1051
 msgid "Database is locked. Another freshclam instance may be running."
-msgstr "数据库已锁定。另一个 freshclam 实例可能在运行。"
+msgstr ""
+"Il database è bloccato. Un'altra istanza di freshclam potrebbe essere in "
+"esecuzione."
 
 #: src/core/updater.py:1055
 msgid ""
 "Permission denied. You may need elevated privileges to update the database."
-msgstr "权限不够。你可能需要提升权限来更新数据库。"
+msgstr ""
+"Permesso negato. Potrebbero essere necessari privilegi elevati per "
+"aggiornare il database."
 
 #: src/core/updater.py:1059
 msgid "Connection error. Please check your network connection."
-msgstr "连接出错。请检查网络连接。"
+msgstr "Errore connessione. Controlla la tua connessione di rete."
 
 #: src/core/updater.py:1063
 msgid "DNS resolution failed. Please check your network settings."
-msgstr "DNS 解析出错。请检查网络连接。"
+msgstr "Risoluzione DNS fallita. Controlla le tue impostazioni di rete."
 
 #: src/core/updater.py:1069
 msgid "Update failed with an unknown error. Check the logs for details."
-msgstr "更新失败，出现未知错误。详情请查看日志。"
+msgstr ""
+"Aggiornamento fallito con errore sconosciuto. Controlla i log per i dettagli."
 
 #: src/core/updater.py:1081
 #, python-brace-format
 msgid "Database update completed - {count} database(s) updated"
-msgstr "数据库更新完成 - 已更新 {count} 个数据库"
+msgstr "Aggiornamento database completato - {count} database aggiornati"
 
 #: src/core/updater.py:1085
 msgid "Database update completed - Already up to date"
-msgstr "数据库更新完成 - 已是最新"
+msgstr "Aggiornamento database completato - Già aggiornato"
 
 #: src/core/updater.py:1087
 msgid "Database update cancelled"
-msgstr "已取消数据库更新"
+msgstr "Aggiornamento database annullato"
 
 #: src/core/updater.py:1089
 #, python-brace-format
 msgid "Database update failed: {error}"
-msgstr "数据库更新失败：{error}"
+msgstr "Aggiornamento database fallito: {error}"
 
 #: src/core/updater.py:1090 src/ui/scan_results_dialog.py:223
 #: src/ui/virustotal_results_dialog.py:197
 msgid "Unknown error"
-msgstr "未知错误"
+msgstr "Errore sconosciuto"
 
 #: src/core/virustotal.py:254 src/core/virustotal.py:308
 #: src/core/virustotal.py:467 src/core/virustotal.py:560
 #: src/core/virustotal.py:568 src/ui/scan/scan_view.py:255
 #: src/ui/scan_view.py:1991
 msgid "Scan cancelled"
-msgstr "已取消扫描"
+msgstr "Scansione annullata"
 
 #: src/core/virustotal.py:262
 msgid "API rate limit exceeded"
-msgstr "API 请求频率超限"
+msgstr "Limite velocità API superato"
 
 #: src/core/virustotal.py:266 src/ui/preferences/virustotal_page.py:291
 #: src/ui/virustotal_setup_dialog.py:274
 msgid "Invalid API key"
-msgstr "无效 API 密钥"
+msgstr "Chiave API non valida"
 
 #: src/core/virustotal.py:269
 msgid "API key lacks required permissions"
-msgstr "API 密钥缺少所需权限"
+msgstr "La chiave API manca dei permessi richiesti"
 
 #: src/core/virustotal.py:278
 msgid "Request timed out after retries"
-msgstr "在数次重试后，请求已超时"
+msgstr "Richiesta scaduta dopo i tentativi"
 
 #: src/core/virustotal.py:285
 msgid "Network connection failed after retries"
-msgstr "在数次重试后，网络连接失败"
+msgstr "Connessione di rete fallita dopo i tentativi"
 
 #: src/core/virustotal.py:289
 #, python-brace-format
 msgid "Request failed: {error}"
-msgstr "请求失败：{error}"
+msgstr "Richiesta fallita: {error}"
 
 #: src/core/virustotal.py:291
 msgid "Unknown request error"
-msgstr "未知请求错误"
+msgstr "Errore richiesta sconosciuto"
 
 #: src/core/virustotal.py:337
 msgid "No response received"
-msgstr "未收到响应"
+msgstr "Nessuna risposta ricevuta"
 
 #: src/core/virustotal.py:352
 #, python-brace-format
 msgid "API error: HTTP {code}"
-msgstr "API 错误：HTTP {code}"
+msgstr "Errore API: HTTP {code}"
 
 #: src/core/virustotal.py:362
 msgid "Invalid JSON response from API"
-msgstr "API 返回了无效的 JSON 响应"
+msgstr "Risposta JSON non valida dall'API"
 
 #: src/core/virustotal.py:384
 msgid "Malformed response: missing report attributes"
-msgstr "响应格式错误：缺少报告属性"
+msgstr "Risposta malformata: attributi del report mancanti"
 
 #: src/core/virustotal.py:448
 #, python-brace-format
 msgid "Failed to parse response: {error}"
-msgstr "无法分析响应：{error}"
+msgstr "Impossibile analizzare la risposta: {error}"
 
 #: src/core/virustotal.py:484 src/core/virustotal.py:646
 msgid "File not found"
-msgstr "未找到文件"
+msgstr "File non trovato"
 
 #: src/core/virustotal.py:491
 msgid "Permission denied"
-msgstr "权限不够"
+msgstr "Permesso negato"
 
 #: src/core/virustotal.py:515
 #, python-brace-format
 msgid "Upload failed: HTTP {code}"
-msgstr "上传失败：HTTP {code}"
+msgstr "Caricamento fallito: HTTP {code}"
 
 #: src/core/virustotal.py:610
 msgid "Analysis still in progress"
-msgstr "分析仍在进行中"
+msgstr "Analisi ancora in corso"
 
 #: src/core/virustotal.py:638
 msgid "API key not configured"
-msgstr "未配置 API 密钥"
+msgstr "Chiave API non configurata"
 
 #: src/core/virustotal.py:653
 msgid "Path is not a file"
-msgstr "路径不是一个文件"
+msgstr "Il percorso non è un file"
 
 #: src/core/virustotal.py:663
 #, python-brace-format
 msgid "Cannot access file: {error}"
-msgstr "无法访问文件：{error}"
+msgstr "Impossibile accedere al file: {error}"
 
 #: src/core/virustotal.py:671
 #, python-brace-format
 msgid "File too large ({size}MB). Maximum size is {max}MB"
-msgstr "文件过大（{size} MB）。最大不超过 {max} MB。"
+msgstr "File troppo grande ({size}MB). La dimensione massima è {max}MB"
 
 #: src/core/virustotal.py:680
 msgid "Cannot scan empty files"
-msgstr "无法扫描空文件"
+msgstr "Impossibile scansionare file vuoti"
 
 #: src/core/virustotal.py:691
 #, python-brace-format
 msgid "Cannot read file: {error}"
-msgstr "无法读取文件：{error}"
+msgstr "Impossibile leggere il file: {error}"
 
 #: src/ui/clipboard_helper.py:99
 msgid "Copied to clipboard"
-msgstr "已复制到剪贴板"
+msgstr "Copiato negli appunti"
 
 #: src/ui/clipboard_helper.py:101
 msgid "Failed to copy to clipboard"
-msgstr "无法复制到剪贴板"
+msgstr "Impossibile copiare negli appunti"
 
 #: src/ui/clipboard_helper.py:103
 msgid "Copying..."
-msgstr "正在复制……"
+msgstr "Copia in corso..."
 
 #: src/ui/clipboard_helper.py:189
 #, python-brace-format
 msgid "Content too large ({size}). Use export to save to file."
-msgstr "内容过大（{size}）。请使用导出功能以另存为文件。"
+msgstr "Contenuto troppo grande ({size}). Usa esporta per salvare su file."
 
 #: src/ui/close_behavior_dialog.py:68
 msgid "Close Application?"
-msgstr "关闭应用？"
+msgstr "Chiudere l'Applicazione?"
 
 #: src/ui/close_behavior_dialog.py:96
 msgid "What would you like to do when closing the window?"
-msgstr "关闭窗口时希望执行什么操作？"
+msgstr "Cosa vuoi fare quando chiudi la finestra?"
 
 #: src/ui/close_behavior_dialog.py:106 src/ui/preferences/behavior_page.py:40
 msgid "Minimize to tray"
-msgstr "最小化到系统托盘"
+msgstr "Minimizza nell'area di notifica"
 
 #: src/ui/close_behavior_dialog.py:108
 msgid "Hide the window but keep ClamUI running in the background"
-msgstr "隐藏窗口，但 ClamUI 会在后台继续运行"
+msgstr "Nascondi la finestra ma mantieni ClamUI in esecuzione in background"
 
 #: src/ui/close_behavior_dialog.py:122 src/ui/preferences/behavior_page.py:41
 msgid "Quit completely"
-msgstr "完全退出"
+msgstr "Esci completamente"
 
 #: src/ui/close_behavior_dialog.py:123
 msgid "Close the window and exit ClamUI"
-msgstr "关闭窗口，然后退出 ClamUI"
+msgstr "Chiudi la finestra e esci da ClamUI"
 
 #: src/ui/close_behavior_dialog.py:142 src/ui/virustotal_setup_dialog.py:222
 msgid "Remember my choice"
-msgstr "记住我的选择"
+msgstr "Ricorda la mia scelta"
 
 #: src/ui/close_behavior_dialog.py:153 src/ui/database_missing_dialog.py:132
 #: src/ui/file_manager_integration_dialog.py:261 src/ui/logs_view.py:100
@@ -1718,262 +1753,274 @@ msgstr "记住我的选择"
 #: src/ui/profile_dialogs.py:981 src/ui/scan/scan_view.py:168
 #: src/ui/scan_view.py:1031 src/ui/scan_view.py:1635 src/ui/update_view.py:142
 msgid "Cancel"
-msgstr "取消"
+msgstr "Annulla"
 
 #: src/ui/close_behavior_dialog.py:158
 msgid "Confirm"
-msgstr "确定"
+msgstr "Conferma"
 
 #: src/ui/compat.py:425
 msgid "_Open"
-msgstr "打开(_O)"
+msgstr "_Apri"
 
 #: src/ui/compat.py:426 src/ui/compat.py:492
 #: src/ui/preferences/database_page.py:328
 #: src/ui/preferences/scanner_page.py:225
 msgid "_Cancel"
-msgstr "取消(_C)"
+msgstr "_Annulla"
 
 #: src/ui/compat.py:491
 msgid "_Save"
-msgstr "_保存"
+msgstr "_Salva"
 
 #: src/ui/components_view.py:32
 msgid "clamscan Installation"
-msgstr "clamscan 安装"
+msgstr "Installazione clamscan"
 
 #: src/ui/components_view.py:39
 msgid ""
 "clamscan is the on-demand virus scanner. After installation, update the "
 "virus database with freshclam."
-msgstr "clamscan 是按需病毒扫描程序。安装后，使用 freshclam 更新病毒数据库。"
+msgstr ""
+"clamscan è il scanner virus on-demand. Dopo l'installazione, aggiorna il "
+"database virus con freshclam."
 
 #: src/ui/components_view.py:43
 msgid "freshclam Installation"
-msgstr "freshclam 安装"
+msgstr "Installazione freshclam"
 
 #: src/ui/components_view.py:50
 msgid ""
 "freshclam updates the virus database. Enable the service for automatic "
 "updates:"
-msgstr "freshclam 用于更新病毒数据库。启用以下服务以启用自动更新："
+msgstr ""
+"freshclam aggiorna il database virus. Abilita il servizio per aggiornamenti "
+"automatici:"
 
 #: src/ui/components_view.py:55
 msgid "clamdscan Installation"
-msgstr "clamdscan 安装"
+msgstr "Installazione clamdscan"
 
 #: src/ui/components_view.py:62
 msgid ""
 "clamdscan is a client for the clamd daemon, providing faster scanning. "
 "Requires clamd daemon to be running."
 msgstr ""
-"clamdscan 是 clamd 守护进程的客户端，提供更快的扫描速度。需要 clamd 守护进程"
-"处于运行状态。"
+"clamdscan è un client per il demone clamd, fornendo scansioni più veloci. "
+"Richiede che il demone clamd sia in esecuzione."
 
 #: src/ui/components_view.py:66
 msgid "clamd Daemon Setup"
-msgstr "clamd 守护进程设置"
+msgstr "Configurazione Demone clamd"
 
 #: src/ui/components_view.py:81
 msgid "clamd is the ClamAV daemon for faster scanning."
-msgstr "clamd 是 ClamAV 的守护进程，它可以提供更快的扫描。"
+msgstr "clamd è il demone ClamAV per scansioni più veloci."
 
 #: src/ui/components_view.py:83
 msgid "Configuration file location is auto-detected in Preferences."
-msgstr "配置文件位置是在首选项中自动检测的。"
+msgstr ""
+"La posizione del file di configurazione è rilevata automaticamente nelle "
+"Preferenze."
 
 #: src/ui/components_view.py:145
 msgid "ClamAV Components"
-msgstr "ClamAV 组件"
+msgstr "Componenti ClamAV"
 
 #: src/ui/components_view.py:147
 msgid "Check the status of ClamAV components and get setup instructions"
-msgstr "检查 ClamAV 的组件并获取设置说明"
+msgstr ""
+"Controlla lo stato dei componenti ClamAV e ottieni istruzioni di "
+"configurazione"
 
 #: src/ui/components_view.py:152
 msgid "Component Status"
-msgstr "组件状态"
+msgstr "Stato Componente"
 
 #: src/ui/components_view.py:153
 msgid "View installation status and setup guides for ClamAV tools"
-msgstr "查看安装状态和 ClamAV 工具的设置指南"
+msgstr ""
+"Visualizza lo stato di installazione e le guide di configurazione per gli "
+"strumenti ClamAV"
 
 #: src/ui/components_view.py:168
 msgid "Components Status"
-msgstr "组件状态"
+msgstr "Stato Componenti"
 
 #: src/ui/components_view.py:173
 msgid ""
 "clamscan and freshclam are bundled with the Flatpak. Daemon components run "
 "on the host system via flatpak-spawn."
 msgstr ""
-"clamscan 和 freshclam 已随 Flatpak 捆绑提供。守护进程组件通过 flatpak-spawn "
-"在主机系统上运行。"
+"clamscan e freshclam sono inclusi nel Flatpak. I componenti del demone "
+"girano sul sistema host via flatpak-spawn."
 
 #: src/ui/components_view.py:179
 msgid "Expand each component for installation instructions"
-msgstr "展开各组件可查看安装说明"
+msgstr "Espandi ogni componente per le istruzioni di installazione"
 
 #: src/ui/components_view.py:188
 msgid "Virus Scanner"
-msgstr "病毒扫描程序"
+msgstr "Scanner Virus"
 
 #: src/ui/components_view.py:193
 msgid "Database Updater"
-msgstr "数据库更新程序"
+msgstr "Aggiornatore Database"
 
 #: src/ui/components_view.py:202
 msgid "Daemon Scanner Client"
-msgstr "后台扫描客户端"
+msgstr "Client Scanner Demone"
 
 #: src/ui/components_view.py:206
 msgid "Scanner Daemon"
-msgstr "扫描守护进程"
+msgstr "Demone Scanner"
 
 #: src/ui/components_view.py:227 src/ui/logs_view.py:504
 #: src/ui/statistics_view.py:180
 msgid "Checking..."
-msgstr "正在检查……"
+msgstr "Controllo in corso..."
 
 #: src/ui/components_view.py:239
 msgid "Checking"
-msgstr "正在检查"
+msgstr "Controllo in corso"
 
 #: src/ui/components_view.py:351 src/ui/logs_view.py:384
 msgid "Copy to clipboard"
-msgstr "复制到剪贴板"
+msgstr "Copia negli appunti"
 
 #: src/ui/components_view.py:388
 msgid ""
 "clamscan is bundled with the Flatpak package. No installation is required."
-msgstr "clamscan 随 Flatpak 包捆绑提供。不需要安装。"
+msgstr ""
+"clamscan è incluso nel pacchetto Flatpak. Nessuna installazione richiesta."
 
 #: src/ui/components_view.py:392
 msgid ""
 "freshclam is bundled with the Flatpak package. No installation is required. "
 "The virus database is automatically stored in the Flatpak sandbox."
 msgstr ""
-"freshscan 随 Flatpak 包捆绑提供，不需要安装。.病毒数据库将自动存储在 Flatpak "
-"沙盒中。"
+"freshclam è incluso nel pacchetto Flatpak. Nessuna installazione richiesta. "
+"Il database virus è automaticamente memorizzato nella sandbox Flatpak."
 
 #: src/ui/components_view.py:438 src/ui/preferences/scanner_page.py:323
 msgid "Refresh Status"
-msgstr "刷新状态"
+msgstr "Aggiorna Stato"
 
 #: src/ui/components_view.py:558
 msgid "Bundled"
-msgstr "随包提供"
+msgstr "Incluso"
 
 #: src/ui/components_view.py:559
 msgid "Included with Flatpak"
-msgstr "随 Flatpak 捆绑提供"
+msgstr "Incluso con Flatpak"
 
 #: src/ui/components_view.py:561 src/ui/components_view.py:562
 msgid "Installed"
-msgstr "已安装"
+msgstr "Installato"
 
 #: src/ui/components_view.py:574
 msgid "Unavailable"
-msgstr "不可用"
+msgstr "Non disponibile"
 
 #: src/ui/components_view.py:575
 msgid "Flatpak package issue - component should be bundled"
-msgstr "Flatpak 包问题 - 组件应该随包提供"
+msgstr "Problema pacchetto Flatpak - il componente dovrebbe essere incluso"
 
 #: src/ui/components_view.py:580 src/ui/components_view.py:631
 #: src/ui/logs_view.py:1238
 msgid "Not installed"
-msgstr "未安装"
+msgstr "Non installato"
 
 #: src/ui/components_view.py:581 src/ui/components_view.py:632
 msgid "Not installed - expand for setup instructions"
-msgstr "未安装 - 展开以获取设置说明"
+msgstr "Non installato - espandi per istruzioni di configurazione"
 
 #: src/ui/components_view.py:613 src/ui/logs_view.py:1225
 msgid "Running"
-msgstr "正在运行"
+msgstr "In esecuzione"
 
 #: src/ui/components_view.py:614
 msgid "Daemon is running"
-msgstr "守护进程正在运行"
+msgstr "Il demone è in esecuzione"
 
 #: src/ui/components_view.py:622 src/ui/logs_view.py:1232
 msgid "Stopped"
-msgstr "已停止"
+msgstr "Fermato"
 
 #: src/ui/components_view.py:623
 msgid "Daemon is installed but not running"
-msgstr "守护进程已安装，但没在运行"
+msgstr "Il demone è installato ma non in esecuzione"
 
 #: src/ui/components_view.py:639 src/ui/logs_view.py:1253
 #: src/ui/quarantine_view.py:686 src/ui/statistics_view.py:185
 #: src/ui/statistics_view.py:801 src/ui/statistics_view.py:830
 msgid "Unknown"
-msgstr "未知"
+msgstr "Sconosciuto"
 
 #: src/ui/components_view.py:640 src/ui/statistics_view.py:797
 #: src/ui/statistics_view.py:985
 msgid "Unable to determine status"
-msgstr "无法确定状态"
+msgstr "Impossibile determinare lo stato"
 
 #: src/ui/database_missing_dialog.py:67
 msgid "Virus Database Required"
-msgstr "需要病毒数据库"
+msgstr "Database Virus Richiesto"
 
 #: src/ui/database_missing_dialog.py:107
 msgid "<b>Virus Database Not Found</b>"
-msgstr "<b>未找到病毒数据库</b>"
+msgstr "<b>Database Virus Non Trovato</b>"
 
 #: src/ui/database_missing_dialog.py:116
 msgid ""
 "ClamAV requires a virus database to scan files. The database needs to be "
 "downloaded before you can perform scans."
 msgstr ""
-"ClamAV 需要一个病毒数据库来扫描文件。在执行扫描之前，需要先下载病毒库。"
+"ClamAV richiede un database virus per scansionare i file. Il database deve "
+"essere scaricato prima di poter eseguire scansioni."
 
 #: src/ui/database_missing_dialog.py:137
 msgid "Download Now"
-msgstr "现在下载"
+msgstr "Scarica Ora"
 
 #: src/ui/file_export.py:222
 msgid "Invalid file path selected"
-msgstr "选定了无效的文件路径"
+msgstr "Percorso file non valido selezionato"
 
 #: src/ui/file_export.py:245
 #, python-brace-format
 msgid "Exported to {filename}"
-msgstr "已导出到 {filename}"
+msgstr "Esportato in {filename}"
 
 #: src/ui/file_export.py:250
 msgid "Permission denied - cannot write to selected location"
-msgstr "权限不够，无法向选定位置写入文件"
+msgstr "Permesso negato - impossibile scrivere nella posizione selezionata"
 
 #: src/ui/file_export.py:253
 #, python-brace-format
 msgid "Error writing file: {error}"
-msgstr "写入文件时出错：{error}"
+msgstr "Errore scrittura file: {error}"
 
 #: src/ui/file_export.py:278
 msgid "Text Files"
-msgstr "文本文件"
+msgstr "File di Testo"
 
 #: src/ui/file_export.py:279
 msgid "CSV Files"
-msgstr "CSV 文件"
+msgstr "File CSV"
 
 #: src/ui/file_export.py:280 src/ui/profile_dialogs.py:1336
 #: src/ui/profile_dialogs.py:1387
 msgid "JSON Files"
-msgstr "JSON 文件"
+msgstr "File JSON"
 
 #: src/ui/file_manager_integration_dialog.py:86
 #: src/ui/preferences/behavior_page.py:282
 msgid "File Manager Integration"
-msgstr "文件管理器集成"
+msgstr "Integrazione Gestore File"
 
 #: src/ui/file_manager_integration_dialog.py:132
 msgid "Add Context Menu Actions"
-msgstr "添加上下文菜单操作"
+msgstr "Aggiungi Azioni Menu Contestuale"
 
 #: src/ui/file_manager_integration_dialog.py:135
 msgid ""
@@ -1981,259 +2028,264 @@ msgid ""
 "menu. This makes it easy to scan files and folders directly from your file "
 "browser."
 msgstr ""
-"ClamUI 可以将“使用 ClamUI 扫描”选项添加到您的文件管理器的右键菜单中。这样，您"
-"就可以直接从文件浏览器中快速扫描文件和文件夹了。"
+"ClamUI può aggiungere opzioni 'Scansiona con ClamUI' al menu click-destro "
+"del tuo gestore file. Questo rende facile scansionare file e cartelle "
+"direttamente dal tuo browser di file."
 
 #: src/ui/file_manager_integration_dialog.py:143
 msgid "What gets installed?"
-msgstr "会安装什么？"
+msgstr "Cosa viene installato?"
 
 #: src/ui/file_manager_integration_dialog.py:146
 msgid ""
 "Small configuration files are added to your user profile. No system files "
 "are modified."
-msgstr "小型配置文件将添加到您的用户配置文件中，不会修改任何系统文件。"
+msgstr ""
+"Piccoli file di configurazione sono aggiunti al tuo profilo utente. Nessun "
+"file di sistema è modificato."
 
 #: src/ui/file_manager_integration_dialog.py:161
 msgid "Available File Managers"
-msgstr "可用的文件管理器"
+msgstr "Gestori File Disponibili"
 
 #: src/ui/file_manager_integration_dialog.py:162
 msgid "Select which file managers to integrate with:"
-msgstr "选择要与之集成的文件管理器："
+msgstr "Seleziona con quali gestori file integrare:"
 
 #: src/ui/file_manager_integration_dialog.py:179
 msgid "No supported file managers detected"
-msgstr "未检测到支持的文件管理器"
+msgstr "Nessun gestore file supportato rilevato"
 
 #: src/ui/file_manager_integration_dialog.py:180
 msgid "ClamUI supports Nemo, Nautilus, and Dolphin file managers."
-msgstr "ClamUI 支持 Nemo、Nautilus 和 Dolphin 文件管理器。"
+msgstr "ClamUI supporta i gestori file Nemo, Nautilus e Dolphin."
 
 #: src/ui/file_manager_integration_dialog.py:210
 #, python-brace-format
 msgid "{description} (installed)"
-msgstr "{description}（installed）"
+msgstr "{description} (installato)"
 
 #: src/ui/file_manager_integration_dialog.py:215
 #, python-brace-format
 msgid "{description} (incomplete - needs repair)"
-msgstr "{description}（不完整，需要修复）"
+msgstr "{description} (incompleto - necessita riparazione)"
 
 #: src/ui/file_manager_integration_dialog.py:267
 msgid "Apply"
-msgstr "应用"
+msgstr "Applica"
 
 #: src/ui/file_manager_integration_dialog.py:337
 #, python-brace-format
 msgid "{count} succeeded"
-msgstr "{count} 个成功"
+msgstr "{count} riuscito(i)"
 
 #: src/ui/file_manager_integration_dialog.py:338
 #, python-brace-format
 msgid "{count} failed"
-msgstr "{count} 个失败"
+msgstr "{count} fallito(i)"
 
 #: src/ui/file_manager_integration_dialog.py:343
 #, python-brace-format
 msgid "{count} installed"
-msgstr "{count} 个已安装"
+msgstr "{count} installato(i)"
 
 #: src/ui/file_manager_integration_dialog.py:345
 #, python-brace-format
 msgid "{count} removed"
-msgstr "{count} 个已移除"
+msgstr "{count} rimosso(i)"
 
 #: src/ui/file_manager_integration_dialog.py:347
 #, python-brace-format
 msgid "{count} repaired"
-msgstr "{count} 个已修复"
+msgstr "{count} riparato(i)"
 
 #: src/ui/fullscreen_dialog.py:36
 msgid "No content to display"
-msgstr "没有要显示的内容"
+msgstr "Nessun contenuto da visualizzare"
 
 #: src/ui/logs_view.py:49
 msgid "Clear All Logs?"
-msgstr "清除所有日志?"
+msgstr "Cancellare Tutti i Log?"
 
 #: src/ui/logs_view.py:51
 msgid ""
 "This will permanently delete all historical logs. This action cannot be "
 "undone."
-msgstr "这会永久删除所有历史记录。此操作不可被撤销。"
+msgstr ""
+"Questo eliminerà permanentemente tutti i log storici. Questa azione non può "
+"essere annullata."
 
 #: src/ui/logs_view.py:105 src/ui/logs_view.py:283
 #: src/ui/scan/target_selector.py:107
 msgid "Clear All"
-msgstr "清除全部"
+msgstr "Cancella Tutto"
 
 #: src/ui/logs_view.py:238 src/ui/logs_view.py:274
 msgid "Historical Logs"
-msgstr "历史记录"
+msgstr "Log Storici"
 
 #: src/ui/logs_view.py:261
 msgid "ClamAV Daemon"
-msgstr "ClamAV 守护进程"
+msgstr "Demone ClamAV"
 
 #: src/ui/logs_view.py:275
 msgid "Previous scan and update operations"
-msgstr "先前的扫描和更新操作"
+msgstr "Operazioni di scansione e aggiornamento precedenti"
 
 #: src/ui/logs_view.py:291
 msgid "Export all logs to JSON"
-msgstr "导出所有日志为 JSON 文件"
+msgstr "Esporta tutti i log in JSON"
 
 #: src/ui/logs_view.py:300
 msgid "Export all logs to CSV"
-msgstr "导出所有日志为 CSV 文件"
+msgstr "Esporta tutti i log in CSV"
 
 #: src/ui/logs_view.py:309
 msgid "Refresh logs"
-msgstr "刷新日志"
+msgstr "Aggiorna log"
 
 #: src/ui/logs_view.py:349
 msgid "No logs yet"
-msgstr "目前还没有日志记录"
+msgstr "Ancora nessun log"
 
 #: src/ui/logs_view.py:350
 msgid "Logs from scans and updates will appear here"
-msgstr "先前的扫描和更新操作会显示在这里"
+msgstr "I log dalle scansioni e dagli aggiornamenti appariranno qui"
 
 #: src/ui/logs_view.py:361
 msgid "Loading logs..."
-msgstr "正在加载日志……"
+msgstr "Caricamento log..."
 
 #: src/ui/logs_view.py:372 src/ui/logs_view.py:843
 msgid "Log Details"
-msgstr "日志详细信息"
+msgstr "Dettagli Log"
 
 #: src/ui/logs_view.py:373
 msgid "Select a log entry above to view details"
-msgstr "请在上方选择一条日志以查看详情"
+msgstr "Seleziona una voce di log sopra per visualizzare i dettagli"
 
 #: src/ui/logs_view.py:393
 msgid "Export to text file"
-msgstr "导出为文本文件"
+msgstr "Esporta in file di testo"
 
 #: src/ui/logs_view.py:402
 msgid "Export to CSV file"
-msgstr "导出为 CSV 文件"
+msgstr "Esporta in file CSV"
 
 #: src/ui/logs_view.py:411
 msgid "Export to JSON file"
-msgstr "导出为 JSON 文件"
+msgstr "Esporta in file JSON"
 
 #: src/ui/logs_view.py:420 src/ui/logs_view.py:492
 msgid "View fullscreen"
-msgstr "全屏查看"
+msgstr "Visualizza a schermo intero"
 
 #: src/ui/logs_view.py:455 src/ui/logs_view.py:718 src/ui/logs_view.py:1168
 msgid "Select a log entry to view details."
-msgstr "请选择一条日志以查看详情。"
+msgstr "Seleziona una voce di log per visualizzare i dettagli."
 
 #: src/ui/logs_view.py:472
 msgid "ClamAV Daemon Logs"
-msgstr "ClamAV 守护进程日志"
+msgstr "Log Demone ClamAV"
 
 #: src/ui/logs_view.py:473
 msgid "Live logs from the clamd daemon"
-msgstr "Clamd 守护进程实时日志"
+msgstr "Log live dal demone clamd"
 
 #: src/ui/logs_view.py:483
 msgid "Export daemon logs to file"
-msgstr "导出守护进程日志为文件"
+msgstr "Esporta log demone su file"
 
 #: src/ui/logs_view.py:503 src/ui/preferences/scanner_page.py:303
 msgid "Daemon Status"
-msgstr "守护进程状态"
+msgstr "Stato Demone"
 
 #: src/ui/logs_view.py:510 src/ui/logs_view.py:1271
 msgid "Start live log updates"
-msgstr "开始实时日志更新"
+msgstr "Avvia aggiornamenti log live"
 
 #: src/ui/logs_view.py:537
 msgid "Daemon logs will appear here."
-msgstr "守护进程日志会显示在此处"
+msgstr "I log del demone appariranno qui."
 
 #: src/ui/logs_view.py:539
 msgid "Click the play button to start live updates."
-msgstr "点击开始按钮以开始实时更新。"
+msgstr "Clicca il pulsante play per avviare gli aggiornamenti live."
 
 #: src/ui/logs_view.py:751
 msgid "SCAN LOG"
-msgstr "扫描日志"
+msgstr "LOG SCANSIONE"
 
 #: src/ui/logs_view.py:753
 msgid "UPDATE LOG"
-msgstr "更新日志"
+msgstr "LOG AGGIORNAMENTO"
 
 #: src/ui/logs_view.py:759
 #, python-brace-format
 msgid "ID: {id}"
-msgstr "ID：{id}"
+msgstr "ID: {id}"
 
 #: src/ui/logs_view.py:760
 #, python-brace-format
 msgid "Timestamp: {timestamp}"
-msgstr "时间戳：{timestamp}"
+msgstr "Marca temporale: {timestamp}"
 
 #: src/ui/logs_view.py:761
 #, python-brace-format
 msgid "Type: {type}"
-msgstr "类型：{type}"
+msgstr "Tipo: {type}"
 
 #: src/ui/logs_view.py:765 src/ui/quarantine_view.py:665
 #, python-brace-format
 msgid "Path: {path}"
-msgstr "路径：{path}"
+msgstr "Percorso: {path}"
 
 #: src/ui/logs_view.py:768
 #, python-brace-format
 msgid "Duration: {duration:.2f} seconds"
-msgstr "用时：{duration:.2f} 秒"
+msgstr "Durata: {duration:.2f} secondi"
 
 #: src/ui/logs_view.py:782
 msgid "Statistics Summary:"
-msgstr "统计摘要："
+msgstr "Riepilogo Statistiche:"
 
 #: src/ui/logs_view.py:787
 #, python-brace-format
 msgid "  Files Scanned: {count}"
-msgstr "  已扫描文件：{count} 个"
+msgstr "  File Scansionati: {count}"
 
 #: src/ui/logs_view.py:794
 #, python-brace-format
 msgid "  Directories Scanned: {count}"
-msgstr "  已扫描的目录：{count} 个"
+msgstr "  Directory Scansionate: {count}"
 
 #: src/ui/logs_view.py:803
 #, python-brace-format
 msgid "{seconds:.2f} seconds"
-msgstr "{seconds:.2f} 秒"
+msgstr "{seconds:.2f} secondi"
 
 #: src/ui/logs_view.py:807
 #, python-brace-format
 msgid "{minutes}m {seconds:.0f}s"
-msgstr "{minutes} 分 {seconds:.0f} 秒"
+msgstr "{minutes}m {seconds:.0f}s"
 
 #: src/ui/logs_view.py:813 src/ui/statistics_view.py:1025
 #, python-brace-format
 msgid "{hours}h {minutes}m"
-msgstr "{hours} 小时 {minutes} 分钟"
+msgstr "{hours}h {minutes}m"
 
 #: src/ui/logs_view.py:814
 #, python-brace-format
 msgid "  Duration: {duration}"
-msgstr "  用时：{duration}"
+msgstr "  Durata: {duration}"
 
 #: src/ui/logs_view.py:819 src/ui/update_view.py:611
 msgid "Summary:"
-msgstr "小结："
+msgstr "Riepilogo:"
 
 #: src/ui/logs_view.py:826
 msgid "Full Output:"
-msgstr "完整输出："
+msgstr "Output Completo:"
 
 #: src/ui/logs_view.py:1247
 msgid ""
@@ -2242,141 +2294,143 @@ msgid ""
 "The daemon is optional and provides faster scanning.\n"
 "You can still use ClamUI for on-demand scanning without it."
 msgstr ""
-"ClamAV 守护程序（clamd）尚未安装。\n"
+"Il demone ClamAV (clamd) non è installato.\n"
 "\n"
-"该守护程序为可选组件，可提供更快的扫描速度。\n"
-"未安装的情况下，您仍可使用 ClamUI 进行按需扫描。"
+"Il demone è opzionale e fornisce scansioni più veloci.\n"
+"Puoi comunque usare ClamUI per scansioni on-demand senza di esso."
 
 #: src/ui/logs_view.py:1266
 msgid "Stop live log updates"
-msgstr "停止实时日志更新"
+msgstr "Ferma aggiornamenti log live"
 
 #: src/ui/pagination.py:179
 #, python-brace-format
 msgid "Showing {displayed} of {total} {label}"
-msgstr "正在显示 {displayed} 个 {label}，共 {total} 个"
+msgstr "Visualizzazione di {displayed} di {total} {label}"
 
 #: src/ui/pagination.py:195
 #, python-brace-format
 msgid "Show {count} More"
-msgstr "再显示 {count} 个"
+msgstr "Mostra Altri {count}"
 
 #: src/ui/pagination.py:205
 #, python-brace-format
 msgid "Show All ({remaining} remaining)"
-msgstr "显示全部（还剩 {remaining} 个）"
+msgstr "Mostra Tutti ({remaining} rimanenti)"
 
 #: src/ui/preferences/base.py:180 src/ui/preferences/base.py:186
 msgid "Show password"
-msgstr "显示密码"
+msgstr "Mostra password"
 
 #: src/ui/preferences/base.py:186
 msgid "Hide password"
-msgstr "隐藏密码"
+msgstr "Nascondi password"
 
 #: src/ui/preferences/base.py:514
 msgid "Requires administrator privileges to modify"
-msgstr "需要管理员权限才能修改"
+msgstr "Richiede privilegi di amministratore per modificare"
 
 #: src/ui/preferences/base.py:529
 msgid "Folder Not Found"
-msgstr "未找到文件夹"
+msgstr "Cartella Non Trovata"
 
 #: src/ui/preferences/base.py:530
 #, python-brace-format
 msgid "The folder '{path}' does not exist."
-msgstr "文件夹 ‘{path}’ 不存在。"
+msgstr "La cartella '{path}' non esiste."
 
 #: src/ui/preferences/base.py:544
 msgid "Error Opening Folder"
-msgstr "打开文件夹时出错"
+msgstr "Errore Apertura Cartella"
 
 #: src/ui/preferences/base.py:545
 #, python-brace-format
 msgid "Could not open folder: {error}"
-msgstr "无法打开文件夹：{error}"
+msgstr "Impossibile aprire la cartella: {error}"
 
 #: src/ui/preferences/base.py:595 src/ui/preferences/save_page.py:175
 #: src/ui/preferences/scanner_page.py:549
 msgid "OK"
-msgstr "确定"
+msgstr "OK"
 
 #: src/ui/preferences/base.py:659
 msgid "File Location"
-msgstr "文件位置"
+msgstr "Posizione File"
 
 #: src/ui/preferences/base.py:670
 msgid "Open Folder"
-msgstr "打开文件夹"
+msgstr "Apri Cartella"
 
 #: src/ui/preferences/base.py:673
 msgid "Open containing folder in file manager"
-msgstr "在文件管理器中打开所在文件夹"
+msgstr "Apri cartella contenente nel gestore file"
 
 #: src/ui/preferences/base.py:694
 msgid "Detect"
-msgstr "检测"
+msgstr "Rileva"
 
 #: src/ui/preferences/base.py:697
 msgid "Auto-detect configuration file location"
-msgstr "自动检测配置文件位置"
+msgstr "Rileva automaticamente la posizione del file di configurazione"
 
 #: src/ui/preferences/base.py:704
 msgid "Browse"
-msgstr "浏览"
+msgstr "Sfoglia"
 
 #: src/ui/preferences/base.py:707
 msgid "Browse for configuration file"
-msgstr "浏览配置文件"
+msgstr "Sfoglia per file di configurazione"
 
 #: src/ui/preferences/behavior_page.py:42
 #: src/ui/preferences/virustotal_page.py:208
 msgid "Always ask"
-msgstr "总是询问"
+msgstr "Chiedi sempre"
 
 #: src/ui/preferences/behavior_page.py:78
 #: src/ui/preferences/virustotal_page.py:202 src/ui/preferences/window.py:50
 msgid "Behavior"
-msgstr "行为"
+msgstr "Comportamento"
 
 #: src/ui/preferences/behavior_page.py:93
 #: src/ui/preferences/behavior_page.py:121
 msgid "Window Behavior"
-msgstr "窗口行为"
+msgstr "Comportamento Finestra"
 
 #: src/ui/preferences/behavior_page.py:96
 msgid ""
 "System tray is not available. Window behavior settings require a system tray "
 "to be active."
-msgstr "系统托盘不可用。窗口行为设置需要一个系统托盘才能生效。"
+msgstr ""
+"L'area di notifica non è disponibile. Le impostazioni del comportamento "
+"della finestra richiedono un'area di notifica attiva."
 
 #: src/ui/preferences/behavior_page.py:122
 msgid "Configure what happens when closing the window"
-msgstr "配置关闭窗口时执行的操作"
+msgstr "Configura cosa succede quando chiudi la finestra"
 
 #: src/ui/preferences/behavior_page.py:126
 msgid "When closing window"
-msgstr "关闭窗口时"
+msgstr "Quando chiudi la finestra"
 
 #: src/ui/preferences/behavior_page.py:128
 msgid "Choose what happens when you close the main window"
-msgstr "配置关闭主窗口时执行的操作"
+msgstr "Scegli cosa succede quando chiudi la finestra principale"
 
 #: src/ui/preferences/behavior_page.py:158
 msgid "Scan Behavior"
-msgstr "扫描行为"
+msgstr "Comportamento Scansione"
 
 #: src/ui/preferences/behavior_page.py:159
 msgid "Configure how scans are displayed"
-msgstr "配置如何显示扫描记录"
+msgstr "Configura come vengono visualizzate le scansioni"
 
 #: src/ui/preferences/behavior_page.py:163
 msgid "Show Live Scan Progress"
-msgstr "显示实时扫描进度"
+msgstr "Mostra Avanzamento Scansione Live"
 
 #: src/ui/preferences/behavior_page.py:165
 msgid "Display files being scanned in real-time with detailed progress"
-msgstr "实时显示正在扫描的文件及详细进度"
+msgstr "Mostra i file in scansione in tempo reale con avanzamento dettagliato"
 
 #: src/ui/preferences/behavior_page.py:183
 #: src/ui/preferences/behavior_page.py:187
@@ -2401,449 +2455,462 @@ msgstr ""
 
 #: src/ui/preferences/behavior_page.py:284
 msgid "Add context menu actions to scan files directly from your file manager"
-msgstr "添加上下文菜单操作以直接从文件管理器中扫描文件"
+msgstr ""
+"Aggiungi azioni menu contestuale per scansionare file direttamente dal tuo "
+"gestore file"
 
 #: src/ui/preferences/behavior_page.py:288
 msgid "Configure Integration"
-msgstr "配置集成"
+msgstr "Configura Integrazione"
 
 #: src/ui/preferences/behavior_page.py:289
 msgid "Install or manage 'Scan with ClamUI' menu actions"
-msgstr "安装或管理“使用 ClamUI 扫描”菜单操作"
+msgstr "Installa o gestisci le azioni del menu 'Scansiona con ClamUI'"
 
 #: src/ui/preferences/database_page.py:73
 msgid "Free malware URL blocklist by abuse.ch, updated every minute"
-msgstr "由 abuse.ch 提供的免费恶意软件 URL 黑名单，每分钟更新一次"
+msgstr ""
+"Lista di blocco URL malware gratuita di abuse.ch, aggiornata ogni minuto"
 
 #: src/ui/preferences/database_page.py:74
 #: src/ui/preferences/database_page.py:106
 msgid "No registration required. Click 'Suggested' above to add."
-msgstr "无需注册。点击上面的“建议”以添加。"
+msgstr ""
+"Nessuna registrazione richiesta. Clicca 'Suggeriti' sopra per aggiungere."
 
 #: src/ui/preferences/database_page.py:82
 msgid "Millions of signatures for zero-day malware, phishing, and spam"
-msgstr "数百万条针对零日恶意软件、网络钓鱼和垃圾邮件的特征库"
+msgstr "Milioni di firme per malware zero-day, phishing e spam"
 
 #: src/ui/preferences/database_page.py:84
 msgid ""
 "Free registration required at securiteinfo.com. URLs contain your personal "
 "API key."
-msgstr "需在 securiteinfo.com 完成免费注册。URL 包含您的私人 API 密钥。"
+msgstr ""
+"Registrazione gratuita richiesta su securiteinfo.com. Gli URL contengono la "
+"tua chiave API personale."
 
 #: src/ui/preferences/database_page.py:93
 msgid "Macro malware, phishing, scam, and spam signatures (hourly updates)"
-msgstr "宏病毒、钓鱼邮件、欺诈邮件和垃圾邮件签名（每小时更新）"
+msgstr "Firme macro malware, phishing, truffe e spam (aggiornamenti orari)"
 
 #: src/ui/preferences/database_page.py:95
 msgid ""
 "Requires 'fangfrisch' or 'clamav-unofficial-sigs' tool. Cannot be added as "
 "custom URL directly."
 msgstr ""
-"需要 ‘fangfrisch’ 或 ‘clamav-unofficial-sigs’ 工具。无法直接作为自定义 URL 添"
-"加。"
+"Richiede lo strumento 'fangfrisch' o 'clamav-unofficial-sigs'. Non può "
+"essere aggiunto come URL personalizzato direttamente."
 
 #: src/ui/preferences/database_page.py:105
 msgid "Hash-based signatures, web shell detection, and general malware"
-msgstr "基于哈希的签名、Web Shell 检测及常规恶意软件"
+msgstr "Firme basate su hash, rilevamento web shell e malware generico"
 
 #: src/ui/preferences/database_page.py:200
 msgid "Database Updates"
-msgstr "数据库更新"
+msgstr "Aggiornamenti Database"
 
 #: src/ui/preferences/database_page.py:222
 #: src/ui/preferences/scanner_page.py:117
 #, python-brace-format
 msgid "Detected: {path}"
-msgstr "检测到的：{path}"
+msgstr "Rilevato: {path}"
 
 #: src/ui/preferences/database_page.py:225
 msgid "No freshclam.conf found in known locations"
-msgstr "未在已知位置中找到 freshclam.conf"
+msgstr "Nessun freshclam.conf trovato nelle posizioni conosciute"
 
 #: src/ui/preferences/database_page.py:239
 #: src/ui/preferences/scanner_page.py:130
 msgid "Configuration File"
-msgstr "配置文件"
+msgstr "File di Configurazione"
 
 #: src/ui/preferences/database_page.py:241
 msgid "freshclam.conf location"
-msgstr "freshclam.conf 位置"
+msgstr "posizione freshclam.conf"
 
 #: src/ui/preferences/database_page.py:277
 #: src/ui/preferences/scanner_page.py:172
 msgid "Configuration files"
-msgstr "配置文件"
+msgstr "File di configurazione"
 
 #: src/ui/preferences/database_page.py:300
 #: src/ui/preferences/scanner_page.py:197
 #, python-brace-format
 msgid "Selected: {path}"
-msgstr "已选择：{path}"
+msgstr "Selezionato: {path}"
 
 #: src/ui/preferences/database_page.py:305
 #: src/ui/preferences/database_page.py:324
 #: src/ui/preferences/scanner_page.py:202
 #: src/ui/preferences/scanner_page.py:221
 msgid "Select Configuration File"
-msgstr "选择配置文件"
+msgstr "Seleziona File di Configurazione"
 
 #: src/ui/preferences/database_page.py:327
 #: src/ui/preferences/scanner_page.py:224
 msgid "_Select"
-msgstr "选择(_S)"
+msgstr "_Seleziona"
 
 #: src/ui/preferences/database_page.py:359
 msgid "Paths"
-msgstr "路径"
+msgstr "Percorsi"
 
 #: src/ui/preferences/database_page.py:360
 msgid "Configure database and log file locations"
-msgstr "配置数据库和日志文件位置"
+msgstr "Configura le posizioni del database e del file di log"
 
 #: src/ui/preferences/database_page.py:365
 msgid "Database Directory"
-msgstr "数据库目录"
+msgstr "Directory Database"
 
 #: src/ui/preferences/database_page.py:375
 msgid "Update Log File"
-msgstr "更新日志文件"
+msgstr "File Log Aggiornamento"
 
 #: src/ui/preferences/database_page.py:385
 msgid "Notify ClamD Config"
-msgstr "ClamD 配置通知"
+msgstr "Notifica Config ClamD"
 
 #: src/ui/preferences/database_page.py:395
 #: src/ui/preferences/scanner_page.py:728
 msgid "Verbose Logging"
-msgstr "详细记录"
+msgstr "Logging Dettagliato"
 
 #: src/ui/preferences/database_page.py:396
 msgid "Enable detailed logging for database updates"
-msgstr "为数据库更新启用详细的日志记录"
+msgstr "Abilita logging dettagliato per gli aggiornamenti del database"
 
 #: src/ui/preferences/database_page.py:402
 #: src/ui/preferences/scanner_page.py:735
 msgid "Syslog Logging"
-msgstr "Syslog 日志记录"
+msgstr "Logging Syslog"
 
 #: src/ui/preferences/database_page.py:403
 #: src/ui/preferences/scanner_page.py:736
 msgid "Send log messages to system log"
-msgstr "将日志消息发送到系统日志"
+msgstr "Invia messaggi di log al log di sistema"
 
 #: src/ui/preferences/database_page.py:424
 msgid "Update Behavior"
-msgstr "更新行为"
+msgstr "Comportamento Aggiornamento"
 
 #: src/ui/preferences/database_page.py:425
 msgid "Configure how often and where to check for updates"
-msgstr "配置更新检查的频率和位置"
+msgstr "Configura quanto spesso e dove controllare gli aggiornamenti"
 
 #: src/ui/preferences/database_page.py:433
 msgid "Checks Per Day"
-msgstr "每日检查"
+msgstr "Controlli Al Giorno"
 
 #: src/ui/preferences/database_page.py:434
 msgid "Number of update checks per day (0 to disable)"
-msgstr "每日检查的次数（设为0可禁用）"
+msgstr "Numero di controlli aggiornamento al giorno (0 per disabilitare)"
 
 #: src/ui/preferences/database_page.py:445
 msgid "Database Mirror"
-msgstr "数据库镜像站"
+msgstr "Mirror Database"
 
 #: src/ui/preferences/database_page.py:473
 msgid "Custom Signature Databases"
-msgstr "带自定义签名的数据库"
+msgstr "Database Firme Personalizzati"
 
 #: src/ui/preferences/database_page.py:476
 msgid ""
 "Third-party signature URLs (e.g., SecuriteInfo). Paste URLs or config lines "
 "- 'DatabaseCustomURL' prefix auto-stripped."
 msgstr ""
-"第三方签名 URL（例如 SecuriteInfo）。粘贴 URL 或配置行 - ‘DatabaseCustomURL’ "
-"前缀将自动去除。"
+"URL firme di terze parti (es., SecuriteInfo). Incolla URL o righe di config "
+"- prefisso 'DatabaseCustomURL' rimosso automaticamente."
 
 #: src/ui/preferences/database_page.py:488
 msgid "Add URL(s)"
-msgstr "添加 URL"
+msgstr "Aggiungi URL"
 
 #: src/ui/preferences/database_page.py:489
 msgid "Paste URL or multi-line config block"
-msgstr "粘贴 URL 或多行配置块"
+msgstr "Incolla URL o blocco di config multi-riga"
 
 #: src/ui/preferences/database_page.py:499
 #: src/ui/preferences/exclusions_page.py:130 src/ui/profile_dialogs.py:719
 msgid "Add"
-msgstr "添加"
+msgstr "Aggiungi"
 
 #: src/ui/preferences/database_page.py:500
 msgid "Add custom signature URL(s)"
-msgstr "添加带自定义签名的 URL"
+msgstr "Aggiungi URL firme personalizzate"
 
 #: src/ui/preferences/database_page.py:508
 msgid "Suggested"
-msgstr "建议"
+msgstr "Suggeriti"
 
 #: src/ui/preferences/database_page.py:510
 msgid "Add free community signature databases (URLhaus, InterServer)"
-msgstr "添加免费社区签名数据库（URLhaus、InterServer）"
+msgstr "Aggiungi database firme comunitari gratuiti (URLhaus, InterServer)"
 
 #: src/ui/preferences/database_page.py:565
 msgid "Remove this URL"
-msgstr "移除此 URL"
+msgstr "Rimuovi questo URL"
 
 #: src/ui/preferences/database_page.py:630
 msgid "Popular Signature Providers"
-msgstr "热门签名提供商"
+msgstr "Fornitori Firme Popolari"
 
 #: src/ui/preferences/database_page.py:633
 msgid ""
 "Third-party databases can significantly improve detection rates. Providers "
 "marked with a key icon require free registration."
-msgstr "第三方数据库可显著提升检测率。带有钥匙图标的提供商需要免费注册。"
+msgstr ""
+"I database di terze parti possono migliorare significativamente i tassi di "
+"rilevamento. I fornitori contrassegnati con un'icona chiave richiedono "
+"registrazione gratuita."
 
 #: src/ui/preferences/database_page.py:645
 msgid "Registration required"
-msgstr "需要注册"
+msgstr "Registrazione richiesta"
 
 #: src/ui/preferences/database_page.py:659
 msgid "Free registration required"
-msgstr "需要免费注册"
+msgstr "Registrazione gratuita richiesta"
 
 #: src/ui/preferences/database_page.py:669
 msgid "Tip: fangfrisch"
-msgstr "提示：fangfrisch"
+msgstr "Suggerimento: fangfrisch"
 
 #: src/ui/preferences/database_page.py:672
 msgid ""
 "For SaneSecurity and other rsync-based providers, install the 'fangfrisch' "
 "tool which handles downloading and updating signatures automatically."
 msgstr ""
-"对于 SaneSecurity 和其他基于 rsync 的提供商，安装‘fangfrisch’工具，它可以自动"
-"下载和更新签名。"
+"Per SaneSecurity e altri fornitori basati su rsync, installa lo strumento "
+"'fangfrisch' che gestisce il download e l'aggiornamento delle firme "
+"automaticamente."
 
 #: src/ui/preferences/database_page.py:704
 msgid "Proxy Settings"
-msgstr "代理设置"
+msgstr "Impostazioni Proxy"
 
 #: src/ui/preferences/database_page.py:705
 msgid "Configure HTTP proxy for database downloads (optional)"
-msgstr "为数据库下载配置 HTTP 代理（可选）"
+msgstr "Configura proxy HTTP per i download del database (opzionale)"
 
 #: src/ui/preferences/database_page.py:710
 msgid "Proxy Server"
-msgstr "代理服务器"
+msgstr "Server Proxy"
 
 #: src/ui/preferences/database_page.py:723
 msgid "Proxy Port"
-msgstr "代理服务器端口"
+msgstr "Porta Proxy"
 
 #: src/ui/preferences/database_page.py:724
 msgid "Proxy server port number (0 to disable)"
-msgstr "代理服务器端口号（设置0可禁用）"
+msgstr "Numero porta server proxy (0 per disabilitare)"
 
 #: src/ui/preferences/database_page.py:735
 msgid "Proxy Username"
-msgstr "代理服务器用户名"
+msgstr "Username Proxy"
 
 #: src/ui/preferences/database_page.py:747
 msgid "Proxy Password"
-msgstr "代理服务器密码"
+msgstr "Password Proxy"
 
 #: src/ui/preferences/debug_page.py:51
 msgid "Verbose debugging information"
-msgstr "详细调试信息"
+msgstr "Informazioni debug dettagliate"
 
 #: src/ui/preferences/debug_page.py:52
 msgid "General operational messages"
-msgstr "常规操作信息"
+msgstr "Messaggi operativi generali"
 
 #: src/ui/preferences/debug_page.py:53
 msgid "Warnings and errors only (recommended)"
-msgstr "仅警告和错误（推荐）"
+msgstr "Solo avvisi ed errori (consigliato)"
 
 #: src/ui/preferences/debug_page.py:54
 msgid "Errors only"
-msgstr "仅错误"
+msgstr "Solo errori"
 
 #: src/ui/preferences/debug_page.py:82 src/ui/preferences/window.py:58
 msgid "Debug"
-msgstr "调试"
+msgstr "Debug"
 
 #: src/ui/preferences/debug_page.py:108
 msgid "Logging Settings"
-msgstr "日志设置"
+msgstr "Impostazioni Logging"
 
 #: src/ui/preferences/debug_page.py:111
 msgid ""
 "Configure debug logging for troubleshooting. Higher levels produce more "
 "detailed logs but use more disk space."
 msgstr ""
-"配置调试日志以进行故障排查。级别越高，日志越详细，但占用的磁盘空间也越多。"
+"Configura il logging debug per la risoluzione dei problemi. Livelli più alti "
+"producono log più dettagliati ma usano più spazio disco."
 
 #: src/ui/preferences/debug_page.py:118
 msgid "Log Level"
-msgstr "日志级别"
+msgstr "Livello Log"
 
 #: src/ui/preferences/debug_page.py:119
 msgid "Set the verbosity of debug logs"
-msgstr "设置日志的详尽程度"
+msgstr "Imposta la verbosità dei log di debug"
 
 #: src/ui/preferences/debug_page.py:143
 msgid "Log File Location"
-msgstr "日志文件位置"
+msgstr "Posizione File Log"
 
 #: src/ui/preferences/debug_page.py:151
 msgid "Open"
-msgstr "打开"
+msgstr "Apri"
 
 #: src/ui/preferences/debug_page.py:154
 msgid "Open log folder in file manager"
-msgstr "在文件管理器中打开日志文件夹"
+msgstr "Apri cartella log nel gestore file"
 
 #: src/ui/preferences/debug_page.py:170
 msgid "Log Management"
-msgstr "日志管理"
+msgstr "Gestione Log"
 
 #: src/ui/preferences/debug_page.py:171
 msgid "Export logs for sharing or clear them to free disk space."
-msgstr "导出日志以供分享，或清除日志以回收磁盘空间"
+msgstr ""
+"Esporta log per la condivisione o cancellali per liberare spazio disco."
 
 #: src/ui/preferences/debug_page.py:175
 msgid "Current Log Size"
-msgstr "当前日志大小"
+msgstr "Dimensione Log Corrente"
 
 #: src/ui/preferences/debug_page.py:186
 msgid "Refresh size"
-msgstr "刷新大小"
+msgstr "Aggiorna dimensione"
 
 #: src/ui/preferences/debug_page.py:194 src/ui/preferences/debug_page.py:641
 msgid "Export Logs"
-msgstr "导出日志"
+msgstr "Esporta Log"
 
 #: src/ui/preferences/debug_page.py:195
 msgid "Save all log files to a ZIP archive for sharing"
-msgstr "将所有日志文件保存到 ZIP 压缩包以供分享"
+msgstr "Salva tutti i file di log in un archivio ZIP per la condivisione"
 
 #: src/ui/preferences/debug_page.py:202
 msgid "Export"
-msgstr "导出"
+msgstr "Esporta"
 
 #: src/ui/preferences/debug_page.py:205
 msgid "Export logs to ZIP file"
-msgstr "导出日志为 ZIP 文件"
+msgstr "Esporta log in file ZIP"
 
 #: src/ui/preferences/debug_page.py:213 src/ui/preferences/debug_page.py:662
 msgid "Clear Logs"
-msgstr "清除日志"
+msgstr "Cancella Log"
 
 #: src/ui/preferences/debug_page.py:214
 msgid "Delete all log files to free disk space"
-msgstr "删除所有日志文件以回收磁盘空间"
+msgstr "Elimina tutti i file di log per liberare spazio disco"
 
 #: src/ui/preferences/debug_page.py:221
 msgid "Clear"
-msgstr "清除"
+msgstr "Cancella"
 
 #: src/ui/preferences/debug_page.py:224
 msgid "Delete all log files"
-msgstr "删除所有日志文件"
+msgstr "Elimina tutti i file di log"
 
 #: src/ui/preferences/debug_page.py:240
 msgid "System Information"
-msgstr "系统信息"
+msgstr "Informazioni di Sistema"
 
 #: src/ui/preferences/debug_page.py:241
 msgid "Useful information for troubleshooting and bug reports."
-msgstr "对故障排除和错误报告有用的信息。"
+msgstr ""
+"Informazioni utili per la risoluzione dei problemi e le segnalazioni di bug."
 
 #: src/ui/preferences/debug_page.py:245
 msgid "Installation Type"
-msgstr "安装方式"
+msgstr "Tipo di Installazione"
 
 #: src/ui/preferences/debug_page.py:246
 msgid "Detecting..."
-msgstr "正在检测……"
+msgstr "Rilevamento in corso..."
 
 #: src/ui/preferences/debug_page.py:263
 msgid "Distribution"
-msgstr "发行版"
+msgstr "Distribuzione"
 
 #: src/ui/preferences/debug_page.py:273
 msgid "Desktop Environment"
-msgstr "桌面环境"
+msgstr "Ambiente Desktop"
 
 #: src/ui/preferences/debug_page.py:283
 msgid "Python Version"
-msgstr "Python 版本"
+msgstr "Versione Python"
 
 #: src/ui/preferences/debug_page.py:293
 msgid "GTK Version"
-msgstr "GTK 版本"
+msgstr "Versione GTK"
 
 #: src/ui/preferences/debug_page.py:303
 msgid "Copy System Info"
-msgstr "复制系统信息"
+msgstr "Copia Info Sistema"
 
 #: src/ui/preferences/debug_page.py:304
 msgid "Copy all system information to clipboard"
-msgstr "复制所有系统信息到剪贴板"
+msgstr "Copia tutte le informazioni di sistema negli appunti"
 
 #: src/ui/preferences/debug_page.py:311
 msgid "Copy"
-msgstr "复制"
+msgstr "Copia"
 
 #: src/ui/preferences/debug_page.py:314
 msgid "Copy system information to clipboard"
-msgstr "复制系统信息到剪贴板"
+msgstr "Copia informazioni di sistema negli appunti"
 
 #: src/ui/preferences/debug_page.py:483
 msgid "ClamUI System Information"
-msgstr "ClamUI System Information"
+msgstr "Informazioni di Sistema ClamUI"
 
 #: src/ui/preferences/debug_page.py:485
 #, python-brace-format
 msgid "Installation Type: {value}"
-msgstr "Installation Type: {value}"
+msgstr "Tipo di Installazione: {value}"
 
 #: src/ui/preferences/debug_page.py:486
 #, python-brace-format
 msgid "Distribution: {value}"
-msgstr "Distribution: {value}"
+msgstr "Distribuzione: {value}"
 
 #: src/ui/preferences/debug_page.py:487
 #, python-brace-format
 msgid "Desktop Environment: {value}"
-msgstr "Desktop Environment: {value}"
+msgstr "Ambiente Desktop: {value}"
 
 #: src/ui/preferences/debug_page.py:488
 #, python-brace-format
 msgid "Python Version: {value}"
-msgstr "Python Version: {value}"
+msgstr "Versione Python: {value}"
 
 #: src/ui/preferences/debug_page.py:489
 #, python-brace-format
 msgid "GTK Version: {value}"
-msgstr "GTK Version: {value}"
+msgstr "Versione GTK: {value}"
 
 #: src/ui/preferences/debug_page.py:490
 #, python-brace-format
 msgid "Platform: {value}"
-msgstr "Platform: {value}"
+msgstr "Piattaforma: {value}"
 
 #: src/ui/preferences/debug_page.py:491
 #, python-brace-format
 msgid "Architecture: {value}"
-msgstr "Architecture: {value}"
+msgstr "Architettura: {value}"
 
 #: src/ui/preferences/debug_page.py:500
 msgid "System information copied to clipboard"
-msgstr "系统信息已复制到剪贴板"
+msgstr "Informazioni di sistema copiate negli appunti"
 
 #: src/ui/preferences/debug_page.py:563
 #, python-brace-format
 msgid "{count} bytes"
-msgstr "{count} 字节"
+msgstr "{count} byte"
 
 #: src/ui/preferences/debug_page.py:565
 #, python-brace-format
@@ -2859,350 +2926,356 @@ msgstr "{size} MB"
 #, python-brace-format
 msgid "{count} file"
 msgid_plural "{count} files"
-msgstr[0] "{count} 个文件"
+msgstr[0] "{count} file"
+msgstr[1] "{count} file"
 
 #: src/ui/preferences/debug_page.py:575
 #, python-brace-format
 msgid "{size} ({files})"
-msgstr "{size}（{files}）"
+msgstr "{size} ({files})"
 
 #: src/ui/preferences/debug_page.py:593
 msgid "No Logs to Export"
-msgstr "没有日志可供导出"
+msgstr "Nessun Log da Esportare"
 
 #: src/ui/preferences/debug_page.py:595
 msgid ""
 "There are no log files to export. Logs will be created when debug logging is "
 "enabled and the application runs."
-msgstr "没有日志可供导出。当启用调试日志记录并且应用程序运行时，将创建日志。"
+msgstr ""
+"Non ci sono file di log da esportare. I log verranno creati quando il "
+"logging debug è abilitato e l'applicazione è in esecuzione."
 
 #: src/ui/preferences/device_scan_page.py:88 src/ui/preferences/window.py:55
 msgid "Device Scan"
-msgstr "设备扫描"
+msgstr "Scansione Dispositivo"
 
 #: src/ui/preferences/device_scan_page.py:109
 msgid "General"
-msgstr "一般"
+msgstr "Generale"
 
 #: src/ui/preferences/device_scan_page.py:110
 msgid "Automatically scan storage devices when they are connected"
-msgstr "当存储设备连接时自动扫描"
+msgstr ""
+"Scansiona automaticamente i dispositivi di archiviazione quando sono "
+"collegati"
 
 #: src/ui/preferences/device_scan_page.py:113
 msgid "Enable Device Auto-Scan"
-msgstr "启用自动扫描设备"
+msgstr "Abilita Scansione Automatica Dispositivo"
 
 #: src/ui/preferences/device_scan_page.py:114
 msgid "Scan newly mounted devices in the background"
-msgstr "在后台扫描新挂载的设备"
+msgstr "Scansiona i dispositivi appena montati in background"
 
 #: src/ui/preferences/device_scan_page.py:134
 msgid "Device Types"
-msgstr "设备类型"
+msgstr "Tipi di Dispositivo"
 
 #: src/ui/preferences/device_scan_page.py:135
 msgid "Select which types of devices to scan automatically"
-msgstr "选择要自动扫描的设备类型"
+msgstr "Seleziona quali tipi di dispositivi scansionare automaticamente"
 
 #: src/ui/preferences/device_scan_page.py:163
 msgid "Options"
-msgstr "选项"
+msgstr "Opzioni"
 
 #: src/ui/preferences/device_scan_page.py:164
 msgid "Configure device scan behavior"
-msgstr "配置设备扫描行为"
+msgstr "Configura il comportamento della scansione dispositivo"
 
 #: src/ui/preferences/device_scan_page.py:168
 msgid "Max Device Size (GB)"
-msgstr "最大设备大小（GB）"
+msgstr "Dimensione Massima Dispositivo (GB)"
 
 #: src/ui/preferences/device_scan_page.py:169
 msgid "Skip devices larger than this (0 = no limit)"
-msgstr "当设备大小超过此值时跳过（0 = 无限制）"
+msgstr "Salta dispositivi più grandi di questo (0 = nessun limite)"
 
 #: src/ui/preferences/device_scan_page.py:187
 msgid "Scan Delay (seconds)"
-msgstr "扫描延迟（秒）"
+msgstr "Ritardo Scansione (secondi)"
 
 #: src/ui/preferences/device_scan_page.py:188
 msgid "Wait before starting scan after device is mounted"
-msgstr "挂载设备后等待，然后开始扫描"
+msgstr "Attendi prima di avviare la scansione dopo il mount del dispositivo"
 
 #: src/ui/preferences/device_scan_page.py:204
 msgid "Auto-Quarantine Threats"
-msgstr "自动隔离威胁"
+msgstr "Quarantena Automatica Minacce"
 
 #: src/ui/preferences/device_scan_page.py:205
 msgid "Automatically move detected threats to quarantine"
-msgstr "自动将检测到的威胁移动到隔离区"
+msgstr "Sposta automaticamente le minacce rilevate in quarantena"
 
 #: src/ui/preferences/device_scan_page.py:219
 msgid "Notifications"
-msgstr "通知"
+msgstr "Notifiche"
 
 #: src/ui/preferences/device_scan_page.py:220
 msgid "Show desktop notifications for device scan events"
-msgstr "显示设备扫描事件的桌面通知"
+msgstr "Mostra notifiche desktop per gli eventi di scansione dispositivo"
 
 #: src/ui/preferences/device_scan_page.py:234
 #: src/ui/preferences/scheduled_page.py:173
 msgid "Skip on Battery"
-msgstr "电池供电时跳过扫描"
+msgstr "Salta su Batteria"
 
 #: src/ui/preferences/device_scan_page.py:235
 msgid "Do not scan devices when running on battery power"
-msgstr "电池供电时不要扫描设备"
+msgstr "Non scansionare i dispositivi quando in esecuzione con batteria"
 
 #: src/ui/preferences/exclusions_page.py:27
 msgid "Node.js dependencies"
-msgstr "Node.js 依赖项"
+msgstr "Dipendenze Node.js"
 
 #: src/ui/preferences/exclusions_page.py:33
 msgid "Git repository data"
-msgstr "Git 仓库数据"
+msgstr "Dati repository Git"
 
 #: src/ui/preferences/exclusions_page.py:39
 msgid "Python virtual environment"
-msgstr "Python 虚拟环境"
+msgstr "Ambiente virtuale Python"
 
 #: src/ui/preferences/exclusions_page.py:45
 msgid "Build output directory"
-msgstr "构建输出目录"
+msgstr "Directory output build"
 
 #: src/ui/preferences/exclusions_page.py:51
 msgid "Distribution output directory"
-msgstr "分发输出目录"
+msgstr "Directory output distribuzione"
 
 #: src/ui/preferences/exclusions_page.py:57
 msgid "Python bytecode cache"
-msgstr "Python 字节码缓存"
+msgstr "Cache bytecode Python"
 
 #: src/ui/preferences/exclusions_page.py:99 src/ui/preferences/window.py:51
 #: src/ui/profile_dialogs.py:234 src/ui/profile_dialogs.py:590
 msgid "Exclusions"
-msgstr "排除项"
+msgstr "Esclusioni"
 
 #: src/ui/preferences/exclusions_page.py:105
 msgid "Preset Exclusions (Auto-Saved)"
-msgstr "预设排除项（自动保存）"
+msgstr "Esclusioni Preimpostate (Salvate Auto)"
 
 #: src/ui/preferences/exclusions_page.py:106
 msgid "Common patterns to exclude. Auto-saved."
-msgstr "要排除的常见模式。更改会自动保存。"
+msgstr "Pattern comuni da escludere. Salvati automaticamente."
 
 #: src/ui/preferences/exclusions_page.py:120
 msgid "Custom Exclusions (Auto-Saved)"
-msgstr "自定义排除项（自动保存）"
+msgstr "Esclusioni Personalizzate (Salvate Auto)"
 
 #: src/ui/preferences/exclusions_page.py:121
 msgid "Your exclusion patterns. Auto-saved."
-msgstr "您的排除模式。更改会自动保存。"
+msgstr "I tuoi pattern di esclusione. Salvati automaticamente."
 
 #: src/ui/preferences/exclusions_page.py:125
 msgid "Add Pattern (e.g., /path/to/exclude or *.tmp)"
-msgstr "添加模式（如 /path/to/exclude 或 *.tmp）"
+msgstr "Aggiungi Pattern (es., /percorso/da/escludere o *.tmp)"
 
 #: src/ui/preferences/exclusions_page.py:132
 msgid "Add custom exclusion pattern"
-msgstr "添加自定义排除模式"
+msgstr "Aggiungi pattern di esclusione personalizzato"
 
 #: src/ui/preferences/exclusions_page.py:179
 msgid "Remove exclusion"
-msgstr "移除模式"
+msgstr "Rimuovi esclusione"
 
 #: src/ui/preferences/onaccess_page.py:71
 msgid "On Access"
-msgstr "实时扫描"
+msgstr "All'Accesso"
 
 #: src/ui/preferences/onaccess_page.py:94
 #: src/ui/preferences/scanner_page.py:149
 msgid "Configuration Status"
-msgstr "配置状态"
+msgstr "Stato Configurazione"
 
 #: src/ui/preferences/onaccess_page.py:96
 msgid "On Access Configuration"
-msgstr "实时扫描配置"
+msgstr "Configurazione All'Accesso"
 
 #: src/ui/preferences/onaccess_page.py:97
 msgid "clamd.conf not found - On Access settings unavailable"
-msgstr "未找到 clamd.conf - 实时扫描设置不可用"
+msgstr "clamd.conf non trovato - Impostazioni All'Accesso non disponibili"
 
 #: src/ui/preferences/onaccess_page.py:118
 msgid "Monitored Paths"
-msgstr "监控路径"
+msgstr "Percorsi Monitorati"
 
 #: src/ui/preferences/onaccess_page.py:119
 msgid "Directories to monitor. Comma-separated."
-msgstr "需要监控的目录，用英文逗号分隔。"
+msgstr "Directory da monitorare. Separate da virgola."
 
 #: src/ui/preferences/onaccess_page.py:124
 msgid "Include Paths"
-msgstr "包含路径"
+msgstr "Includi Percorsi"
 
 #: src/ui/preferences/onaccess_page.py:134
 msgid "Exclude Paths"
-msgstr "排除路径"
+msgstr "Escludi Percorsi"
 
 #: src/ui/preferences/onaccess_page.py:161
 msgid "Behavior Settings"
-msgstr "行为设置"
+msgstr "Impostazioni Comportamento"
 
 #: src/ui/preferences/onaccess_page.py:162
 msgid "On-Access scanning behavior"
-msgstr "实时扫描行为"
+msgstr "Comportamento scansione All'Accesso"
 
 #: src/ui/preferences/onaccess_page.py:167
 msgid "Prevention Mode"
-msgstr "保护模式"
+msgstr "Modalità Prevenzione"
 
 #: src/ui/preferences/onaccess_page.py:168
 msgid "Block access to infected files"
-msgstr "阻止对受感染文件的访问"
+msgstr "Blocca l'accesso ai file infetti"
 
 #: src/ui/preferences/onaccess_page.py:174
 msgid "Extra Scanning"
-msgstr "额外扫描"
+msgstr "Scansione Extra"
 
 #: src/ui/preferences/onaccess_page.py:175
 msgid "Monitor file creation/moves via inotify"
-msgstr "通过 inotify 监控文件的创建或移动"
+msgstr "Monitora creazione/spostamento file via inotify"
 
 #: src/ui/preferences/onaccess_page.py:181
 msgid "Deny on Error"
-msgstr "出错时拒绝访问"
+msgstr "Nega su Errore"
 
 #: src/ui/preferences/onaccess_page.py:182
 msgid "Deny access when scan fails (requires Prevention)"
-msgstr "扫描失败时拒绝访问（需要开启“保护模式”）"
+msgstr "Nega accesso quando la scansione fallisce (richiede Prevenzione)"
 
 #: src/ui/preferences/onaccess_page.py:188
 msgid "Disable DDD"
-msgstr "禁用递归"
+msgstr "Disabilita DDD"
 
 #: src/ui/preferences/onaccess_page.py:189
 msgid "Disable Directory Descent Detection"
-msgstr "禁用目录递归检测"
+msgstr "Disabilita Rilevamento Discesa Directory"
 
 #: src/ui/preferences/onaccess_page.py:212
 msgid "Performance Settings"
-msgstr "性能设置"
+msgstr "Impostazioni Prestazioni"
 
 #: src/ui/preferences/onaccess_page.py:213
 msgid "Scanning limits and performance"
-msgstr "扫描限制和性能"
+msgstr "Limiti di scansione e prestazioni"
 
 #: src/ui/preferences/onaccess_page.py:218
 msgid "Max Threads"
-msgstr "最大线程数"
+msgstr "Thread Max"
 
 #: src/ui/preferences/onaccess_page.py:219
 msgid "Maximum number of scanning threads"
-msgstr "最大扫描线程数"
+msgstr "Numero massimo di thread di scansione"
 
 #: src/ui/preferences/onaccess_page.py:230
 #: src/ui/preferences/scanner_page.py:650
 msgid "Max File Size (MB)"
-msgstr "最大文件大小（MB）"
+msgstr "Dimensione Massima File (MB)"
 
 #: src/ui/preferences/onaccess_page.py:231
 #: src/ui/preferences/scanner_page.py:651
 msgid "Maximum file size to scan (0 = unlimited)"
-msgstr "要扫描的最大文件大小（0 = 无限制）"
+msgstr "Dimensione massima file da scansionare (0 = illimitato)"
 
 #: src/ui/preferences/onaccess_page.py:242
 msgid "Curl Timeout (seconds)"
-msgstr "Curl 超时时间（秒）"
+msgstr "Timeout Curl (secondi)"
 
 #: src/ui/preferences/onaccess_page.py:243
 msgid "Timeout for remote scanning operations (0 = disabled)"
-msgstr "远程扫描操作的超时时间（0 = 禁用）"
+msgstr "Timeout per operazioni di scansione remota (0 = disabilitato)"
 
 #: src/ui/preferences/onaccess_page.py:254
 msgid "Retry Attempts"
-msgstr "重试次数"
+msgstr "Tentativi di Riprova"
 
 #: src/ui/preferences/onaccess_page.py:255
 msgid "Number of retry attempts when scan fails"
-msgstr "扫描失败时的重试次数"
+msgstr "Numero di tentativi di ripetizione quando la scansione fallisce"
 
 #: src/ui/preferences/onaccess_page.py:285
 msgid "Scan Loop Prevention"
-msgstr "扫描循环预防"
+msgstr "Prevenzione Ciclo Scansione"
 
 #: src/ui/preferences/onaccess_page.py:286
 msgid "CRITICAL: Set at least one to prevent infinite loops"
-msgstr "重要：至少设置一项以防止无限循环"
+msgstr "CRITICO: Imposta almeno uno per prevenire cicli infiniti"
 
 #: src/ui/preferences/onaccess_page.py:291
 msgid "Required Configuration"
-msgstr "必要配置"
+msgstr "Configurazione Richiesta"
 
 #: src/ui/preferences/onaccess_page.py:292
 msgid "Exclude clamav user or UID to prevent scan loops"
-msgstr "排除 clamav 用户或 UID 以防止扫描循环"
+msgstr "Escludi utente clamav o UID per prevenire cicli di scansione"
 
 #: src/ui/preferences/onaccess_page.py:303
 msgid "Exclude Username"
-msgstr "排除用户名"
+msgstr "Escludi Username"
 
 #: src/ui/preferences/onaccess_page.py:313
 msgid "Exclude User ID"
-msgstr "排除用户 ID"
+msgstr "Escludi User ID"
 
 #: src/ui/preferences/onaccess_page.py:314
 msgid "User ID to exclude from On-Access scanning"
-msgstr "实时扫描要排除的用户 ID"
+msgstr "User ID da escludere dalla scansione All'Accesso"
 
 #: src/ui/preferences/onaccess_page.py:325
 msgid "Exclude Root User"
-msgstr "排除 root 用户"
+msgstr "Escludi Utente Root"
 
 #: src/ui/preferences/onaccess_page.py:326
 msgid "Exclude root (UID 0) from On-Access scanning"
-msgstr "实时扫描排除 root（UID 0）"
+msgstr "Escludi root (UID 0) dalla scansione All'Accesso"
 
 #: src/ui/preferences/save_page.py:197 src/ui/preferences/save_page.py:244
 msgid "Save & Apply"
-msgstr "保存并应用"
+msgstr "Salva & Applica"
 
 #: src/ui/preferences/save_page.py:203
 msgid "Save Behavior"
-msgstr "保存行为"
+msgstr "Comportamento Salva"
 
 #: src/ui/preferences/save_page.py:207
 msgid "Auto-Saved"
-msgstr "自动保存"
+msgstr "Salvato Auto"
 
 #: src/ui/preferences/save_page.py:208
 msgid "Scan Backend, Exclusions"
-msgstr "扫描后端，排除项"
+msgstr "Backend Scansione, Esclusioni"
 
 #: src/ui/preferences/save_page.py:216
 msgid "Manual Save Required"
-msgstr "需要手动保存"
+msgstr "Salvataggio Manuale Richiesto"
 
 #: src/ui/preferences/save_page.py:220
-#, fuzzy
 msgid ""
 "Database Updates, Scanner, On-Access, Scheduled Scans. When needed, you will "
 "be asked for administrator permission once."
-msgstr "数据库更新，扫描程序，实时扫描，定期扫描"
+msgstr ""
+"Aggiornamenti Database, Scanner, All'Accesso, Scansioni Programmate. Quando "
+"necessario, ti verrà chiesto il permesso di amministratore una volta."
 
 #: src/ui/preferences/save_page.py:234
 msgid "Apply Configuration"
-msgstr "应用配置"
+msgstr "Applica Configurazione"
 
 #: src/ui/preferences/save_page.py:238
 msgid "Save Configuration"
-msgstr "保存配置"
+msgstr "Salva Configurazione"
 
 #: src/ui/preferences/save_page.py:239
 msgid "Apply all pending changes at once."
-msgstr ""
+msgstr "Applica tutte le modifiche in sospeso in una volta."
 
 #: src/ui/preferences/save_page.py:284 src/ui/preferences/save_page.py:308
 msgid "Configuration Error"
-msgstr "配置错误"
+msgstr "Errore Configurazione"
 
 #: src/ui/preferences/save_page.py:286
 msgid ""
@@ -3215,18 +3288,18 @@ msgid ""
 "\n"
 "Check the application logs for details."
 msgstr ""
-"无法保存 freshclam 设置：配置加载失败。\n"
+"Impossibile salvare le impostazioni freshclam: Configurazione non caricata.\n"
 "\n"
-"可能原因：\n"
-"- 配置文件缺失\n"
-"- 权限不足\n"
-"- 磁盘空间问题（Flatpak 环境）\n"
+"Questo può essere dovuto a:\n"
+"- File di configurazione mancante\n"
+"- Permessi insufficienti\n"
+"- Problemi di spazio disco (Flatpak)\n"
 "\n"
-"详情请查看应用日志。"
+"Controlla i log dell'applicazione per i dettagli."
 
 #: src/ui/preferences/save_page.py:300 src/ui/preferences/save_page.py:320
 msgid "Validation Error"
-msgstr "验证失败"
+msgstr "Errore di Validazione"
 
 #: src/ui/preferences/save_page.py:310
 #, python-brace-format
@@ -3235,331 +3308,340 @@ msgid ""
 "\n"
 "Check that {path} exists and is readable."
 msgstr ""
-"无法保存 clamd 设置：无法加载配置。\n"
+"Impossibile salvare le impostazioni clamd: Configurazione non caricata.\n"
 "\n"
-"请检查 {path} 是否存在并且可读。"
+"Controlla che {path} esista e sia leggibile."
 
 #: src/ui/preferences/save_page.py:435
 msgid "Configuration Saved"
-msgstr "已保存配置"
+msgstr "Configurazione Salvata"
 
 #: src/ui/preferences/save_page.py:436
 msgid "Configuration changes have been applied successfully."
-msgstr "已成功应用配置更改。"
+msgstr "Le modifiche alla configurazione sono state applicate con successo."
 
 #: src/ui/preferences/save_page.py:441
 msgid "Save Failed"
-msgstr "保存失败"
+msgstr "Salvataggio Fallito"
 
 #: src/ui/preferences/scanner_page.py:95
 msgid "Scanner Settings"
-msgstr "扫描程序设置"
+msgstr "Impostazioni Scanner"
 
 #: src/ui/preferences/scanner_page.py:120
 msgid "No clamd.conf found in known locations"
-msgstr "未在已知位置中找到 clamd.conf"
+msgstr "Nessun clamd.conf trovato nelle posizioni conosciute"
 
 #: src/ui/preferences/scanner_page.py:132
 msgid "clamd.conf location"
-msgstr "clamd.conf 位置"
+msgstr "posizione clamd.conf"
 
 #: src/ui/preferences/scanner_page.py:151
 msgid "ClamD Configuration"
-msgstr "ClamD 配置"
+msgstr "Configurazione ClamD"
 
 #: src/ui/preferences/scanner_page.py:152
 msgid "clamd.conf not found - Scanner settings unavailable"
-msgstr "未找到 clamd.conf - 扫描程序设置不可用"
+msgstr "clamd.conf non trovato - Impostazioni Scanner non disponibili"
 
 #: src/ui/preferences/scanner_page.py:263
 #: src/ui/preferences/scanner_page.py:282
 msgid "Scan Backend"
-msgstr "扫描后端"
+msgstr "Backend Scansione"
 
 #: src/ui/preferences/scanner_page.py:269
 msgid ""
 "Select how ClamUI performs scans. Daemon runs on host via flatpak-spawn. "
 "Auto-saved."
 msgstr ""
-"选择 ClamUI 如何实施扫描。守护进程通过 flatpak-spawn 在主机上运行。自动保存。"
+"Seleziona come ClamUI esegue le scansioni. Il demone gira sull'host via "
+"flatpak-spawn. Salvato automaticamente."
 
 #: src/ui/preferences/scanner_page.py:273
 msgid "Select how ClamUI performs scans. Auto-saved."
-msgstr "选择 ClamUI 如何实施扫描。自动保存。"
+msgstr "Seleziona come ClamUI esegue le scansioni. Salvato automaticamente."
 
 #: src/ui/preferences/scanner_page.py:278
 msgid "Auto (prefer daemon)"
-msgstr "自动（默认守护进程）"
+msgstr "Auto (preferisci demone)"
 
 #: src/ui/preferences/scanner_page.py:279
 msgid "ClamAV Daemon (clamd)"
-msgstr "ClamAV守护进程 (clamd)"
+msgstr "Demone ClamAV (clamd)"
 
 #: src/ui/preferences/scanner_page.py:280
 msgid "Standalone Scanner (clamscan)"
-msgstr "独立扫描程序 (clamscan)"
+msgstr "Scanner Standalone (clamscan)"
 
 #: src/ui/preferences/scanner_page.py:305
 #: src/ui/preferences/scanner_page.py:308
 msgid "Checking daemon connection..."
-msgstr "正在检查守护进程连接……"
+msgstr "Controllo connessione demone..."
 
 #: src/ui/preferences/scanner_page.py:337
 msgid "Documentation"
-msgstr "文档"
+msgstr "Documentazione"
 
 #: src/ui/preferences/scanner_page.py:338
 msgid "About scan backends"
-msgstr "关于扫描后端"
+msgstr "Informazioni sui backend di scansione"
 
 #: src/ui/preferences/scanner_page.py:361
 msgid ""
 "Recommended — Automatically uses daemon if available, falls back to clamscan "
 "for reliability"
-msgstr "推荐——自动使用守护进程（如果可用），否则回退到 clamscan 以确保可靠性。"
+msgstr ""
+"Consigliato — Usa automaticamente il demone se disponibile, ripiega su "
+"clamscan per affidabilità"
 
 #: src/ui/preferences/scanner_page.py:364
 msgid ""
 "Fastest — Instant startup with in-memory database, requires clamd service "
 "running"
-msgstr "最快——使用内存数据库即时启动，需要 clamd 服务运行"
+msgstr ""
+"Più veloce — Avvio istantaneo con database in memoria, richiede il servizio "
+"clamd in esecuzione"
 
 #: src/ui/preferences/scanner_page.py:366
 msgid ""
 "Most compatible — Works anywhere, loads database each scan (3-10 sec startup)"
-msgstr "兼容性最强——哪里都能用，每次扫描都加载数据库（启动耗时3-10秒）"
+msgstr ""
+"Più compatibile — Funziona ovunque, carica il database ad ogni scansione "
+"(3-10 sec avvio)"
 
 #: src/ui/preferences/scanner_page.py:436
 msgid "Daemon available"
-msgstr "守护进程可用"
+msgstr "Demone disponibile"
 
 #: src/ui/preferences/scanner_page.py:437
 #, python-brace-format
 msgid "Not available: {message}"
-msgstr "不可用：{message}"
+msgstr "Non disponibile: {message}"
 
 #: src/ui/preferences/scanner_page.py:484
 msgid "Documentation Not Found"
-msgstr "未找到文档"
+msgstr "Documentazione Non Trovata"
 
 #: src/ui/preferences/scanner_page.py:486
 msgid ""
 "The scan backends documentation file could not be found. It may have been "
 "moved or deleted."
-msgstr "找不到扫描后端文档文件，它可能已被移动或删除。"
+msgstr ""
+"Il file di documentazione dei backend di scansione non è stato trovato. "
+"Potrebbe essere stato spostato o eliminato."
 
 #: src/ui/preferences/scanner_page.py:503
 msgid "Error Opening Documentation"
-msgstr "打开文档时出错"
+msgstr "Errore Apertura Documentazione"
 
 #: src/ui/preferences/scanner_page.py:504
 #, python-brace-format
 msgid "Could not open documentation file: {error}"
-msgstr "无法打开文档文件：{error}"
+msgstr "Impossibile aprire il file di documentazione: {error}"
 
 #: src/ui/preferences/scanner_page.py:579
 msgid "File Type Scanning"
-msgstr "文件类型扫描"
+msgstr "Scansione Tipo di File"
 
 #: src/ui/preferences/scanner_page.py:580
 msgid "Enable or disable scanning for specific file types"
-msgstr "为指定文件类型启用或禁用扫描"
+msgstr "Abilita o disabilita la scansione per tipi di file specifici"
 
 #: src/ui/preferences/scanner_page.py:585
 msgid "Scan PE Files"
-msgstr "扫描 PE 文件"
+msgstr "Scansiona File PE"
 
 #: src/ui/preferences/scanner_page.py:586
 msgid "Scan Windows/DOS executable files"
-msgstr "扫描 Windows/DOS 可执行文件"
+msgstr "Scansiona file eseguibili Windows/DOS"
 
 #: src/ui/preferences/scanner_page.py:592
 msgid "Scan ELF Files"
-msgstr "扫描 ELF 文件"
+msgstr "Scansiona File ELF"
 
 #: src/ui/preferences/scanner_page.py:593
 msgid "Scan Unix/Linux executable files"
-msgstr "扫描 Unix/Linux 可执行文件"
+msgstr "Scansiona file eseguibili Unix/Linux"
 
 #: src/ui/preferences/scanner_page.py:599
 msgid "Scan OLE2 Files"
-msgstr "扫描 OLE2 文件"
+msgstr "Scansiona File OLE2"
 
 #: src/ui/preferences/scanner_page.py:600
 msgid "Scan Microsoft Office documents"
-msgstr "扫描 Microsoft Office 文档"
+msgstr "Scansiona documenti Microsoft Office"
 
 #: src/ui/preferences/scanner_page.py:606
 msgid "Scan PDF Files"
-msgstr "扫描 PDF 文件"
+msgstr "Scansiona File PDF"
 
 #: src/ui/preferences/scanner_page.py:607
 msgid "Scan PDF documents"
-msgstr "扫描 PDF 文档"
+msgstr "Scansiona documenti PDF"
 
 #: src/ui/preferences/scanner_page.py:613
 msgid "Scan HTML Files"
-msgstr "扫描 HTML 文件"
+msgstr "Scansiona File HTML"
 
 #: src/ui/preferences/scanner_page.py:614
 msgid "Scan HTML documents"
-msgstr "扫描 HTML 文档"
+msgstr "Scansiona documenti HTML"
 
 #: src/ui/preferences/scanner_page.py:620
 msgid "Scan Archive Files"
-msgstr "扫描压缩文件"
+msgstr "Scansiona File Archivio"
 
 #: src/ui/preferences/scanner_page.py:621
 msgid "Scan compressed archives (ZIP, RAR, etc.)"
-msgstr "扫描压缩文件（ZIP、RAR等）"
+msgstr "Scansiona archivi compressi (ZIP, RAR, etc.)"
 
 #: src/ui/preferences/scanner_page.py:644
 msgid "Performance and Limits"
-msgstr "性能和限制"
+msgstr "Prestazioni e Limiti"
 
 #: src/ui/preferences/scanner_page.py:645
 msgid "Configure scanning limits and performance settings"
-msgstr "配置扫描限制和性能设置"
+msgstr "Configura limiti di scansione e impostazioni di prestazioni"
 
 #: src/ui/preferences/scanner_page.py:662
 msgid "Max Scan Size (MB)"
-msgstr "最大扫描大小（MB）"
+msgstr "Dimensione Massima Scansione (MB)"
 
 #: src/ui/preferences/scanner_page.py:663
 msgid "Maximum total scan size (0 = unlimited)"
-msgstr "扫描的最大大小（0 = 无限制）"
+msgstr "Dimensione totale massima scansione (0 = illimitata)"
 
 #: src/ui/preferences/scanner_page.py:674
 msgid "Max Archive Recursion"
-msgstr "最大归档递归深度"
+msgstr "Ricorsione Massima Archivio"
 
 #: src/ui/preferences/scanner_page.py:675
 msgid "Maximum recursion depth for archives"
-msgstr "扫描压缩文件时的最大递归层数"
+msgstr "Profondità massima ricorsione per archivi"
 
 #: src/ui/preferences/scanner_page.py:686
 msgid "Max Files in Archive"
-msgstr "归档文件扫描上限"
+msgstr "File Massimi in Archivio"
 
 #: src/ui/preferences/scanner_page.py:687
 msgid "Maximum number of files to scan in archive (0 = unlimited)"
-msgstr "压缩包内最多扫描的文件数（0 = 无限制）"
+msgstr "Numero massimo di file da scansionare nell'archivio (0 = illimitato)"
 
 #: src/ui/preferences/scanner_page.py:714
 msgid "Logging"
-msgstr "日志记录"
+msgstr "Logging"
 
 #: src/ui/preferences/scanner_page.py:715
 msgid "Configure logging options for the scanner"
-msgstr "为扫描程序配置日志记录选项"
+msgstr "Configura opzioni di logging per lo scanner"
 
 #: src/ui/preferences/scanner_page.py:720
 msgid "Log File Path"
-msgstr "日志文件路径"
+msgstr "Percorso File di Log"
 
 #: src/ui/preferences/scanner_page.py:729
 msgid "Enable detailed scanner logging"
-msgstr "启用详细的扫描程序日志记录"
+msgstr "Abilita logging dettagliato dello scanner"
 
 #: src/ui/preferences/scheduled_page.py:70
 msgid "Scheduled Scans"
-msgstr "定期扫描"
+msgstr "Scansioni Programmate"
 
 #: src/ui/preferences/scheduled_page.py:99
 msgid "Scheduled Scans Configuration"
-msgstr "定期扫描配置"
+msgstr "Configurazione Scansioni Programmate"
 
 #: src/ui/preferences/scheduled_page.py:100
 msgid "Configure automatic scanning. Save with 'Save &amp; Apply'."
-msgstr "配置定期扫描。点击‘保存并应用’进行保存。"
+msgstr "Configura scansione automatica. Salva con 'Salva &amp; Applica'."
 
 #: src/ui/preferences/scheduled_page.py:104
 msgid "Enable Scheduled Scans"
-msgstr "启用定期扫描"
+msgstr "Abilita Scansioni Programmate"
 
 #: src/ui/preferences/scheduled_page.py:105
 msgid "Run automatic scans at specified intervals"
-msgstr "以指定的时间间隔运行自动扫描"
+msgstr "Esegui scansioni automatiche a intervalli specificati"
 
 #: src/ui/preferences/scheduled_page.py:113
 msgid "Hourly"
-msgstr "每小时"
+msgstr "Ogni ora"
 
 #: src/ui/preferences/scheduled_page.py:114
 msgid "Daily"
-msgstr "每日"
+msgstr "Giornaliero"
 
 #: src/ui/preferences/scheduled_page.py:115
 msgid "Weekly"
-msgstr "每周"
+msgstr "Settimanale"
 
 #: src/ui/preferences/scheduled_page.py:116
 msgid "Monthly"
-msgstr "每月"
+msgstr "Mensile"
 
 #: src/ui/preferences/scheduled_page.py:119
 msgid "Scan Frequency"
-msgstr "扫描频率"
+msgstr "Frequenza Scansione"
 
 #: src/ui/preferences/scheduled_page.py:125
 msgid "Scan Time (24-hour format, e.g. 02:00)"
-msgstr "扫描时间（24时制，如02:00）"
+msgstr "Ora Scansione (formato 24 ore, es. 02:00)"
 
 #: src/ui/preferences/scheduled_page.py:135
 msgid "Monday"
-msgstr "周一"
+msgstr "Lunedì"
 
 #: src/ui/preferences/scheduled_page.py:136
 msgid "Tuesday"
-msgstr "周二"
+msgstr "Martedì"
 
 #: src/ui/preferences/scheduled_page.py:137
 msgid "Wednesday"
-msgstr "周三"
+msgstr "Mercoledì"
 
 #: src/ui/preferences/scheduled_page.py:138
 msgid "Thursday"
-msgstr "周四"
+msgstr "Giovedì"
 
 #: src/ui/preferences/scheduled_page.py:139
 msgid "Friday"
-msgstr "周五"
+msgstr "Venerdì"
 
 #: src/ui/preferences/scheduled_page.py:140
 msgid "Saturday"
-msgstr "周六"
+msgstr "Sabato"
 
 #: src/ui/preferences/scheduled_page.py:141
 msgid "Sunday"
-msgstr "周日"
+msgstr "Domenica"
 
 #: src/ui/preferences/scheduled_page.py:146
 msgid "Day of Week"
-msgstr "星期几"
+msgstr "Giorno della Settimana"
 
 #: src/ui/preferences/scheduled_page.py:147
 msgid "For weekly scans"
-msgstr "每周扫描"
+msgstr "Per scansioni settimanali"
 
 #: src/ui/preferences/scheduled_page.py:153
 msgid "Day of Month"
-msgstr "每月中的日期"
+msgstr "Giorno del Mese"
 
 #: src/ui/preferences/scheduled_page.py:154
 msgid "For monthly scans (1-28)"
-msgstr "每月扫描（1-28）"
+msgstr "Per scansioni mensili (1-28)"
 
 #: src/ui/preferences/scheduled_page.py:166
 msgid "Scan Targets (comma-separated paths)"
-msgstr "扫描目标（用英文逗号分隔路径）"
+msgstr "Destinazioni Scansione (percorsi separati da virgola)"
 
 #: src/ui/preferences/scheduled_page.py:174
 msgid "Don't run scheduled scans when on battery power"
-msgstr "电池供电时不要运行定期扫描"
+msgstr "Non eseguire scansioni programmate quando con batteria"
 
 #: src/ui/preferences/scheduled_page.py:181
 msgid "Auto-Quarantine"
-msgstr "自动隔离"
+msgstr "Quarantena Automatica"
 
 #: src/ui/preferences/virustotal_page.py:70 src/ui/preferences/window.py:57
 msgid "VirusTotal"
@@ -3569,1142 +3651,1156 @@ msgstr "VirusTotal"
 #: src/ui/preferences/virustotal_page.py:129
 #: src/ui/virustotal_setup_dialog.py:169
 msgid "API Key"
-msgstr "API 密钥"
+msgstr "Chiave API"
 
 #: src/ui/preferences/virustotal_page.py:108
 msgid "Configure your VirusTotal API key for file scanning"
-msgstr "配置用于文件扫描的VirusTotal API密钥"
+msgstr "Configura la tua chiave API VirusTotal per la scansione dei file"
 
 #: src/ui/preferences/virustotal_page.py:113
 #: src/ui/preferences/virustotal_page.py:305
 #, python-brace-format
 msgid "Configured ({key})"
-msgstr "已配置（{key}）"
+msgstr "Configurata ({key})"
 
 #: src/ui/preferences/virustotal_page.py:120
 #: src/ui/preferences/virustotal_page.py:377
 msgid "Not configured"
-msgstr "未配置"
+msgstr "Non configurata"
 
 #: src/ui/preferences/virustotal_page.py:151
 msgid "Delete Key"
-msgstr "删除密钥"
+msgstr "Elimina Chiave"
 
 #: src/ui/preferences/virustotal_page.py:163
 msgid "Save Key"
-msgstr "保存密钥"
+msgstr "Salva Chiave"
 
 #: src/ui/preferences/virustotal_page.py:177
 #: src/ui/virustotal_setup_dialog.py:143
 msgid "Get a free API key"
-msgstr "获取免费的 API 密钥"
+msgstr "Ottieni una chiave API gratuita"
 
 #: src/ui/preferences/virustotal_page.py:178
 #: src/ui/virustotal_setup_dialog.py:144
 msgid "Create an account at virustotal.com"
-msgstr "在 virustotal.com 创建新账户"
+msgstr "Crea un account su virustotal.com"
 
 #: src/ui/preferences/virustotal_page.py:203
 msgid "Configure VirusTotal scanning behavior"
-msgstr "配置 VirusTotal 扫描行为"
+msgstr "Configura il comportamento di scansione VirusTotal"
 
 #: src/ui/preferences/virustotal_page.py:209
 msgid "Open VirusTotal website"
-msgstr "打开 VirusTotal 网站"
+msgstr "Apri sito web VirusTotal"
 
 #: src/ui/preferences/virustotal_page.py:210
 msgid "Show notification only"
-msgstr "仅显示通知"
+msgstr "Mostra solo notifica"
 
 #: src/ui/preferences/virustotal_page.py:212
 msgid "When API key is missing"
-msgstr "无 API 密钥时"
+msgstr "Quando la chiave API è mancante"
 
 #: src/ui/preferences/virustotal_page.py:213
 msgid "Action to take when scanning without API key"
-msgstr "无 API 密钥扫描时执行的操作"
+msgstr "Azione da intraprendere quando si scansiona senza chiave API"
 
 #: src/ui/preferences/virustotal_page.py:239
 msgid "Information"
-msgstr "信息"
+msgstr "Informazione"
 
 #: src/ui/preferences/virustotal_page.py:243
 msgid "Rate Limit"
-msgstr "请求频率"
+msgstr "Limite di Velocità"
 
 #: src/ui/preferences/virustotal_page.py:244
 msgid "Free tier: 4 requests per minute, 500 per day"
-msgstr "免费方案：每分钟4个请求，每天500个请求"
+msgstr "Livello gratuito: 4 richieste al minuto, 500 al giorno"
 
 #: src/ui/preferences/virustotal_page.py:251
 msgid "Maximum File Size"
-msgstr "最大文件大小"
+msgstr "Dimensione Massima File"
 
 #: src/ui/preferences/virustotal_page.py:252
 msgid "Files up to 650 MB can be scanned"
-msgstr "最大可扫描650 MB的文件"
+msgstr "È possibile scansionare file fino a 650 MB"
 
 #: src/ui/preferences/virustotal_page.py:277
 #: src/ui/virustotal_setup_dialog.py:261
 msgid "Invalid API key format"
-msgstr "无效 API 密钥格式"
+msgstr "Formato chiave API non valido"
 
 #: src/ui/preferences/virustotal_page.py:298
 #: src/ui/virustotal_setup_dialog.py:281
 msgid "API key saved"
-msgstr "已保存 API 密钥"
+msgstr "Chiave API salvata"
 
 #: src/ui/preferences/virustotal_page.py:315
 #: src/ui/virustotal_setup_dialog.py:290
 #, python-brace-format
 msgid "Failed to save: {error}"
-msgstr "无法保存：{error}"
+msgstr "Impossibile salvare: {error}"
 
 #: src/ui/preferences/virustotal_page.py:317
 msgid "Failed"
-msgstr "失败"
+msgstr "Fallito"
 
 #: src/ui/preferences/virustotal_page.py:324
 msgid "Delete API Key?"
-msgstr "删除 API 密钥?"
+msgstr "Eliminare Chiave API?"
 
 #: src/ui/preferences/virustotal_page.py:345
 msgid ""
 "This will remove your VirusTotal API key. You'll need to enter it again to "
 "use VirusTotal scanning."
 msgstr ""
-"这会移除你的 VirusTotal API 密钥。使用 VirusTotal 扫描时你将需要再输入一次。"
+"Questo rimuoverà la tua chiave API VirusTotal. Dovrai inserirla di nuovo per "
+"usare la scansione VirusTotal."
 
 #: src/ui/preferences/virustotal_page.py:369
 msgid "API key deleted"
-msgstr "已删除 API 密钥"
+msgstr "Chiave API eliminata"
 
 #: src/ui/preferences/virustotal_page.py:383
 msgid "Failed to delete API key"
-msgstr "无法删除 API 密钥"
+msgstr "Impossibile eliminare la chiave API"
 
 #: src/ui/preferences/virustotal_page.py:385 src/ui/profile_dialogs.py:865
 #: src/ui/quarantine_view.py:715
 msgid "Delete"
-msgstr "删除"
+msgstr "Elimina"
 
 #: src/ui/preferences/window.py:52 src/ui/sidebar.py:28
 msgid "Database"
-msgstr "数据库"
+msgstr "Database"
 
 #: src/ui/preferences/window.py:53
 msgid "Scanner"
-msgstr "扫描程序"
+msgstr "Scanner"
 
 #: src/ui/preferences/window.py:54
 msgid "Scheduled"
-msgstr "定期扫描"
+msgstr "Programmato"
 
 #: src/ui/preferences/window.py:56
 msgid "On-Access"
-msgstr "实时扫描"
+msgstr "All'Accesso"
 
 #: src/ui/preferences/window.py:59 src/ui/profile_dialogs.py:127
 msgid "Save"
-msgstr "保存"
+msgstr "Salva"
 
 #: src/ui/preferences/window.py:149 src/ui/preferences/window.py:325
 #: src/ui/window.py:631
 msgid "Preferences"
-msgstr "首选项"
+msgstr "Preferenze"
 
 #: src/ui/preferences/window.py:319 src/ui/window.py:517
 msgid "Back to navigation"
-msgstr "返回导航"
+msgstr "Torna alla navigazione"
 
 #: src/ui/preferences/window.py:549 src/ui/preferences/window.py:572
 #, python-brace-format
 msgid "Preferences — {page}"
-msgstr "首选项 — {page}"
+msgstr "Preferenze — {page}"
 
 #: src/ui/profile_dialogs.py:101
 msgid "Edit Profile"
-msgstr "编辑配置文件"
+msgstr "Modifica Profilo"
 
 #: src/ui/profile_dialogs.py:103
 msgid "New Profile"
-msgstr "新建配置文件"
+msgstr "Nuovo Profilo"
 
 #: src/ui/profile_dialogs.py:161
 msgid "Profile Information"
-msgstr "配置文件信息"
+msgstr "Informazioni Profilo"
 
 #: src/ui/profile_dialogs.py:162
 msgid "Basic profile settings"
-msgstr "基本配置文件设置"
+msgstr "Impostazioni base del profilo"
 
 #: src/ui/profile_dialogs.py:173
 msgid "Description"
-msgstr "描述"
+msgstr "Descrizione"
 
 #: src/ui/profile_dialogs.py:190 src/ui/profile_dialogs.py:582
 #: src/ui/scan/target_selector.py:78 src/ui/scan/target_selector.py:233
 #: src/ui/scan_view.py:704 src/ui/scan_view.py:989
 msgid "Scan Targets"
-msgstr "扫描目标"
+msgstr "Target di scansione"
 
 #: src/ui/profile_dialogs.py:191
 msgid "Directories and files to scan"
-msgstr "要扫描的目录和文件"
+msgstr "Cartelle e file da scansionare"
 
 #: src/ui/profile_dialogs.py:199
 msgid "Add folder"
-msgstr "添加文件夹"
+msgstr "Aggiungi cartella"
 
 #: src/ui/profile_dialogs.py:206
 msgid "Add file"
-msgstr "添加文件"
+msgstr "Aggiungi file"
 
 #: src/ui/profile_dialogs.py:220 src/ui/scan_view.py:745
 msgid "No targets added"
-msgstr "未添加目标"
+msgstr "Nessun target aggiunto"
 
 #: src/ui/profile_dialogs.py:222
 msgid "Click the folder or file button to add scan targets"
-msgstr "点击文件夹或文件按钮添加扫描目标"
+msgstr "Clicca il pulsante cartella o file per aggiungere target di scansione"
 
 #: src/ui/profile_dialogs.py:235
 msgid "Paths and patterns to skip during scan"
-msgstr "扫描时要跳过的路径和模式"
+msgstr "Percorsi e pattern da saltare durante la scansione"
 
 #: src/ui/profile_dialogs.py:243
 msgid "Add exclusion path"
-msgstr "添加排除路径"
+msgstr "Aggiungi percorso esclusione"
 
 #: src/ui/profile_dialogs.py:250
 msgid "Add exclusion pattern"
-msgstr "添加排除模式"
+msgstr "Aggiungi pattern esclusione"
 
 #: src/ui/profile_dialogs.py:264
 msgid "No exclusions added"
-msgstr "未添加排除项"
+msgstr "Nessuna esclusione aggiunta"
 
 #: src/ui/profile_dialogs.py:266
 msgid "Add paths or patterns to exclude from scanning"
-msgstr "添加要从扫描中排除的路径或模式"
+msgstr "Aggiungi percorsi o pattern da escludere dalla scansione"
 
 #: src/ui/profile_dialogs.py:300 src/ui/profile_dialogs.py:603
 msgid "Profile name is required"
-msgstr "配置名称不能为空"
+msgstr "Il nome profilo è obbligatorio"
 
 #: src/ui/profile_dialogs.py:304
 #, python-brace-format
 msgid "Name must be {max_length} characters or less"
-msgstr "名称长度不能超过 {max_length} 个字符"
+msgstr "Il nome deve essere di {max_length} caratteri o meno"
 
 #: src/ui/profile_dialogs.py:367 src/ui/scan/target_selector.py:159
 msgid "Select Folders"
-msgstr "选择文件夹"
+msgstr "Seleziona cartelle"
 
 #: src/ui/profile_dialogs.py:367
 msgid "Select Folder"
-msgstr "选择文件夹"
+msgstr "Seleziona cartella"
 
 #: src/ui/profile_dialogs.py:369 src/ui/scan/target_selector.py:159
 msgid "Select Files"
-msgstr "选择文件"
+msgstr "Seleziona file"
 
 #: src/ui/profile_dialogs.py:369
 msgid "Select File"
-msgstr "选择文件"
+msgstr "Seleziona file"
 
 #: src/ui/profile_dialogs.py:471
 msgid "Path"
-msgstr "路径"
+msgstr "Percorso"
 
 #: src/ui/profile_dialogs.py:491 src/ui/profile_dialogs.py:741
 msgid "Pattern"
-msgstr "模式"
+msgstr "Pattern"
 
 #: src/ui/profile_dialogs.py:522 src/ui/scan_view.py:780
 msgid "Remove"
-msgstr "移除"
+msgstr "Rimuovi"
 
 #: src/ui/profile_dialogs.py:580 src/ui/scan/target_selector.py:239
 #: src/ui/scan_view.py:995
 #, python-brace-format
 msgid "Scan Targets ({count})"
-msgstr "扫描目标（{count} 个）"
+msgstr "Target di scansione ({count})"
 
 #: src/ui/profile_dialogs.py:588
 #, python-brace-format
 msgid "Exclusions ({count})"
-msgstr "排除项（{count} 个）"
+msgstr "Esclusioni ({count})"
 
 #: src/ui/profile_dialogs.py:696
 msgid "Add Exclusion Pattern"
-msgstr "添加排除模式"
+msgstr "Aggiungi pattern esclusione"
 
 #: src/ui/profile_dialogs.py:737
 msgid "Enter a glob pattern to exclude (e.g., *.tmp, .git/*, cache/*)"
-msgstr "输入要排除的通配符模式（例如：.tmp、.git/*、cache/*）"
+msgstr "Inserisci un pattern glob da escludere (es. *.tmp, .git/*, cache/*)"
 
 #: src/ui/profile_dialogs.py:805
 msgid "Delete Profile?"
-msgstr "删除配置文件?"
+msgstr "Eliminare il profilo?"
 
 #: src/ui/profile_dialogs.py:807
 #, python-brace-format
 msgid "Are you sure you want to delete the profile \"{profile_name}\"?"
-msgstr "确定要删除配置文件“{profile_name}”吗？"
+msgstr "Sei sicuro di voler eliminare il profilo \"{profile_name}\"?"
 
 #: src/ui/profile_dialogs.py:811
 msgid "This action cannot be undone."
-msgstr "此操作不可被撤销。"
+msgstr "Questa azione non può essere annullata."
 
 #: src/ui/profile_dialogs.py:924
 msgid "Restore Default Profiles?"
-msgstr "恢复默认配置？"
+msgstr "Ripristinare i profili predefiniti?"
 
 #: src/ui/profile_dialogs.py:927
 msgid ""
 "This will reset Quick Scan, Full Scan, and Home Folder profiles to their "
 "original settings. Any changes you made to these profiles will be lost."
 msgstr ""
-"此操作将把快速扫描、完全扫描和主文件夹配置文件重置为原始设置。您对这些配置所"
-"做的任何更改都将丢失。"
+"Questo ripristinerà le impostazioni originali dei profili Scansione rapida, "
+"Scansione completa e Cartella home. Eventuali modifiche apportate a questi "
+"profili andranno perse."
 
 #: src/ui/profile_dialogs.py:932
 msgid "Your custom profiles will not be affected."
-msgstr "您的自定义配置不会受到影响。"
+msgstr "I tuoi profili personalizzati non saranno influenzati."
 
 #: src/ui/profile_dialogs.py:986 src/ui/quarantine_view.py:708
 msgid "Restore"
-msgstr "还原"
+msgstr "Ripristina"
 
 #: src/ui/profile_dialogs.py:1056
 msgid "Manage Profiles"
-msgstr "管理配置文件"
+msgstr "Gestisci profili"
 
 #: src/ui/profile_dialogs.py:1074
 msgid "Restore default profiles"
-msgstr "恢复默认配置"
+msgstr "Ripristina profili predefiniti"
 
 #: src/ui/profile_dialogs.py:1081
 msgid "Import profile from file"
-msgstr "从文件中导入配置"
+msgstr "Importa profilo da file"
 
 #: src/ui/profile_dialogs.py:1088
 msgid "Create new profile"
-msgstr "创建新的配置文件"
+msgstr "Crea nuovo profilo"
 
 #: src/ui/profile_dialogs.py:1106
 msgid "Scan Profiles"
-msgstr "扫描配置文件"
+msgstr "Profili di scansione"
 
 #: src/ui/profile_dialogs.py:1107
 msgid "Select a profile to edit or use for scanning"
-msgstr "选择要编辑或用于扫描的配置"
+msgstr "Seleziona un profilo da modificare o da usare per la scansione"
 
 #: src/ui/profile_dialogs.py:1116
 msgid "No profiles available"
-msgstr "暂无可用配置"
+msgstr "Nessun profilo disponibile"
 
 #: src/ui/profile_dialogs.py:1117
 msgid "Click the + button to create a new profile"
-msgstr "点击 + 按钮新建配置"
+msgstr "Clicca il pulsante + per creare un nuovo profilo"
 
 #: src/ui/profile_dialogs.py:1172
 #, python-brace-format
 msgid "{count} target"
 msgid_plural "{count} targets"
-msgstr[0] "{count} 个目标"
+msgstr[0] "{count} obiettivo"
+msgstr[1] "{count} obiettivi"
 
 #: src/ui/profile_dialogs.py:1178
 msgid "Default profile"
-msgstr "默认配置文件"
+msgstr "Profilo predefinito"
 
 #: src/ui/profile_dialogs.py:1196
 msgid "Use this profile"
-msgstr "使用此配置文件"
+msgstr "Usa questo profilo"
 
 #: src/ui/profile_dialogs.py:1205
 msgid "Edit profile"
-msgstr "编辑配置文件"
+msgstr "Modifica profilo"
 
 #: src/ui/profile_dialogs.py:1213
 msgid "Delete profile"
-msgstr "删除配置文件"
+msgstr "Elimina profilo"
 
 #: src/ui/profile_dialogs.py:1217
 msgid "Cannot delete default profile"
-msgstr "无法删除默认配置文件"
+msgstr "Impossibile eliminare il profilo predefinito"
 
 #: src/ui/profile_dialogs.py:1228
 msgid "Export profile"
-msgstr "导出配置文件"
+msgstr "Esporta profilo"
 
 #: src/ui/profile_dialogs.py:1341
 msgid "Export Profile"
-msgstr "导出配置文件"
+msgstr "Esporta profilo"
 
 #: src/ui/profile_dialogs.py:1392
 msgid "Import Profile"
-msgstr "导入配置文件"
+msgstr "Importa profilo"
 
 #: src/ui/quarantine_view.py:151
 msgid "Quarantine Storage"
-msgstr "隔离区"
+msgstr "Archivio quarantena"
 
 #: src/ui/quarantine_view.py:152
 msgid "Secure storage for isolated threats"
-msgstr "用于孤立威胁的安全存储区"
+msgstr "Archivio sicuro per minacce isolate"
 
 #: src/ui/quarantine_view.py:156
 msgid "Total Size"
-msgstr "总大小"
+msgstr "Dimensione totale"
 
 #: src/ui/quarantine_view.py:157
 msgid "Calculating..."
-msgstr "计算中……"
+msgstr "Calcolo in corso..."
 
 #: src/ui/quarantine_view.py:162
 msgid "0 items"
-msgstr "0 个项目"
+msgstr "0 elementi"
 
 #: src/ui/quarantine_view.py:174
 msgid "Quarantined Files"
-msgstr "已隔离的文件"
+msgstr "File in quarantena"
 
 #: src/ui/quarantine_view.py:175
 msgid "Detected threats isolated from your system"
-msgstr "从系统中隔离出的检测到的威胁"
+msgstr "Minacce rilevate isolate dal sistema"
 
 #: src/ui/quarantine_view.py:186 src/ui/quarantine_view.py:189
 msgid "Search by threat name or path..."
-msgstr "搜索威胁名称或路径……"
+msgstr "Cerca per nome minaccia o percorso..."
 
 #: src/ui/quarantine_view.py:208
 msgid "Refresh quarantine list"
-msgstr "刷新隔离名单"
+msgstr "Aggiorna elenco quarantena"
 
 #: src/ui/quarantine_view.py:216
 msgid "Clear Old Items"
-msgstr "清除旧项目"
+msgstr "Cancella elementi vecchi"
 
 #: src/ui/quarantine_view.py:217
 msgid "Remove quarantined files older than 30 days"
-msgstr "删除隔离超过30天的文件"
+msgstr "Rimuovi file in quarantena più vecchi di 30 giorni"
 
 #: src/ui/quarantine_view.py:248
 msgid "No Quarantined Files"
-msgstr "没有已隔离的文件"
+msgstr "Nessun file in quarantena"
 
 #: src/ui/quarantine_view.py:249
 msgid "Detected threats will be isolated here for review"
-msgstr "检测到的威胁将在此处隔离以供查看"
+msgstr "Le minacce rilevate verranno isolate qui per la revisione"
 
 #: src/ui/quarantine_view.py:261
 msgid "No matching entries"
-msgstr "没有符合条件的条目"
+msgstr "Nessuna voce corrispondente"
 
 #: src/ui/quarantine_view.py:262
 msgid "Try a different search term"
-msgstr "请尝试其他搜索词"
+msgstr "Prova un termine di ricerca diverso"
 
 #: src/ui/quarantine_view.py:276
 msgid "Loading quarantine entries..."
-msgstr "正在加载隔离条目……"
+msgstr "Caricamento voci quarantena..."
 
 #: src/ui/quarantine_view.py:548
 #, python-brace-format
 msgid "Removed {count} old quarantine entry"
 msgid_plural "Removed {count} old quarantine entries"
-msgstr[0] "已移除 {count} 个旧隔离条目"
+msgstr[0] "Rimossa {count} vecchia voce di quarantena"
+msgstr[1] "Rimosse {count} vecchie voci di quarantena"
 
 #: src/ui/quarantine_view.py:558
 msgid "No old entries found to remove"
-msgstr "未找到可移除的旧条目"
+msgstr "Nessuna vecchia voce trovata da rimuovere"
 
 #: src/ui/quarantine_view.py:608
 #, python-brace-format
 msgid "{filtered} of {total} items"
-msgstr "正在显示 {filtered} 项，共 {total} 项"
+msgstr "{filtered} di {total} elementi"
 
 #: src/ui/quarantine_view.py:613
 #, python-brace-format
 msgid "{count} item"
 msgid_plural "{count} items"
-msgstr[0] "{count} 项"
+msgstr[0] "{count} elemento"
+msgstr[1] "{count} elementi"
 
 #: src/ui/quarantine_view.py:656
 msgid "Unknown Threat"
-msgstr "未知威胁"
+msgstr "Minaccia sconosciuta"
 
 #: src/ui/quarantine_view.py:687
 #, python-brace-format
 msgid "Quarantined: {date}"
-msgstr "隔离日期：{date}"
+msgstr "In quarantena: {date}"
 
 #: src/ui/quarantine_view.py:694
 #, python-brace-format
 msgid "Size: {size}"
-msgstr "大小：{size}"
+msgstr "Dimensione: {size}"
 
 #: src/ui/quarantine_view.py:747
 msgid "File restored successfully"
-msgstr "文件还原成功。"
+msgstr "File ripristinato con successo"
 
 #: src/ui/quarantine_view.py:752
 msgid "Failed to restore file"
-msgstr "无法还原文件"
+msgstr "Ripristino file fallito"
 
 #: src/ui/quarantine_view.py:778
 msgid "File deleted successfully"
-msgstr "文件删除成功"
+msgstr "File eliminato con successo"
 
 #: src/ui/quarantine_view.py:783
 msgid "Failed to delete file"
-msgstr "无法删除文件"
+msgstr "Eliminazione file fallita"
 
 #: src/ui/scan/profile_selector.py:50 src/ui/scan_view.py:503
 msgid "Scan Profile"
-msgstr "扫描配置"
+msgstr "Profilo di scansione"
 
 #: src/ui/scan/profile_selector.py:61 src/ui/scan_view.py:508
 msgid "Profile"
-msgstr "配置"
+msgstr "Profilo"
 
 #: src/ui/scan/profile_selector.py:65 src/ui/scan/profile_selector.py:103
 #: src/ui/scan_view.py:514 src/ui/scan_view.py:599
 msgid "No Profile (Manual)"
-msgstr "无配置（手动）"
+msgstr "Nessun profilo (manuale)"
 
 #: src/ui/scan/profile_selector.py:75 src/ui/scan_view.py:526
 msgid "Manage profiles"
-msgstr "管理配置"
+msgstr "Gestisci profili"
 
 #: src/ui/scan/scan_progress_widget.py:47 src/ui/scan_view.py:1057
-#, fuzzy
 msgid "Scan Progress"
-msgstr "扫描正在进行中"
+msgstr "Avanzamento scansione"
 
 #: src/ui/scan/scan_progress_widget.py:61 src/ui/scan/scan_view.py:284
 #: src/ui/scan_view.py:1071
 msgid "Scanning..."
-msgstr "正在扫描……"
+msgstr "Scansione in corso..."
 
 #: src/ui/scan/scan_progress_widget.py:71 src/ui/scan_view.py:1081
 msgid "Currently scanning"
-msgstr ""
+msgstr "Scansione in corso"
 
 #: src/ui/scan/scan_progress_widget.py:72
 #: src/ui/scan/scan_progress_widget.py:117 src/ui/scan_view.py:1082
 #: src/ui/scan_view.py:1675
-#, fuzzy
 msgid "Waiting for scan data..."
-msgstr "正在更新病毒数据库……"
+msgstr "In attesa dei dati di scansione..."
 
 #: src/ui/scan/scan_progress_widget.py:82
 #: src/ui/scan/scan_progress_widget.py:120 src/ui/scan_view.py:1093
 #: src/ui/scan_view.py:1680
-#, fuzzy
 msgid "Scanned 0 files"
-msgstr "已扫描 {scanned} 个文件"
+msgstr "Scansionati 0 file"
 
 #: src/ui/scan/scan_progress_widget.py:92 src/ui/scan_results_dialog.py:202
 #: src/ui/scan_view.py:1103 src/ui/statistics_view.py:288
 msgid "Threats Detected"
-msgstr "检测到威胁"
+msgstr "Minacce rilevate"
 
 #: src/ui/scan/scan_progress_widget.py:156 src/ui/scan_view.py:1256
 #, python-brace-format
 msgid "Target {current} of {total} \\u2014 {pct}%"
-msgstr "第 {current}/{total} 个目标 — {pct}%"
+msgstr "Target {current} di {total} \\u2014 {pct}%"
 
 #: src/ui/scan/scan_progress_widget.py:161 src/ui/scan_view.py:1263
 #, python-brace-format
 msgid "Scanning... {pct}%"
-msgstr "正在扫描... {pct}%"
+msgstr "Scansione in corso... {pct}%"
 
 #: src/ui/scan/scan_progress_widget.py:172
 #: src/ui/scan/scan_progress_widget.py:192 src/ui/scan_view.py:1281
 #: src/ui/scan_view.py:1301
 #, python-brace-format
 msgid "Scanned {scanned} / {total} files"
-msgstr "已扫描 {scanned}/{total} 个文件"
+msgstr "Scansionati {scanned} / {total} file"
 
 #: src/ui/scan/scan_progress_widget.py:179
 #: src/ui/scan/scan_progress_widget.py:200 src/ui/scan_view.py:1288
 #: src/ui/scan_view.py:1309
 #, python-brace-format
 msgid "Scanned {scanned} files"
-msgstr "已扫描 {scanned} 个文件"
+msgstr "Scansionati {scanned} file"
 
 #: src/ui/scan/scan_progress_widget.py:184 src/ui/scan_view.py:1293
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Target {current} of {total} ({cumulative} total)"
-msgstr "第 {current}/{total} 个目标：{path}"
+msgstr "Target {current} di {total} ({cumulative} totali)"
 
 #: src/ui/scan/scan_progress_widget.py:210 src/ui/scan_view.py:1319
-#, fuzzy
 msgid "Unknown threat"
-msgstr "未知威胁"
+msgstr "Minaccia sconosciuta"
 
 #: src/ui/scan/scan_progress_widget.py:233 src/ui/scan_view.py:1347
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Threats Detected ({n})"
 msgid_plural "Threats Detected ({n})"
-msgstr[0] "检测到威胁"
+msgstr[0] "Minaccia rilevata ({n})"
+msgstr[1] "Minacce rilevate ({n})"
 
 #: src/ui/scan/scan_results_widget.py:44
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "View Results ({n})"
-msgstr "查看结果（{n} 个威胁）"
+msgstr "Visualizza risultati ({n})"
 
 #: src/ui/scan/scan_results_widget.py:48 src/ui/scan_view.py:1438
 #: src/ui/scan_view.py:1463
 msgid "View Results"
-msgstr "查看结果"
+msgstr "Visualizza risultati"
 
 #: src/ui/scan/scan_view.py:154 src/ui/scan_view.py:1014
 msgid "Start Scan"
-msgstr "开始扫描"
+msgstr "Avvia scansione"
 
 #: src/ui/scan/scan_view.py:160 src/ui/scan_view.py:1023
 msgid "EICAR Test"
-msgstr "EICAR 测试"
+msgstr "Test EICAR"
 
 #: src/ui/scan/scan_view.py:162 src/ui/scan_view.py:2069
 msgid "Run a scan with EICAR test file to verify antivirus detection"
-msgstr "使用 EICAR 测试文件运行扫描以验证防病毒检测"
+msgstr ""
+"Esegui una scansione con file di test EICAR per verificare il rilevamento "
+"antivirus"
 
 #: src/ui/scan/scan_view.py:185 src/ui/scan_view.py:2095
 #, python-brace-format
 msgid "Backend: {name}"
-msgstr "后端：{name}"
+msgstr "Backend: {name}"
 
 #: src/ui/scan/scan_view.py:201 src/ui/scan/target_selector.py:135
 msgid "Cannot add targets while scanning"
-msgstr ""
+msgstr "Impossibile aggiungere target durante la scansione"
 
 #: src/ui/scan/scan_view.py:244 src/ui/scan_view.py:1972
 #, python-brace-format
 msgid "Scan complete - {count} threat(s) detected"
-msgstr "扫描完成 — 发现 {count} 个威胁"
+msgstr "Scansione completata - {count} minaccia/e rilevata/e"
 
 #: src/ui/scan/scan_view.py:248 src/ui/scan_view.py:1986
 msgid "Scan complete - No threats found"
-msgstr "扫描完成 — 未发现威胁"
+msgstr "Scansione completata - Nessuna minaccia trovata"
 
 #: src/ui/scan/scan_view.py:250 src/ui/scan_view.py:1981
 #, python-brace-format
 msgid "Scan complete - No threats found ({count} file(s) not accessible)"
-msgstr "扫描完成 — 未发现威胁（{count} 个文件无法访问）"
+msgstr ""
+"Scansione completata - Nessuna minaccia trovata ({count} file/i non "
+"accessibili)"
 
 #: src/ui/scan/scan_view.py:258
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "Scan error: {error}"
-msgstr "  错误：{error}"
+msgstr "Errore scansione: {error}"
 
 #: src/ui/scan/scan_view.py:271 src/ui/scan_view.py:1501
 msgid "Please select a file or folder to scan"
-msgstr "请选择要扫描的文件或文件夹"
+msgstr "Seleziona un file o una cartella da scansionare"
 
 #: src/ui/scan/scan_view.py:298 src/ui/scan_view.py:1920
 #, python-brace-format
 msgid "Target {current} of {total}: {path}"
-msgstr "第 {current}/{total} 个目标：{path}"
+msgstr "Target {current} di {total}: {path}"
 
 #: src/ui/scan/scan_view.py:303 src/ui/scan_view.py:1659
 #: src/ui/scan_view.py:1917
 #, python-brace-format
 msgid "Scanning {path}"
-msgstr "正在扫描 {path}"
+msgstr "Scansione di {path}"
 
 #: src/ui/scan/scan_view.py:326 src/ui/scan_view.py:1606
 #, python-brace-format
 msgid "Failed to create EICAR test file: {error}"
-msgstr "无法创建 EICAR 测试文件：{error}"
+msgstr "Creazione file di test EICAR fallita: {error}"
 
 #: src/ui/scan/target_selector.py:79 src/ui/scan/target_selector.py:234
 #: src/ui/scan_view.py:705 src/ui/scan_view.py:990
 msgid "Drop files here or click Add"
-msgstr "将文件拖放到此处，或点击添加"
+msgstr "Trascina file qui o clicca Aggiungi"
 
 #: src/ui/scan/target_selector.py:94 src/ui/scan_view.py:714
 msgid "Add files"
-msgstr "添加文件"
+msgstr "Aggiungi file"
 
 #: src/ui/scan/target_selector.py:101 src/ui/scan_view.py:722
 msgid "Add folders"
-msgstr "添加文件夹"
+msgstr "Aggiungi cartelle"
 
 #: src/ui/scan/target_selector.py:120
-#, fuzzy
 msgid "No targets selected"
-msgstr "未检测到威胁"
+msgstr "Nessun target selezionato"
 
 #: src/ui/scan/target_selector.py:236 src/ui/scan_view.py:992
 msgid "Scan Target (1)"
-msgstr "扫描目标 (1)"
+msgstr "Target di scansione (1)"
 
 #: src/ui/scan_in_progress_dialog.py:65
 msgid "Scan in Progress"
-msgstr "扫描正在进行中"
+msgstr "Scansione in corso"
 
 #: src/ui/scan_in_progress_dialog.py:101
 msgid "<b><big>Scan in Progress</big></b>"
-msgstr "<b><big>扫描正在进行中</big></b>"
+msgstr "<b><big>Scansione in corso</big></b>"
 
 #: src/ui/scan_in_progress_dialog.py:111
 msgid ""
 "A virus scan is currently running. If you close now, the scan will be "
 "cancelled and any partial results will be lost."
-msgstr "当前正在运行病毒扫描。如果您现在关闭，扫描将被取消，部分结果将丢失。"
+msgstr ""
+"Una scansione virus è attualmente in esecuzione. Se chiudi ora, la scansione "
+"verrà annullata e i risultati parziali andranno persi."
 
 #: src/ui/scan_in_progress_dialog.py:122
 msgid "Do you want to cancel the scan and close?"
-msgstr "你想取消扫描并关闭吗？"
+msgstr "Vuoi annullare la scansione e chiudere?"
 
 #: src/ui/scan_in_progress_dialog.py:134
 msgid "Keep Scanning"
-msgstr "继续扫描"
+msgstr "Continua scansione"
 
 #: src/ui/scan_in_progress_dialog.py:139
 msgid "Cancel Scan and Close"
-msgstr "取消扫描并关闭"
+msgstr "Annulla scansione e chiudi"
 
 #: src/ui/scan_results_dialog.py:101
 msgid "Scan Results"
-msgstr "扫描结果"
+msgstr "Risultati scansione"
 
 #: src/ui/scan_results_dialog.py:122
 msgid "Export results"
-msgstr "导出结果"
+msgstr "Esporta risultati"
 
 #: src/ui/scan_results_dialog.py:133 src/ui/scan_results_dialog.py:614
 #, python-brace-format
 msgid "Quarantine {n} Threat"
 msgid_plural "Quarantine All ({n})"
-msgstr[0] "隔离全部（{n} 个）"
+msgstr[0] "Metti in quarantena {n} minaccia"
+msgstr[1] "Metti tutti in quarantena ({n})"
 
 #: src/ui/scan_results_dialog.py:177 src/ui/sidebar.py:32
 msgid "Statistics"
-msgstr "统计"
+msgstr "Statistiche"
 
 #: src/ui/scan_results_dialog.py:188
 #, python-brace-format
 msgid "No threats found ({count} file(s) not accessible)"
-msgstr "未发现威胁（有 {count} 个文件无法访问）"
+msgstr "Nessuna minaccia trovata ({count} file/i non accessibili)"
 
 #: src/ui/scan_results_dialog.py:198 src/ui/scan_results_dialog.py:210
 #, python-brace-format
 msgid "{n} threat"
 msgid_plural "{n} threats"
-msgstr[0] "{n} 个威胁"
+msgstr[0] "{n} minaccia"
+msgstr[1] "{n} minacce"
 
 #: src/ui/scan_results_dialog.py:203
 #, python-brace-format
 msgid "{threat_text} found"
-msgstr "已发现威胁 {threat_text}"
+msgstr "Trovate {threat_text}"
 
 #: src/ui/scan_results_dialog.py:215
 #, python-brace-format
 msgid "Partial results - {threat_text} found"
-msgstr "部分结果 - 已发现威胁 {threat_text}"
+msgstr "Risultati parziali - {threat_text} trovata/e"
 
 #: src/ui/scan_results_dialog.py:218
 msgid "Partial results shown"
-msgstr "已显示部分结果"
+msgstr "Mostrati risultati parziali"
 
 #: src/ui/scan_results_dialog.py:238
 msgid "Files scanned:"
-msgstr "已扫描文件："
+msgstr "File scansionati:"
 
 #: src/ui/scan_results_dialog.py:241
 msgid "Directories:"
-msgstr "目录："
+msgstr "Cartelle:"
 
 #: src/ui/scan_results_dialog.py:246
 msgid "Threats found:"
-msgstr "已发现威胁："
+msgstr "Minacce trovate:"
 
 #: src/ui/scan_results_dialog.py:251
 msgid "Not accessible:"
-msgstr "无法访问："
+msgstr "Non accessibili:"
 
 #: src/ui/scan_results_dialog.py:256
 msgid "Error:"
-msgstr "错误："
+msgstr "Errore:"
 
 #: src/ui/scan_results_dialog.py:286
 msgid "Files Not Accessible"
-msgstr "无法访问的文件"
+msgstr "File non accessibili"
 
 #: src/ui/scan_results_dialog.py:290
 msgid "Permission Denied"
-msgstr "权限不够"
+msgstr "Permesso negato"
 
 #: src/ui/scan_results_dialog.py:294
 #, python-brace-format
 msgid "{n} file could not be scanned"
 msgid_plural "{n} files could not be scanned"
-msgstr[0] "{n} 个文件无法被扫描"
+msgstr[0] "Impossibile scansionare {n} file"
+msgstr[1] "Impossibile scansionare {n} file"
 
 #: src/ui/scan_results_dialog.py:322
 #, python-brace-format
 msgid "... and {count} more"
-msgstr "……还有 {count} 个"
+msgstr "... e altri {count}"
 
 #: src/ui/scan_results_dialog.py:344
 #, python-brace-format
 msgid ""
 "<b>Large result set:</b> Found {count} threats. Displaying first {limit}."
-msgstr "<b>威胁数量过多：</b> 发现 {count} 个威胁，仅显示前 {limit} 个。"
+msgstr ""
+"<b>Risultati numerosi:</b> Trovate {count} minacce. Visualizzate le prime "
+"{limit}."
 
 #: src/ui/scan_results_dialog.py:393 src/ui/virustotal_results_dialog.py:338
 #, python-brace-format
 msgid "Show {count} more"
-msgstr "再显示 {count} 个"
+msgstr "Mostra altri {count}"
 
 #: src/ui/scan_results_dialog.py:456 src/ui/sidebar.py:31
 msgid "Quarantine"
-msgstr "隔离"
+msgstr "Quarantena"
 
 #: src/ui/scan_results_dialog.py:464
 msgid "Exclude"
-msgstr "排除"
+msgstr "Escludi"
 
 #: src/ui/scan_results_dialog.py:467
 msgid "Add file path to exclusion list"
-msgstr "添加文件路径到排除列表"
+msgstr "Aggiungi percorso file alla lista esclusioni"
 
 #: src/ui/scan_results_dialog.py:473
 msgid "Copy Path"
-msgstr "复制路径"
+msgstr "Copia percorso"
 
 #: src/ui/scan_results_dialog.py:490
 msgid "Quarantined"
-msgstr "已隔离"
+msgstr "In quarantena"
 
 #: src/ui/scan_results_dialog.py:500
 #, python-brace-format
 msgid "Quarantined: {name}"
-msgstr "已隔离：{name}"
+msgstr "In quarantena: {name}"
 
 #: src/ui/scan_results_dialog.py:503
 #, python-brace-format
 msgid "Failed: {error}"
-msgstr "失败：{error}"
+msgstr "Fallito: {error}"
 
 #: src/ui/scan_results_dialog.py:509
 msgid "Cannot access settings"
-msgstr "无法访问设置"
+msgstr "Impossibile accedere alle impostazioni"
 
 #: src/ui/scan_results_dialog.py:520 src/ui/scan_results_dialog.py:535
 msgid "Excluded"
-msgstr "已排除"
+msgstr "Escluso"
 
 #: src/ui/scan_results_dialog.py:523
 msgid "Path already in exclusion list"
-msgstr "文件路径已在排除列表"
+msgstr "Percorso già nella lista esclusioni"
 
 #: src/ui/scan_results_dialog.py:540
 #, python-brace-format
 msgid "Added to exclusions: {name}"
-msgstr "已添加到排除列表：{name}"
+msgstr "Aggiunto alle esclusioni: {name}"
 
 #: src/ui/scan_results_dialog.py:546
 #, python-brace-format
 msgid "Copied: {path}"
-msgstr "已复制：{path}"
+msgstr "Copiato: {path}"
 
 #: src/ui/scan_results_dialog.py:554
 msgid "Quarantining..."
-msgstr "正在隔离……"
+msgstr "Mettendo in quarantena..."
 
 #: src/ui/scan_results_dialog.py:589
 #, python-brace-format
 msgid "Quarantined {n} threat"
 msgid_plural "Quarantined {n} threats"
-msgstr[0] "已隔离 {n} 个威胁"
+msgstr[0] "Messa in quarantena {n} minaccia"
+msgstr[1] "Messe in quarantena {n} minacce"
 
 #: src/ui/scan_results_dialog.py:596
 #, python-brace-format
 msgid "Quarantined {success}, failed {failed}"
-msgstr "已隔离 {success} 个，失败 {failed} 个"
+msgstr "Messe in quarantena: {success}, fallite: {failed}"
 
 #: src/ui/scan_results_dialog.py:627
 msgid "No results to export"
-msgstr "没有结果可供导出"
+msgstr "Nessun risultato da esportare"
 
 #: src/ui/scan_results_dialog.py:636
 msgid "Results copied to clipboard"
-msgstr "已复制结果到剪贴板"
+msgstr "Risultati copiati negli appunti"
 
 #: src/ui/scan_results_dialog.py:637 src/ui/virustotal_results_dialog.py:452
 msgid "Failed to copy results"
-msgstr "无法复制结果"
+msgstr "Copia risultati fallita"
 
 #: src/ui/scan_results_dialog.py:645
 msgid "Export Scan Results"
-msgstr "导出扫描结果"
+msgstr "Esporta risultati scansione"
 
 #: src/ui/scan_view.py:399
 msgid "Scan in progress - please wait until the current scan completes"
-msgstr "扫描正在进行中 - 请等待当前扫描完成"
+msgstr "Scansione in corso - attendi il completamento della scansione corrente"
 
 #: src/ui/scan_view.py:406
 msgid "No files were dropped"
-msgstr "未拖入任何文件"
+msgstr "Nessun file è stato rilasciato"
 
 #: src/ui/scan_view.py:426
 msgid "Unable to accept dropped files"
-msgstr "无法接受拖入的文件"
+msgstr "Impossibile accettare file rilasciati"
 
 #: src/ui/scan_view.py:646
 #, python-brace-format
 msgid "Profile '{name}' has no valid targets"
-msgstr "配置“{name}”没有有效的目标"
+msgstr "Il profilo '{name}' non ha target validi"
 
 #: src/ui/scan_view.py:730
 msgid "Clear all"
-msgstr "清除全部"
+msgstr "Cancella tutto"
 
 #: src/ui/scan_view.py:746
 msgid "Drop files here or click Add Files/Folders"
-msgstr "将文件拖放到此处，或点击添加文件/文件夹"
+msgstr "Trascina file qui o clicca Aggiungi file/cartelle"
 
 #: src/ui/scan_view.py:822
 msgid "Select Files to Scan"
-msgstr "选择要扫描的文件"
+msgstr "Seleziona file da scansionare"
 
 #: src/ui/scan_view.py:844
 msgid "Select Folders to Scan"
-msgstr "选择要扫描的文件夹"
+msgstr "Seleziona cartelle da scansionare"
 
 #: src/ui/scan_view.py:1015
 msgid "Start Scan (F5)"
-msgstr "开始扫描 (F5)"
+msgstr "Avvia scansione (F5)"
 
 #: src/ui/scan_view.py:1032 src/ui/scan_view.py:1636
 msgid "Cancel the current scan"
-msgstr "取消当前扫描"
+msgstr "Annulla la scansione corrente"
 
 #: src/ui/scan_view.py:1455
 #, python-brace-format
 msgid "View Results ({n} Threat)"
 msgid_plural "View Results ({n} Threats)"
-msgstr[0] "查看结果（{n} 个威胁）"
+msgstr[0] "Visualizza risultati ({n} minaccia)"
+msgstr[1] "Visualizza risultati ({n} minacce)"
 
 #: src/ui/scan_view.py:1632
 msgid "Cancel All"
-msgstr "全部取消"
+msgstr "Annulla tutto"
 
 #: src/ui/scan_view.py:1633
 msgid "Cancel all remaining scans"
-msgstr "取消全部剩下的扫描"
+msgstr "Annulla tutte le scansioni rimanenti"
 
 #: src/ui/scan_view.py:1656
 #, python-brace-format
 msgid "Scanning {path} \\u2014 File count pending"
-msgstr "正在扫描 {path} — 等待统计文件数"
+msgstr "Scansione di {path} \\u2014 Conteggio file in attesa"
 
 #: src/ui/scan_view.py:1663
 #, python-brace-format
 msgid "Scanning {count} items \\u2014 File count pending"
-msgstr "正在扫描 {count} 个项目 — 等待统计文件数"
+msgstr "Scansione di {count} elementi \\u2014 Conteggio file in attesa"
 
 #: src/ui/scan_view.py:1669
 #, python-brace-format
 msgid "Scanning {count} items"
-msgstr "正在扫描 {count} 个项目"
+msgstr "Scansione di {count} elementi"
 
 #: src/ui/scan_view.py:1997 src/ui/scan_view.py:2042
 #, python-brace-format
 msgid "Scan error: {detail}"
-msgstr "扫描错误：{detail}"
+msgstr "Errore scansione: {detail}"
 
 #: src/ui/scan_view.py:2009
 #, python-brace-format
 msgid "Scan completed with status: {status}"
-msgstr "扫描完成，状态：{status}"
+msgstr "Scansione completata con stato: {status}"
 
 #: src/ui/scan_view.py:2101
 msgid "Ready to scan"
-msgstr "准备就绪，可开始扫描"
+msgstr "Pronto per la scansione"
 
 #: src/ui/scan_view.py:2102 src/ui/update_view.py:170
 msgid "Dismiss"
-msgstr "忽略"
+msgstr "Chiudi"
 
 #: src/ui/sidebar.py:27
 msgid "Scan"
-msgstr "扫描"
+msgstr "Scansione"
 
 #: src/ui/sidebar.py:29
 msgid "Logs"
-msgstr "日志"
+msgstr "Log"
 
 #: src/ui/sidebar.py:30
 msgid "Components"
-msgstr "组件"
+msgstr "Componenti"
 
 #: src/ui/statistics_view.py:154
 msgid "Protection Status"
-msgstr "保护状态"
+msgstr "Stato protezione"
 
 #: src/ui/statistics_view.py:155
 msgid "Current system security posture"
-msgstr "当前系统安全状况"
+msgstr "Stato attuale della sicurezza del sistema"
 
 #: src/ui/statistics_view.py:168
 msgid "Refresh statistics"
-msgstr "刷新统计"
+msgstr "Aggiorna statistiche"
 
 #: src/ui/statistics_view.py:179
 msgid "System Status"
-msgstr "系统状态"
+msgstr "Stato sistema"
 
 #: src/ui/statistics_view.py:194
 msgid "Last Scan"
-msgstr "上次扫描"
+msgstr "Ultima scansione"
 
 #: src/ui/statistics_view.py:195 src/ui/statistics_view.py:876
 msgid "No scans recorded"
-msgstr "未记录扫描"
+msgstr "Nessuna scansione registrata"
 
 #: src/ui/statistics_view.py:211
 msgid "Timeframe"
-msgstr "时间范围"
+msgstr "Periodo"
 
 #: src/ui/statistics_view.py:212
 msgid "Select the time period for statistics"
-msgstr "选择统计的时间段"
+msgstr "Seleziona il periodo per le statistiche"
 
 #: src/ui/statistics_view.py:226
 msgid "Day"
-msgstr "日"
+msgstr "Giorno"
 
 #: src/ui/statistics_view.py:227
 msgid "Week"
-msgstr "周"
+msgstr "Settimana"
 
 #: src/ui/statistics_view.py:228
 msgid "Month"
-msgstr "月"
+msgstr "Mese"
 
 #: src/ui/statistics_view.py:229
 msgid "All Time"
-msgstr "所有时间"
+msgstr "Tutti i tempi"
 
 #: src/ui/statistics_view.py:254
 msgid "Scan Statistics"
-msgstr "扫描统计"
+msgstr "Statistiche scansione"
 
 #: src/ui/statistics_view.py:255 src/ui/statistics_view.py:789
 msgid "Aggregated metrics for the selected timeframe"
-msgstr "所选时间段的汇总指标"
+msgstr "Metriche aggregate per il periodo selezionato"
 
 #: src/ui/statistics_view.py:260
 msgid "Total Scans"
-msgstr "总扫描次数"
+msgstr "Scansioni totali"
 
 #: src/ui/statistics_view.py:261
 msgid "Number of scans performed"
-msgstr "总扫描次数"
+msgstr "Numero di scansioni effettuate"
 
 #: src/ui/statistics_view.py:274
 msgid "Files Scanned"
-msgstr "已扫描文件"
+msgstr "File scansionati"
 
 #: src/ui/statistics_view.py:275
 msgid "Total files checked"
-msgstr "检查的文件总数"
+msgstr "Totale file controllati"
 
 #: src/ui/statistics_view.py:289
 msgid "Malware and suspicious files found"
-msgstr "发现恶意软件和可疑文件"
+msgstr "Malware e file sospetti trovati"
 
 #: src/ui/statistics_view.py:302
 msgid "Clean Scans"
-msgstr "未报告威胁的扫描次数"
+msgstr "Scansioni pulite"
 
 #: src/ui/statistics_view.py:303
 msgid "Scans with no threats found"
-msgstr "未找到威胁的扫描次数"
+msgstr "Scansioni senza minacce trovate"
 
 #: src/ui/statistics_view.py:316
 msgid "Average Scan Duration"
-msgstr "平均扫描用时"
+msgstr "Durata media scansione"
 
 #: src/ui/statistics_view.py:317
 msgid "Mean time per scan"
-msgstr "每次扫描的平均时间"
+msgstr "Tempo medio per scansione"
 
 #: src/ui/statistics_view.py:342
 msgid "Scan Activity"
-msgstr "扫描活动"
+msgstr "Attività scansione"
 
 #: src/ui/statistics_view.py:343 src/ui/statistics_view.py:441
 msgid "Scan trends over the selected timeframe"
-msgstr "选定时间段内的扫描趋势"
+msgstr "Tendenze scansione nel periodo selezionato"
 
 #: src/ui/statistics_view.py:397
 msgid "No scan data available"
-msgstr "没有可用的扫描数据"
+msgstr "Nessun dato scansione disponibile"
 
 #: src/ui/statistics_view.py:398
 msgid "Run some scans to see activity trends here"
-msgstr "运行一些扫描以在此处查看活动趋势"
+msgstr "Esegui alcune scansioni per vedere le tendenze qui"
 
 #: src/ui/statistics_view.py:422
 msgid "No scan activity recorded"
-msgstr "未记录扫描活动"
+msgstr "Nessuna attività di scansione registrata"
 
 #: src/ui/statistics_view.py:430 src/ui/statistics_view.py:559
 msgid "Unable to render chart"
-msgstr "无法渲染图表"
+msgstr "Impossibile renderizzare il grafico"
 
 #: src/ui/statistics_view.py:483
 msgid "Scans"
-msgstr "扫描次数"
+msgstr "Scansioni"
 
 #: src/ui/statistics_view.py:491
 msgid "Threats"
-msgstr "威胁"
+msgstr "Minacce"
 
 #: src/ui/statistics_view.py:498
 msgid "Count"
-msgstr "数量"
+msgstr "Conteggio"
 
 #: src/ui/statistics_view.py:610
 msgid "Quick Actions"
-msgstr "快速操作"
+msgstr "Azioni rapide"
 
 #: src/ui/statistics_view.py:611
 msgid "Common scanning operations"
-msgstr "常见扫描操作"
+msgstr "Operazioni di scansione comuni"
 
 #: src/ui/statistics_view.py:615 src/ui/tray_service.py:310
 msgid "Quick Scan"
-msgstr "快速扫描"
+msgstr "Scansione rapida"
 
 #: src/ui/statistics_view.py:616
 msgid "Scan your home directory"
-msgstr "扫描主文件夹"
+msgstr "Scansiona la tua cartella home"
 
 #: src/ui/statistics_view.py:630
 msgid "View Scan Logs"
-msgstr "显示扫描日志"
+msgstr "Visualizza log scansioni"
 
 #: src/ui/statistics_view.py:631
 msgid "See detailed scan history"
-msgstr "查看详细的扫描日志记录"
+msgstr "Vedi cronologia dettagliata scansioni"
 
 #: src/ui/statistics_view.py:704
 msgid "Failed to load statistics data"
-msgstr "加载扫描统计数据失败"
+msgstr "Caricamento dati statistiche fallito"
 
 #: src/ui/statistics_view.py:714
 msgid "An unexpected error occurred"
-msgstr "发生意外错误"
+msgstr "Si è verificato un errore imprevisto"
 
 #: src/ui/statistics_view.py:780
 #, python-brace-format
@@ -4714,120 +4810,123 @@ msgstr "{start_date} - {end_date}"
 #: src/ui/statistics_view.py:785
 #, python-brace-format
 msgid "Statistics for: {date_range}"
-msgstr "统计数据：{date_range}"
+msgstr "Statistiche per: {date_range}"
 
 #: src/ui/statistics_view.py:792
 msgid "Aggregated metrics for all time"
-msgstr "所有时间段的汇总指标"
+msgstr "Metriche aggregate per tutto il periodo"
 
 #: src/ui/statistics_view.py:814
 msgid "Protected"
-msgstr "受保护"
+msgstr "Protetto"
 
 #: src/ui/statistics_view.py:820
 msgid "At Risk"
-msgstr "有风险"
+msgstr "A rischio"
 
 #: src/ui/statistics_view.py:824
 msgid "Unprotected"
-msgstr "未受保护"
+msgstr "Non protetto"
 
 #: src/ui/statistics_view.py:845
 msgid "less than an hour ago"
-msgstr "少于一小时前"
+msgstr "meno di un'ora fa"
 
 #: src/ui/statistics_view.py:849
 #, python-brace-format
 msgid "{hours} hour ago"
 msgid_plural "{hours} hours ago"
-msgstr[0] "{hours} 小时前"
+msgstr[0] "{hours} ora fa"
+msgstr[1] "{hours} ore fa"
 
 #: src/ui/statistics_view.py:856
 #, python-brace-format
 msgid "{days} day ago"
 msgid_plural "{days} days ago"
-msgstr[0] "{days} 天前"
+msgstr[0] "{days} giorno fa"
+msgstr[1] "{days} giorni fa"
 
 #: src/ui/statistics_view.py:863
 #, python-brace-format
 msgid "{weeks} week ago"
 msgid_plural "{weeks} weeks ago"
-msgstr[0] "{weeks} 周前"
+msgstr[0] "{weeks} settimana fa"
+msgstr[1] "{weeks} settimane fa"
 
 #: src/ui/statistics_view.py:869
 #, python-brace-format
 msgid "{time} ({age})"
-msgstr "{time}（{age}）"
+msgstr "{time} ({age})"
 
 #: src/ui/statistics_view.py:888
 msgid "No scan history yet"
-msgstr "目前还没有扫描历史"
+msgstr "Nessuna cronologia scansioni ancora"
 
 #: src/ui/statistics_view.py:889
 msgid "Run your first scan to see statistics and protection status"
-msgstr "运行第一次扫描以查看统计信息和保护状态"
+msgstr "Esegui la prima scansione per vedere statistiche e stato protezione"
 
 #: src/ui/statistics_view.py:909 src/ui/statistics_view.py:974
 msgid "Unable to load statistics"
-msgstr "无法加载扫描统计数据"
+msgstr "Impossibile caricare statistiche"
 
 #: src/ui/statistics_view.py:932
 msgid "Try refreshing or check that ClamAV is installed correctly"
-msgstr "尝试刷新或检查ClamAV是否正确安装"
+msgstr "Prova ad aggiornare o verifica che ClamAV sia installato correttamente"
 
 #: src/ui/statistics_view.py:953
 msgid "No scan history available"
-msgstr "没有可用的扫描历史"
+msgstr "Nessuna cronologia scansioni disponibile"
 
 #: src/ui/statistics_view.py:957
 msgid "No Data"
-msgstr "无数据"
+msgstr "Nessun dato"
 
 #: src/ui/statistics_view.py:962
 msgid "Run a scan to see statistics"
-msgstr "运行扫描以查看统计信息"
+msgstr "Esegui una scansione per vedere le statistiche"
 
 #: src/ui/statistics_view.py:964
 msgid "Run your first scan to see statistics here"
-msgstr "运行第一次扫描以在此处查看统计信息"
+msgstr "Esegui la prima scansione per vedere le statistiche qui"
 
 #: src/ui/statistics_view.py:987
 msgid "Error"
-msgstr "错误"
+msgstr "Errore"
 
 #: src/ui/statistics_view.py:990
 msgid "Could not load scan history"
-msgstr "无法加载扫描历史"
+msgstr "Impossibile caricare cronologia scansioni"
 
 #: src/ui/statistics_view.py:1017
 #, python-brace-format
 msgid "{seconds}s"
-msgstr "{seconds}秒"
+msgstr "{seconds}s"
 
 #: src/ui/statistics_view.py:1021
 #, python-brace-format
 msgid "{minutes}m {seconds}s"
-msgstr "{minutes} 分 {seconds} 秒"
+msgstr "{minutes}m {seconds}s"
 
 #: src/ui/tray_service.py:296
 msgid "Hide Window"
-msgstr "隐藏窗口"
+msgstr "Nascondi finestra"
 
 #: src/ui/tray_service.py:296
 msgid "Show Window"
-msgstr "显示窗口"
+msgstr "Mostra finestra"
 
 #: src/ui/tray_service.py:317
 msgid "Full Scan"
-msgstr "完整扫描"
+msgstr "Scansione completa"
 
 #: src/ui/tray_service.py:330
 msgid "Update Definitions"
-msgstr "更新定义"
+msgstr "Aggiorna definizioni"
 
 #: src/ui/tray_service.py:342 src/ui/window.py:633
 msgid "Quit"
-msgstr "退出"
+msgstr "Esci"
 
 #: src/ui/tray_service.py:387
 #, python-brace-format
@@ -4836,397 +4935,442 @@ msgstr "ClamUI - {status}"
 
 #: src/ui/update_view.py:90
 msgid "Database Update"
-msgstr "数据库更新"
+msgstr "Aggiornamento database"
 
 #: src/ui/update_view.py:92
 msgid "Update ClamAV virus definitions to detect the latest threats"
-msgstr "更新 ClamAV 病毒定义以检测新型威胁"
+msgstr "Aggiorna le definizioni virus ClamAV per rilevare le ultime minacce"
 
 #: src/ui/update_view.py:97
 msgid "Virus Definitions"
-msgstr "病毒定义"
+msgstr "Definizioni virus"
 
 #: src/ui/update_view.py:98
 msgid "Click 'Update Database' to download the latest virus signatures"
-msgstr "点击‘更新数据库’以下载最新的病毒特征库"
+msgstr "Clicca 'Aggiorna database' per scaricare le ultime firme virus"
 
 #: src/ui/update_view.py:117 src/ui/update_view.py:508
 msgid "Update Database"
-msgstr "更新数据库"
+msgstr "Aggiorna database"
 
 #: src/ui/update_view.py:118
 msgid "Update Database (F6)"
-msgstr "更新数据库 (F6)"
+msgstr "Aggiorna database (F6)"
 
 #: src/ui/update_view.py:129
 msgid "Force Update"
-msgstr "强制更新"
+msgstr "Aggiornamento forzato"
 
 #: src/ui/update_view.py:132
 msgid ""
 "Force update: Backs up local databases, deletes them, then downloads fresh "
 "copies from mirrors. Automatically restores from backup if update fails."
 msgstr ""
-"强制更新：备份本地数据库、删除它们，然后从镜像站下载新副本。如果更新失败，自"
-"动从备份恢复。"
+"Aggiornamento forzato: esegue il backup dei database locali, li elimina, "
+"quindi scarica copie aggiornate dai mirror. Ripristina automaticamente dal "
+"backup se l'aggiornamento fallisce."
 
 #: src/ui/update_view.py:159
 msgid "Update Results"
-msgstr "更新结果"
+msgstr "Risultati aggiornamento"
 
 #: src/ui/update_view.py:160
 msgid "Results will appear here after updating"
-msgstr "更新后，结果将在此处显示"
+msgstr "I risultati appariranno qui dopo l'aggiornamento"
 
 #: src/ui/update_view.py:193
 msgid "No update results yet."
-msgstr "目前还没有更新结果"
+msgstr "Nessun risultato aggiornamento ancora."
 
 #: src/ui/update_view.py:195
 msgid "Click 'Update Database' to download the latest virus definitions."
-msgstr "点击‘更新数据库’以下载最新的病毒定义。"
+msgstr "Clicca 'Aggiorna database' per scaricare le ultime definizioni virus."
 
 #: src/ui/update_view.py:223
 msgid "Checking freshclam..."
-msgstr "正在检查 freshclam……"
+msgstr "Controllo freshclam..."
 
 #: src/ui/update_view.py:241
 msgid "Checking service..."
-msgstr "正在检查服务……"
+msgstr "Controllo servizio..."
 
 #: src/ui/update_view.py:261 src/ui/update_view.py:357
 #, python-brace-format
 msgid "freshclam: {version}"
-msgstr "freshclam：{version}"
+msgstr "freshclam: {version}"
 
 #: src/ui/update_view.py:276 src/ui/update_view.py:369
 msgid "freshclam not found"
-msgstr "未找到 freshclam"
+msgstr "freshclam non trovato"
 
 #: src/ui/update_view.py:281 src/ui/update_view.py:374
 msgid "freshclam not installed"
-msgstr "未安装 freshclam"
+msgstr "freshclam non installato"
 
 #: src/ui/update_view.py:285 src/ui/update_view.py:411
 msgid "Service: N/A"
-msgstr "服务状态：不适用"
+msgstr "Servizio: N/D"
 
 #: src/ui/update_view.py:319
 msgid "Error checking freshclam status"
-msgstr "检查 freshclam 状态时出错"
+msgstr "Errore controllo stato freshclam"
 
 #: src/ui/update_view.py:402
 msgid "Service: Active"
-msgstr "服务状态：运行中"
+msgstr "Servizio: Attivo"
 
 #: src/ui/update_view.py:408
 msgid "Service: Stopped"
-msgstr "服务状态：已停止"
+msgstr "Servizio: Fermato"
 
 #: src/ui/update_view.py:414
 msgid "Service: Manual Mode"
-msgstr "服务状态：手动模式"
+msgstr "Servizio: Modalità manuale"
 
 #: src/ui/update_view.py:466
 msgid "Force updating virus database..."
-msgstr "正在强制更新病毒数据库……"
+msgstr "Aggiornamento forzato database virus..."
 
 #: src/ui/update_view.py:469
 msgid ""
 "Backing up local databases, then deleting them to force fresh downloads from "
 "mirrors."
-msgstr "备份本地数据库，然后删除它们以强制从镜像下载新的数据库。"
+msgstr ""
+"Backup dei database locali, quindi eliminazione per forzare scaricamenti "
+"freschi dai mirror."
 
 #: src/ui/update_view.py:472
 msgid "Previous databases will be restored if the update fails."
-msgstr "如果更新失败，将恢复以前的数据库。"
+msgstr ""
+"I database precedenti verranno ripristinati se l'aggiornamento fallisce."
 
 #: src/ui/update_view.py:474 src/ui/update_view.py:480
 msgid "Please wait, this may take a few minutes."
-msgstr "请稍候，这可能需要几分钟。"
+msgstr "Attendi, potrebbe richiedere alcuni minuti."
 
 #: src/ui/update_view.py:478
 msgid "Updating virus database..."
-msgstr "正在更新病毒数据库……"
+msgstr "Aggiornamento database virus..."
 
 #: src/ui/update_view.py:500
 msgid "Updating..."
-msgstr "正在更新……"
+msgstr "Aggiornamento..."
 
 #: src/ui/update_view.py:562
 msgid "Update signal sent to freshclam service"
-msgstr "已将更新信号发送到freshclam服务"
+msgstr "Segnale di aggiornamento inviato al servizio freshclam"
 
 #: src/ui/update_view.py:566
 #, python-brace-format
 msgid "Database updated successfully ({count} database updated)"
 msgid_plural "Database updated successfully ({count} databases updated)"
-msgstr[0] "已成功更新数据库（{count} 个数据库已更新）"
+msgstr[0] "Database aggiornato con successo ({count} database aggiornato)"
+msgstr[1] "Database aggiornato con successo ({count} database aggiornati)"
 
 #: src/ui/update_view.py:573
 msgid "Database is already up to date"
-msgstr "数据库已是最新"
+msgstr "Database già aggiornato"
 
 #: src/ui/update_view.py:576
 msgid "Update cancelled"
-msgstr "已取消更新"
+msgstr "Aggiornamento annullato"
 
 #: src/ui/update_view.py:579
 msgid "Update error occurred"
-msgstr "发生更新错误"
+msgstr "Si è verificato un errore aggiornamento"
 
 #: src/ui/update_view.py:593
 msgid "UPDATE SIGNAL SENT TO FRESHCLAM SERVICE"
-msgstr "已将更新信号发送到freshclam服务"
+msgstr "SEGNALE AGGIORNAMENTO INVIATO AL SERVIZIO FRESHCLAM"
 
 #: src/ui/update_view.py:595
 msgid "UPDATE COMPLETE - DATABASE UPDATED"
-msgstr "更新完成 - 数据库已更新"
+msgstr "AGGIORNAMENTO COMPLETATO - DATABASE AGGIORNATO"
 
 #: src/ui/update_view.py:597
 msgid "UPDATE COMPLETE - ALREADY UP TO DATE"
-msgstr "更新完成 - 已是最新"
+msgstr "AGGIORNAMENTO COMPLETATO - GIÀ AGGIORNATO"
 
 #: src/ui/update_view.py:599
 msgid "UPDATE CANCELLED"
-msgstr "已取消更新"
+msgstr "AGGIORNAMENTO ANNULLATO"
 
 #: src/ui/update_view.py:601
 msgid "UPDATE PARTIALLY COMPLETE"
-msgstr ""
+msgstr "AGGIORNAMENTO PARZIALMENTE COMPLETATO"
 
 #: src/ui/update_view.py:603
-#, fuzzy
 msgid "UPDATE RATE LIMITED"
-msgstr "已取消更新"
+msgstr "AGGIORNAMENTO LIMITATO (RATE LIMIT)"
 
 #: src/ui/update_view.py:605
 msgid "UPDATE ERROR"
-msgstr "更新错误"
+msgstr "ERRORE AGGIORNAMENTO"
 
 #: src/ui/update_view.py:612
 #, python-brace-format
 msgid "  Status: {status}"
-msgstr "  状态：{status}"
+msgstr "  Stato: {status}"
 
 #: src/ui/update_view.py:613
 #, python-brace-format
 msgid "  Method: {method}"
-msgstr "  方法：{method}"
+msgstr "  Metodo: {method}"
 
 #: src/ui/update_view.py:615
 #, python-brace-format
 msgid "  Databases updated: {count}"
-msgstr "  已更新的数据库：{count}"
+msgstr "  Database aggiornati: {count}"
 
 #: src/ui/update_view.py:618
 #, python-brace-format
 msgid "  Updated databases: {databases}"
-msgstr ""
+msgstr "  Database aggiornati: {databases}"
 
 #: src/ui/update_view.py:624
 #, python-brace-format
 msgid "  Already current: {databases}"
-msgstr ""
+msgstr "  Già aggiornati: {databases}"
 
 #: src/ui/update_view.py:641
 #, python-brace-format
 msgid "  Rate limited: {databases}"
-msgstr ""
+msgstr "  Limitati: {databases}"
 
 #: src/ui/update_view.py:647
 msgid "Note: The freshclam service is handling the update in the background."
-msgstr "注意：freshclam服务正在后台处理更新。"
+msgstr ""
+"Nota: il servizio freshclam sta gestendo l'aggiornamento in background."
 
 #: src/ui/update_view.py:648
 msgid "Check service logs for detailed progress:"
-msgstr "查看服务日志了解详细进展："
+msgstr "Controlla i log del servizio per il progresso dettagliato:"
 
 #: src/ui/update_view.py:660
 msgid "freshclam Output:"
-msgstr "freshclam 输出："
+msgstr "Output freshclam:"
 
 #: src/ui/update_view.py:666
 msgid "Error Output:"
-msgstr "错误输出："
+msgstr "Output errore:"
 
 #: src/ui/view_helpers.py:420
 msgid "Refresh"
-msgstr "刷新"
+msgstr "Aggiorna"
 
 #: src/ui/virustotal_results_dialog.py:88
 msgid "VirusTotal Results"
-msgstr "VirusTotal 结果"
+msgstr "Risultati VirusTotal"
 
 #: src/ui/virustotal_results_dialog.py:109
 msgid "Export results to JSON"
-msgstr "导出结果为 JSON 文件"
+msgstr "Esporta risultati in JSON"
 
 #: src/ui/virustotal_results_dialog.py:117
 msgid "View on VirusTotal"
-msgstr "在 VirusTotal 上查看"
+msgstr "Visualizza su VirusTotal"
 
 #: src/ui/virustotal_results_dialog.py:156
 msgid "Scan Summary"
-msgstr "扫描摘要"
+msgstr "Riepilogo scansione"
 
 #: src/ui/virustotal_results_dialog.py:163
 msgid "No threats detected"
-msgstr "未检测到威胁"
+msgstr "Nessuna minaccia rilevata"
 
 #: src/ui/virustotal_results_dialog.py:164
 msgid "File appears to be safe"
-msgstr "文件似乎是安全的"
+msgstr "Il file sembra sicuro"
 
 #: src/ui/virustotal_results_dialog.py:170
 #, python-brace-format
 msgid "{count} engines detected threats"
-msgstr "{count} 个引擎检测到威胁"
+msgstr "{count} motori hanno rilevato minacce"
 
 #: src/ui/virustotal_results_dialog.py:172
 #, python-brace-format
 msgid "Detection ratio: {ratio}"
-msgstr "检出占比：{ratio}"
+msgstr "Rapporto rilevamento: {ratio}"
 
 #: src/ui/virustotal_results_dialog.py:176
 msgid "File not in database"
-msgstr "文件不在数据库中"
+msgstr "File non nel database"
 
 #: src/ui/virustotal_results_dialog.py:177
 msgid "This file has not been scanned before"
-msgstr "此文件从未被扫描"
+msgstr "Questo file non è stato scansionato prima"
 
 #: src/ui/virustotal_results_dialog.py:181
 msgid "Analysis in progress"
-msgstr "分析正在进行中"
+msgstr "Analisi in corso"
 
 #: src/ui/virustotal_results_dialog.py:182
 msgid "Check back later for results"
-msgstr "稍后回来查看结果"
+msgstr "Controlla più tardi per i risultati"
 
 #: src/ui/virustotal_results_dialog.py:186
 msgid "Rate limit exceeded"
-msgstr "请求频率超限"
+msgstr "Limite di frequenza superato"
 
 #: src/ui/virustotal_results_dialog.py:187
 msgid "Too many requests"
-msgstr "请求过多"
+msgstr "Troppe richieste"
 
 #: src/ui/virustotal_results_dialog.py:191
 msgid "File too large"
-msgstr "文件过大"
+msgstr "File troppo grande"
 
 #: src/ui/virustotal_results_dialog.py:192
 msgid "Maximum size is 650MB"
-msgstr "最大大小为 650MB"
+msgstr "Dimensione massima 650MB"
 
 #: src/ui/virustotal_results_dialog.py:207
 msgid "Last scanned"
-msgstr "上次扫描"
+msgstr "Ultima scansione"
 
 #: src/ui/virustotal_results_dialog.py:231
 msgid "File Information"
-msgstr "文件信息"
+msgstr "Informazioni file"
 
 #: src/ui/virustotal_results_dialog.py:245
 msgid "Copy file path"
-msgstr "复制文件路径"
+msgstr "Copia percorso file"
 
 #: src/ui/virustotal_results_dialog.py:269
 msgid "Copy SHA256 hash"
-msgstr "复制 SHA256 哈希值"
+msgstr "Copia hash SHA256"
 
 #: src/ui/virustotal_results_dialog.py:284
 msgid "Detection Details"
-msgstr "检测详情"
+msgstr "Dettagli rilevamento"
 
 #: src/ui/virustotal_results_dialog.py:290
 #, python-brace-format
 msgid "<small>Showing first {limit} of {total} detections</small>"
-msgstr "<small>显示前 {limit} 个威胁（共 {total} 个）</small>"
+msgstr "<small>Visualizzate prime {limit} di {total} rilevazioni</small>"
 
 #: src/ui/virustotal_results_dialog.py:408
 #: src/ui/virustotal_setup_dialog.py:242 src/ui/virustotal_setup_dialog.py:313
 msgid "Failed to open browser"
-msgstr "无法打开浏览器"
+msgstr "Apertura browser fallita"
 
 #: src/ui/virustotal_results_dialog.py:413
 msgid "File path copied"
-msgstr "已复制文件路径"
+msgstr "Percorso file copiato"
 
 #: src/ui/virustotal_results_dialog.py:415
 #: src/ui/virustotal_results_dialog.py:422
 msgid "Failed to copy"
-msgstr "无法复制"
+msgstr "Copia non riuscita"
 
 #: src/ui/virustotal_results_dialog.py:420
 msgid "SHA256 hash copied"
-msgstr "已复制 SHA256 哈希值"
+msgstr "Hash SHA256 copiato"
 
 #: src/ui/virustotal_results_dialog.py:450
 msgid "Results copied to clipboard as JSON"
-msgstr "结果已作为 JSON 复制到剪贴板"
+msgstr "Risultati copiati negli appunti come JSON"
 
 #: src/ui/virustotal_setup_dialog.py:87
 msgid "VirusTotal Setup"
-msgstr "VirusTotal 设置"
+msgstr "Configurazione VirusTotal"
 
 #: src/ui/virustotal_setup_dialog.py:133
 msgid "VirusTotal API Key Required"
-msgstr "需要 VirusTotal API 密钥"
+msgstr "Richiesta chiave API VirusTotal"
 
 #: src/ui/virustotal_setup_dialog.py:136
 msgid ""
 "To scan files with VirusTotal, you need a free API key. You can get one by "
 "creating a free account on virustotal.com."
 msgstr ""
-"要使用VirusTotal扫描文件，您需要免费的API密钥。您可以通过在 virustotal.com 上"
-"创建一个免费帐户来获得一个。"
+"Per scansionare file con VirusTotal, hai bisogno di una chiave API gratuita. "
+"Puoi ottenerne una creando un account gratuito su virustotal.com."
 
 #: src/ui/virustotal_setup_dialog.py:163
 msgid "Enter API Key"
-msgstr "输入 API 密钥"
+msgstr "Inserisci chiave API"
 
 #: src/ui/virustotal_setup_dialog.py:189
 msgid "Save & Scan"
-msgstr "保存并扫描"
+msgstr "Salva e scansiona"
 
 #: src/ui/virustotal_setup_dialog.py:201
 msgid "Alternative Options"
-msgstr "替代选项"
+msgstr "Opzioni alternative"
 
 #: src/ui/virustotal_setup_dialog.py:205
 msgid "Upload file manually"
-msgstr "手动上传文件"
+msgstr "Carica file manualmente"
 
 #: src/ui/virustotal_setup_dialog.py:206
 msgid "Open VirusTotal website to upload files without API key"
-msgstr "打开 VirusTotal 网站上传文件，无需API密钥"
+msgstr "Apri sito VirusTotal per caricare file senza chiave API"
 
 #: src/ui/virustotal_setup_dialog.py:223
 msgid "Don't ask again when scanning without API key"
-msgstr "没有API密钥扫描时不要再询问"
+msgstr "Non chiedere più quando scansioni senza chiave API"
 
 #: src/ui/virustotal_setup_dialog.py:292
 msgid "Failed to save API key"
-msgstr "无法保存 API 密钥"
+msgstr "Salvataggio chiave API fallito"
 
 #: src/ui/window.py:534
 msgid "Scan System (Quick Scan)"
-msgstr "扫描系统（快速扫描）"
+msgstr "Scansiona sistema (scansione rapida)"
 
 #: src/ui/window.py:542
 msgid "Scan File or Folder"
-msgstr "扫描文件或文件夹"
+msgstr "Scansiona file o cartella"
 
 #: src/ui/window.py:627
 msgid "Menu (F10)"
-msgstr "菜单 (F10)"
+msgstr "Menu (F10)"
 
 #: src/ui/window.py:632
 msgid "About ClamUI"
-msgstr "关于 ClamUI"
+msgstr "Informazioni su ClamUI"
 
 #: src/ui/window.py:643
 msgid "ClamAV Desktop Scanner"
-msgstr "ClamAV 桌面扫描程序"
+msgstr "Scanner desktop ClamAV"
+
+#~ msgid ""
+#~ "Note: With clamd active, the EICAR test file may be cleaned up before it "
+#~ "can be scanned."
+#~ msgstr ""
+#~ "Nota: con clamd attivo, il file di test EICAR potrebbe essere pulito "
+#~ "prima di poter essere scansionato."
+
+#~ msgid "Target {current} of {total} — {pct}%"
+#~ msgstr "Target {current} di {total} — {pct}%"
+
+#~ msgid "Scanned {scanned:,} / {total:,} files"
+#~ msgstr "Scansionati {scanned:,} / {total:,} file"
+
+#~ msgid "Found {n} threat(s)"
+#~ msgstr "Trovate {n} minaccia/e"
+
+#~ msgid "Scanned {scanned} / {total} files ({cumulative} total)"
+#~ msgstr "Scansionati {scanned} / {total} file ({cumulative} totali)"
+
+#~ msgid "Scanned {scanned} files ({cumulative} total)"
+#~ msgstr "Scansionati {scanned} file ({cumulative} totali)"
+
+#~ msgid "Found {n} threat"
+#~ msgid_plural "Found {n} threats"
+#~ msgstr[0] "Trovata {n} minaccia"
+#~ msgstr[1] "Trovate {n} minacce"
+
+#~ msgid "Configuration file:"
+#~ msgstr "File di configurazione:"
+
+#~ msgid ""
+#~ "Cannot save clamd settings: Configuration failed to load.\n"
+#~ "\n"
+#~ "Check that /etc/clamav/clamd.conf exists and is readable."
+#~ msgstr ""
+#~ "Impossibile salvare impostazioni clamd: caricamento "
+#~ "configurazionefallito.\n"
+#~ "\n"
+#~ "Verifica che /etc/clamav/clamd.conf esista e sia leggibile."

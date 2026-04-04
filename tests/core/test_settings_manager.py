@@ -292,6 +292,51 @@ class TestSettingsManagerResetAndGetAll:
         assert all_settings["custom_key"] == "custom_value"
 
 
+class TestSettingsManagerListeners:
+    """Tests for keyed settings change listeners."""
+
+    @pytest.fixture
+    def temp_config_dir(self):
+        """Create a temporary directory for settings storage."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            yield tmpdir
+
+    @pytest.fixture
+    def settings_manager(self, temp_config_dir):
+        """Create a SettingsManager with a temporary directory."""
+        return SettingsManager(config_dir=temp_config_dir)
+
+    def test_add_listener_notified_on_set(self, settings_manager):
+        """Test listeners receive the new value when a setting changes."""
+        callback = mock.MagicMock()
+        settings_manager.add_listener("scan_backend", callback)
+
+        settings_manager.set("scan_backend", "daemon")
+
+        callback.assert_called_once_with("daemon")
+
+    def test_remove_listener_stops_notifications(self, settings_manager):
+        """Test removed listeners no longer receive setting updates."""
+        callback = mock.MagicMock()
+        settings_manager.add_listener("scan_backend", callback)
+        settings_manager.remove_listener("scan_backend", callback)
+
+        settings_manager.set("scan_backend", "daemon")
+
+        callback.assert_not_called()
+
+    def test_reset_to_defaults_notifies_changed_keys(self, settings_manager):
+        """Test listeners are notified when reset changes an observed key."""
+        callback = mock.MagicMock()
+        settings_manager.add_listener("scan_backend", callback)
+        settings_manager.set("scan_backend", "daemon")
+        callback.reset_mock()
+
+        settings_manager.reset_to_defaults()
+
+        callback.assert_called_once_with("auto")
+
+
 class TestSettingsManagerErrorHandling:
     """Tests for SettingsManager error handling."""
 

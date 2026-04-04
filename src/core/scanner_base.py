@@ -35,6 +35,14 @@ _NONFATAL_SKIP_MARKERS = (
 )
 _IGNORABLE_WARNING_LINES = ("LibClamAV Warning: cli_realpath: Invalid arguments.",)
 
+# LibClamAV Error patterns from non-fatal file parsing (CL_EPARSE/CL_EFORMAT).
+# These are internal errors where ClamAV abandons one corrupt file and continues
+# scanning. They should not cause the entire scan to be treated as a hard error.
+_NONFATAL_LIBCLAMAV_PATTERNS = (
+    "index_local_file_headers_within_bounds",  # ZIP offset validation (ClamAV 1.5.0+)
+    "Invalid offset arguments",  # ZIP parser malformed archive offsets
+)
+
 
 def communicate_with_cancel_check(
     process: subprocess.Popen,
@@ -242,7 +250,7 @@ def stream_process_output(
                         on_line(line)
 
     except OSError as e:
-        logger.warning(f"Error streaming process output: {e}")
+        logger.warning("Error streaming process output: %s", e)
         # Try to get any remaining output
         try:
             remaining_stdout, remaining_stderr = process.communicate(timeout=2.0)
@@ -289,6 +297,13 @@ def collect_clamav_warnings(stdout: str, stderr: str) -> tuple[list[str], list[s
             continue
 
         if any(ignored in line for ignored in _IGNORABLE_WARNING_LINES):
+            continue
+
+        # Non-fatal LibClamAV parse errors (e.g. corrupt ZIP archives) —
+        # ClamAV skips the file internally and continues scanning.
+        if line.startswith("LibClamAV Error:") and any(
+            pattern in line for pattern in _NONFATAL_LIBCLAMAV_PATTERNS
+        ):
             continue
 
         if line.startswith(

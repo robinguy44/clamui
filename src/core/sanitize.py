@@ -316,3 +316,30 @@ def sanitize_path_for_logging(text: str | None) -> str:
         ""
     """
     return redact_sensitive_log_data(text)
+
+
+def sanitize_surrogate_path(path: str) -> str:
+    """
+    Replace surrogate escape characters in a filesystem path with U+FFFD.
+
+    On Linux, filenames are raw bytes (not necessarily UTF-8). Python 3 uses
+    PEP 383 "surrogate escape" to represent non-UTF-8 bytes as code points
+    in U+DC80-U+DCFF. These surrogates cause UnicodeEncodeError when the
+    string is later encoded to UTF-8 (e.g., writing to a file, logging, or
+    passing to subprocess).
+
+    This function replaces any surrogate code points with the Unicode
+    replacement character (U+FFFD), making the string safe for UTF-8 encoding.
+
+    Args:
+        path: A filesystem path that may contain surrogate escapes.
+
+    Returns:
+        The path with surrogates replaced by U+FFFD.
+    """
+    # Fast path: try encoding to UTF-8; if it works, no surrogates present
+    try:
+        path.encode("utf-8")
+        return path
+    except UnicodeEncodeError:
+        return path.encode("utf-8", errors="replace").decode("utf-8")
