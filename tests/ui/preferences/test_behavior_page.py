@@ -357,8 +357,8 @@ class TestBehaviorPageFileManagerIntegration:
         page_instance = BehaviorPage(tray_available=True)
         page_instance.create_page()
 
-        # Should add three groups: window behavior + scan behavior + file manager integration
-        assert mock_page.add.call_count == 3
+        # Should add four groups: language + window behavior + scan behavior + file manager integration
+        assert mock_page.add.call_count == 4
         _clear_src_modules()
 
     def test_create_page_no_file_manager_group_when_not_flatpak(self, mock_gi_modules, monkeypatch):
@@ -377,8 +377,8 @@ class TestBehaviorPageFileManagerIntegration:
         page_instance = BehaviorPage(tray_available=True)
         page_instance.create_page()
 
-        # Should add two groups: window behavior + scan behavior (no file manager group)
-        assert mock_page.add.call_count == 2
+        # Should add three groups: language + window behavior + scan behavior (no file manager group)
+        assert mock_page.add.call_count == 3
         _clear_src_modules()
 
     def test_create_file_manager_group_returns_group(self, mock_gi_modules):

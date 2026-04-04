@@ -13,7 +13,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 
 from ...core.flatpak import is_flatpak
-from ...core.i18n import N_, _
+from ...core.i18n import N_, _, get_available_languages
 from ..compat import create_switch_row
 from ..utils import resolve_icon_name
 from .base import PreferencesPageMixin, create_navigation_row, styled_prefix_icon
@@ -63,6 +63,9 @@ class BehaviorPage(PreferencesPageMixin):
         self._close_behavior_handler_id = None
         self._live_progress_row = None
         self._live_progress_handler_id = None
+        self._language_row = None
+        self._language_handler_id = None
+        self._language_codes: list[str] = []
 
     def create_page(self) -> Adw.PreferencesPage:
         """
@@ -75,6 +78,10 @@ class BehaviorPage(PreferencesPageMixin):
             title=_("Behavior"),
             icon_name=resolve_icon_name("preferences-system-symbolic"),
         )
+
+        # Language group (always shown)
+        language_group = self._create_language_group()
+        page.add(language_group)
 
         # Window Behavior group (only if tray is available)
         if self._tray_available:
@@ -169,6 +176,71 @@ class BehaviorPage(PreferencesPageMixin):
         group.add(self._live_progress_row)
 
         return group
+
+    def _create_language_group(self) -> Adw.PreferencesGroup:
+        """Create the Language preferences group with a language selector."""
+        group = Adw.PreferencesGroup()
+        group.set_title(_("Language"))
+        group.set_description(_("Override the application language (requires restart)"))
+
+        self._language_row = Adw.ComboRow()
+        self._language_row.set_title(_("Language"))
+        self._language_row.set_subtitle(_("Select the display language for the interface"))
+        self._language_row.add_prefix(styled_prefix_icon("preferences-desktop-locale-symbolic"))
+
+        # Build language list: "Automatic (System)" + available translations
+        available = get_available_languages()
+        self._language_codes = ["auto"] + [code for code, _name in available]
+        display_names = [_("Automatic (System)")] + [name for _code, name in available]
+
+        model = Gtk.StringList()
+        for name in display_names:
+            model.append(name)
+        self._language_row.set_model(model)
+
+        self._language_handler_id = self._language_row.connect(
+            "notify::selected", self._on_language_changed
+        )
+
+        self._load_language()
+
+        group.add(self._language_row)
+        return group
+
+    def _load_language(self):
+        """Load the current language setting into the ComboRow."""
+        if self._settings_manager is None or self._language_row is None:
+            return
+
+        current = self._settings_manager.get("language", "auto")
+        if current in self._language_codes:
+            index = self._language_codes.index(current)
+        else:
+            index = 0  # "auto"
+
+        handler_id = self._language_handler_id
+        if handler_id is not None:
+            self._language_row.handler_block(handler_id)
+        self._language_row.set_selected(index)
+        if handler_id is not None:
+            self._language_row.handler_unblock(handler_id)
+
+    def _on_language_changed(self, row, pspec):
+        """Handle language ComboRow changes."""
+        if self._settings_manager is None:
+            return
+
+        selected_index = row.get_selected()
+        if 0 <= selected_index < len(self._language_codes):
+            value = self._language_codes[selected_index]
+            self._settings_manager.set("language", value)
+
+            # Show restart-required toast on the preferences window
+            parent = self._parent_window
+            if parent and hasattr(parent, "add_toast"):
+                toast = Adw.Toast(title=_("Restart ClamUI to apply the new language"))
+                toast.set_timeout(5)
+                parent.add_toast(toast)
 
     def _load_live_progress(self):
         """Load the current live progress setting into the SwitchRow."""

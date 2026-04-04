@@ -42,6 +42,32 @@ def _setup_path():
 # Set up path before importing application modules
 _setup_path()
 
+
+def _apply_language_setting():
+    """
+    Read the language setting from settings.json and set LANGUAGE env var.
+
+    This reads the JSON file directly (without importing SettingsManager or
+    i18n) to set the LANGUAGE environment variable before gettext is
+    initialized at i18n import time.
+    """
+    import json
+
+    config_dir = os.environ.get("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+    settings_path = os.path.join(config_dir, "clamui", "settings.json")
+    try:
+        with open(settings_path, encoding="utf-8") as f:
+            settings = json.load(f)
+        language = settings.get("language", "auto")
+        if language and language != "auto":
+            os.environ["LANGUAGE"] = language
+    except (FileNotFoundError, json.JSONDecodeError, KeyError):
+        pass  # No settings yet or invalid — use system default
+
+
+# Apply language override BEFORE i18n initializes gettext
+_apply_language_setting()
+
 # Initialize i18n before any translatable strings are used
 from .core.i18n import _  # noqa: F401 — initializes i18n at import time
 

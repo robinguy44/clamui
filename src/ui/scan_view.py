@@ -147,6 +147,7 @@ class ScanView(Gtk.Box):
 
         # Set up the UI
         self._setup_ui()
+        self._bind_settings_listeners()
 
         # Connect to parent changes for visibility tracking
         self.connect("notify::parent", self._on_parent_changed)
@@ -185,6 +186,15 @@ class ScanView(Gtk.Box):
 
         # Set up drag-and-drop support
         self._setup_drop_target()
+
+    def _bind_settings_listeners(self) -> None:
+        """Subscribe to live settings updates that affect the scan view."""
+        if self._settings_manager is None:
+            return
+
+        add_listener = getattr(self._settings_manager, "add_listener", None)
+        if callable(add_listener):
+            add_listener("scan_backend", self._on_scan_backend_setting_changed)
 
     def _setup_drop_css(self):
         """Set up CSS styling for drag-and-drop visual feedback and severity badges."""
@@ -2064,6 +2074,15 @@ class ScanView(Gtk.Box):
             return
         backend_name = backend if backend is not None else self._scanner.get_active_backend()
         self._eicar_button.set_tooltip_text(self._get_eicar_tooltip_text(backend_name))
+
+    def _on_scan_backend_setting_changed(self, _backend: str) -> None:
+        """Refresh backend UI when the configured scan backend changes."""
+        GLib.idle_add(self._refresh_backend_indicator)
+
+    def _refresh_backend_indicator(self) -> bool:
+        """Update backend-dependent UI from the current scanner settings."""
+        self._update_backend_label()
+        return False
 
     def _update_backend_label(self):
         """Update the backend label with the current backend name."""

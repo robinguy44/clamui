@@ -1981,6 +1981,20 @@ class TestEicarTest:
 class TestBackendIndicator:
     """Tests for backend indicator functionality."""
 
+    def test_init_subscribes_to_scan_backend_changes(self, scan_view_class):
+        """Test ScanView listens for scan backend setting updates."""
+        settings_manager = mock.MagicMock()
+
+        scan_view_class(
+            settings_manager=settings_manager,
+            quarantine_manager=mock.MagicMock(),
+        )
+
+        settings_manager.add_listener.assert_called_once()
+        key, callback = settings_manager.add_listener.call_args[0]
+        assert key == "scan_backend"
+        assert callback.__name__ == "_on_scan_backend_setting_changed"
+
     def test_update_backend_label_daemon(self, mock_scan_view):
         """Test backend label shows daemon name."""
         mock_scan_view._scanner.get_active_backend.return_value = "daemon"
@@ -2018,6 +2032,22 @@ class TestBackendIndicator:
         tooltip = mock_scan_view._eicar_button.set_tooltip_text.call_args[0][0]
         assert "eicar test file" in tooltip.lower()
         assert "cleaned up" not in tooltip.lower()
+
+    def test_backend_setting_change_schedules_refresh(self, mock_scan_view):
+        """Test backend setting updates schedule a UI refresh on the GTK loop."""
+        with mock.patch("src.ui.scan_view.GLib") as mock_glib:
+            mock_scan_view._on_scan_backend_setting_changed("daemon")
+
+        mock_glib.idle_add.assert_called_once_with(mock_scan_view._refresh_backend_indicator)
+
+    def test_refresh_backend_indicator_updates_label(self, mock_scan_view):
+        """Test backend indicator refresh calls the shared label updater."""
+        mock_scan_view._update_backend_label = mock.MagicMock()
+
+        result = mock_scan_view._refresh_backend_indicator()
+
+        mock_scan_view._update_backend_label.assert_called_once_with()
+        assert result is False
 
 
 class TestScanStateCallbacks:

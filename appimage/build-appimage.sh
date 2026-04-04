@@ -972,6 +972,7 @@ create_apprun() {
 
 # Determine the AppImage mount directory
 HERE="\$(dirname "\$(readlink -f "\$0")")"
+export APPDIR="\$HERE"
 
 # Python environment
 export PYTHONHOME="\$HERE/usr"

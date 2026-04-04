@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ClamUI 0.1.6\n"
 "Report-Msgid-Bugs-To: https://github.com/linx-systems/clamui/issues\n"
-"POT-Creation-Date: 2026-04-03 12:10+0200\n"
+"POT-Creation-Date: 2026-04-04 13:22+0200\n"
 "PO-Revision-Date: 2026-03-06 15:15+0100\n"
 "Last-Translator: ClamUI Contributors\n"
 "Language-Team: English\n"
@@ -1389,7 +1389,7 @@ msgstr "Severity"
 msgid "Timestamp"
 msgstr "Timestamp"
 
-#: src/core/scanner_base.py:469
+#: src/core/scanner_base.py:484
 msgid "Scan cancelled by user"
 msgstr "Scan cancelled by user"
 
@@ -1582,7 +1582,7 @@ msgstr "Unknown error"
 #: src/core/virustotal.py:254 src/core/virustotal.py:308
 #: src/core/virustotal.py:467 src/core/virustotal.py:560
 #: src/core/virustotal.py:568 src/ui/scan/scan_view.py:255
-#: src/ui/scan_view.py:1978
+#: src/ui/scan_view.py:1991
 msgid "Scan cancelled"
 msgstr "Scan cancelled"
 
@@ -1732,7 +1732,7 @@ msgstr "Remember my choice"
 #: src/ui/preferences/virustotal_page.py:359 src/ui/profile_dialogs.py:121
 #: src/ui/profile_dialogs.py:714 src/ui/profile_dialogs.py:860
 #: src/ui/profile_dialogs.py:981 src/ui/scan/scan_view.py:168
-#: src/ui/scan_view.py:1021 src/ui/scan_view.py:1625 src/ui/update_view.py:142
+#: src/ui/scan_view.py:1031 src/ui/scan_view.py:1635 src/ui/update_view.py:142
 msgid "Cancel"
 msgstr "Cancel"
 
@@ -1989,7 +1989,7 @@ msgid "JSON Files"
 msgstr "JSON Files"
 
 #: src/ui/file_manager_integration_dialog.py:86
-#: src/ui/preferences/behavior_page.py:210
+#: src/ui/preferences/behavior_page.py:282
 msgid "File Manager Integration"
 msgstr "File Manager Integration"
 
@@ -2361,17 +2361,17 @@ msgstr "Browse for configuration file"
 msgid "Always ask"
 msgstr "Always ask"
 
-#: src/ui/preferences/behavior_page.py:75
+#: src/ui/preferences/behavior_page.py:78
 #: src/ui/preferences/virustotal_page.py:202 src/ui/preferences/window.py:50
 msgid "Behavior"
 msgstr "Behavior"
 
-#: src/ui/preferences/behavior_page.py:86
-#: src/ui/preferences/behavior_page.py:114
+#: src/ui/preferences/behavior_page.py:93
+#: src/ui/preferences/behavior_page.py:121
 msgid "Window Behavior"
 msgstr "Window Behavior"
 
-#: src/ui/preferences/behavior_page.py:89
+#: src/ui/preferences/behavior_page.py:96
 msgid ""
 "System tray is not available. Window behavior settings require a system tray "
 "to be active."
@@ -2379,43 +2379,64 @@ msgstr ""
 "System tray is not available. Window behavior settings require a system tray "
 "to be active."
 
-#: src/ui/preferences/behavior_page.py:115
+#: src/ui/preferences/behavior_page.py:122
 msgid "Configure what happens when closing the window"
 msgstr "Configure what happens when closing the window"
 
-#: src/ui/preferences/behavior_page.py:119
+#: src/ui/preferences/behavior_page.py:126
 msgid "When closing window"
 msgstr "When closing window"
 
-#: src/ui/preferences/behavior_page.py:121
+#: src/ui/preferences/behavior_page.py:128
 msgid "Choose what happens when you close the main window"
 msgstr "Choose what happens when you close the main window"
 
-#: src/ui/preferences/behavior_page.py:151
+#: src/ui/preferences/behavior_page.py:158
 msgid "Scan Behavior"
 msgstr "Scan Behavior"
 
-#: src/ui/preferences/behavior_page.py:152
+#: src/ui/preferences/behavior_page.py:159
 msgid "Configure how scans are displayed"
 msgstr "Configure how scans are displayed"
 
-#: src/ui/preferences/behavior_page.py:156
+#: src/ui/preferences/behavior_page.py:163
 msgid "Show Live Scan Progress"
 msgstr "Show Live Scan Progress"
 
-#: src/ui/preferences/behavior_page.py:158
+#: src/ui/preferences/behavior_page.py:165
 msgid "Display files being scanned in real-time with detailed progress"
 msgstr "Display files being scanned in real-time with detailed progress"
 
-#: src/ui/preferences/behavior_page.py:212
+#: src/ui/preferences/behavior_page.py:183
+#: src/ui/preferences/behavior_page.py:187
+msgid "Language"
+msgstr ""
+
+#: src/ui/preferences/behavior_page.py:184
+msgid "Override the application language (requires restart)"
+msgstr ""
+
+#: src/ui/preferences/behavior_page.py:188
+msgid "Select the display language for the interface"
+msgstr ""
+
+#: src/ui/preferences/behavior_page.py:194
+msgid "Automatic (System)"
+msgstr ""
+
+#: src/ui/preferences/behavior_page.py:241
+msgid "Restart ClamUI to apply the new language"
+msgstr ""
+
+#: src/ui/preferences/behavior_page.py:284
 msgid "Add context menu actions to scan files directly from your file manager"
 msgstr "Add context menu actions to scan files directly from your file manager"
 
-#: src/ui/preferences/behavior_page.py:216
+#: src/ui/preferences/behavior_page.py:288
 msgid "Configure Integration"
 msgstr "Configure Integration"
 
-#: src/ui/preferences/behavior_page.py:217
+#: src/ui/preferences/behavior_page.py:289
 msgid "Install or manage 'Scan with ClamUI' menu actions"
 msgstr "Install or manage 'Scan with ClamUI' menu actions"
 
@@ -3770,7 +3791,7 @@ msgstr "Description"
 
 #: src/ui/profile_dialogs.py:190 src/ui/profile_dialogs.py:582
 #: src/ui/scan/target_selector.py:78 src/ui/scan/target_selector.py:233
-#: src/ui/scan_view.py:694 src/ui/scan_view.py:979
+#: src/ui/scan_view.py:704 src/ui/scan_view.py:989
 msgid "Scan Targets"
 msgstr "Scan Targets"
 
@@ -3786,7 +3807,7 @@ msgstr "Add folder"
 msgid "Add file"
 msgstr "Add file"
 
-#: src/ui/profile_dialogs.py:220 src/ui/scan_view.py:735
+#: src/ui/profile_dialogs.py:220 src/ui/scan_view.py:745
 msgid "No targets added"
 msgstr "No targets added"
 
@@ -3847,12 +3868,12 @@ msgstr "Path"
 msgid "Pattern"
 msgstr "Pattern"
 
-#: src/ui/profile_dialogs.py:522 src/ui/scan_view.py:770
+#: src/ui/profile_dialogs.py:522 src/ui/scan_view.py:780
 msgid "Remove"
 msgstr "Remove"
 
 #: src/ui/profile_dialogs.py:580 src/ui/scan/target_selector.py:239
-#: src/ui/scan_view.py:985
+#: src/ui/scan_view.py:995
 #, python-brace-format
 msgid "Scan Targets ({count})"
 msgstr "Scan Targets ({count})"
@@ -4091,87 +4112,87 @@ msgstr "File deleted successfully"
 msgid "Failed to delete file"
 msgstr "Failed to delete file"
 
-#: src/ui/scan/profile_selector.py:50 src/ui/scan_view.py:493
+#: src/ui/scan/profile_selector.py:50 src/ui/scan_view.py:503
 msgid "Scan Profile"
 msgstr "Scan Profile"
 
-#: src/ui/scan/profile_selector.py:61 src/ui/scan_view.py:498
+#: src/ui/scan/profile_selector.py:61 src/ui/scan_view.py:508
 msgid "Profile"
 msgstr "Profile"
 
 #: src/ui/scan/profile_selector.py:65 src/ui/scan/profile_selector.py:103
-#: src/ui/scan_view.py:504 src/ui/scan_view.py:589
+#: src/ui/scan_view.py:514 src/ui/scan_view.py:599
 msgid "No Profile (Manual)"
 msgstr "No Profile (Manual)"
 
-#: src/ui/scan/profile_selector.py:75 src/ui/scan_view.py:516
+#: src/ui/scan/profile_selector.py:75 src/ui/scan_view.py:526
 msgid "Manage profiles"
 msgstr "Manage profiles"
 
-#: src/ui/scan/scan_progress_widget.py:47 src/ui/scan_view.py:1047
+#: src/ui/scan/scan_progress_widget.py:47 src/ui/scan_view.py:1057
 msgid "Scan Progress"
 msgstr "Scan Progress"
 
 #: src/ui/scan/scan_progress_widget.py:61 src/ui/scan/scan_view.py:284
-#: src/ui/scan_view.py:1061
+#: src/ui/scan_view.py:1071
 msgid "Scanning..."
 msgstr "Scanning..."
 
-#: src/ui/scan/scan_progress_widget.py:71 src/ui/scan_view.py:1071
+#: src/ui/scan/scan_progress_widget.py:71 src/ui/scan_view.py:1081
 msgid "Currently scanning"
 msgstr "Currently scanning"
 
 #: src/ui/scan/scan_progress_widget.py:72
-#: src/ui/scan/scan_progress_widget.py:117 src/ui/scan_view.py:1072
-#: src/ui/scan_view.py:1665
+#: src/ui/scan/scan_progress_widget.py:117 src/ui/scan_view.py:1082
+#: src/ui/scan_view.py:1675
 msgid "Waiting for scan data..."
 msgstr "Waiting for scan data..."
 
 #: src/ui/scan/scan_progress_widget.py:82
-#: src/ui/scan/scan_progress_widget.py:120 src/ui/scan_view.py:1083
-#: src/ui/scan_view.py:1670
+#: src/ui/scan/scan_progress_widget.py:120 src/ui/scan_view.py:1093
+#: src/ui/scan_view.py:1680
 msgid "Scanned 0 files"
 msgstr "Scanned 0 files"
 
 #: src/ui/scan/scan_progress_widget.py:92 src/ui/scan_results_dialog.py:202
-#: src/ui/scan_view.py:1093 src/ui/statistics_view.py:288
+#: src/ui/scan_view.py:1103 src/ui/statistics_view.py:288
 msgid "Threats Detected"
 msgstr "Threats Detected"
 
-#: src/ui/scan/scan_progress_widget.py:156 src/ui/scan_view.py:1246
+#: src/ui/scan/scan_progress_widget.py:156 src/ui/scan_view.py:1256
 #, python-brace-format
 msgid "Target {current} of {total} \\u2014 {pct}%"
 msgstr "Target {current} of {total} \\u2014 {pct}%"
 
-#: src/ui/scan/scan_progress_widget.py:161 src/ui/scan_view.py:1253
+#: src/ui/scan/scan_progress_widget.py:161 src/ui/scan_view.py:1263
 #, python-brace-format
 msgid "Scanning... {pct}%"
 msgstr "Scanning... {pct}%"
 
 #: src/ui/scan/scan_progress_widget.py:172
-#: src/ui/scan/scan_progress_widget.py:192 src/ui/scan_view.py:1271
-#: src/ui/scan_view.py:1291
+#: src/ui/scan/scan_progress_widget.py:192 src/ui/scan_view.py:1281
+#: src/ui/scan_view.py:1301
 #, python-brace-format
 msgid "Scanned {scanned} / {total} files"
 msgstr "Scanned {scanned} / {total} files"
 
 #: src/ui/scan/scan_progress_widget.py:179
-#: src/ui/scan/scan_progress_widget.py:200 src/ui/scan_view.py:1278
-#: src/ui/scan_view.py:1299
+#: src/ui/scan/scan_progress_widget.py:200 src/ui/scan_view.py:1288
+#: src/ui/scan_view.py:1309
 #, python-brace-format
 msgid "Scanned {scanned} files"
 msgstr "Scanned {scanned} files"
 
-#: src/ui/scan/scan_progress_widget.py:184 src/ui/scan_view.py:1283
+#: src/ui/scan/scan_progress_widget.py:184 src/ui/scan_view.py:1293
 #, python-brace-format
 msgid "Target {current} of {total} ({cumulative} total)"
 msgstr "Target {current} of {total} ({cumulative} total)"
 
-#: src/ui/scan/scan_progress_widget.py:210 src/ui/scan_view.py:1309
+#: src/ui/scan/scan_progress_widget.py:210 src/ui/scan_view.py:1319
 msgid "Unknown threat"
 msgstr "Unknown threat"
 
-#: src/ui/scan/scan_progress_widget.py:233 src/ui/scan_view.py:1337
+#: src/ui/scan/scan_progress_widget.py:233 src/ui/scan_view.py:1347
 #, python-brace-format
 msgid "Threats Detected ({n})"
 msgid_plural "Threats Detected ({n})"
@@ -4183,24 +4204,24 @@ msgstr[1] "Threats Detected ({n})"
 msgid "View Results ({n})"
 msgstr "View Results ({n})"
 
-#: src/ui/scan/scan_results_widget.py:48 src/ui/scan_view.py:1428
-#: src/ui/scan_view.py:1453
+#: src/ui/scan/scan_results_widget.py:48 src/ui/scan_view.py:1438
+#: src/ui/scan_view.py:1463
 msgid "View Results"
 msgstr "View Results"
 
-#: src/ui/scan/scan_view.py:154 src/ui/scan_view.py:1004
+#: src/ui/scan/scan_view.py:154 src/ui/scan_view.py:1014
 msgid "Start Scan"
 msgstr "Start Scan"
 
-#: src/ui/scan/scan_view.py:160 src/ui/scan_view.py:1013
+#: src/ui/scan/scan_view.py:160 src/ui/scan_view.py:1023
 msgid "EICAR Test"
 msgstr "EICAR Test"
 
-#: src/ui/scan/scan_view.py:162 src/ui/scan_view.py:2053
+#: src/ui/scan/scan_view.py:162 src/ui/scan_view.py:2069
 msgid "Run a scan with EICAR test file to verify antivirus detection"
 msgstr "Run a scan with EICAR test file to verify antivirus detection"
 
-#: src/ui/scan/scan_view.py:185 src/ui/scan_view.py:2070
+#: src/ui/scan/scan_view.py:185 src/ui/scan_view.py:2095
 #, python-brace-format
 msgid "Backend: {name}"
 msgstr "Backend: {name}"
@@ -4209,16 +4230,16 @@ msgstr "Backend: {name}"
 msgid "Cannot add targets while scanning"
 msgstr "Cannot add targets while scanning"
 
-#: src/ui/scan/scan_view.py:244 src/ui/scan_view.py:1959
+#: src/ui/scan/scan_view.py:244 src/ui/scan_view.py:1972
 #, python-brace-format
 msgid "Scan complete - {count} threat(s) detected"
 msgstr "Scan complete - {count} threat(s) detected"
 
-#: src/ui/scan/scan_view.py:248 src/ui/scan_view.py:1973
+#: src/ui/scan/scan_view.py:248 src/ui/scan_view.py:1986
 msgid "Scan complete - No threats found"
 msgstr "Scan complete - No threats found"
 
-#: src/ui/scan/scan_view.py:250 src/ui/scan_view.py:1968
+#: src/ui/scan/scan_view.py:250 src/ui/scan_view.py:1981
 #, python-brace-format
 msgid "Scan complete - No threats found ({count} file(s) not accessible)"
 msgstr "Scan complete - No threats found ({count} file(s) not accessible)"
@@ -4228,36 +4249,36 @@ msgstr "Scan complete - No threats found ({count} file(s) not accessible)"
 msgid "Scan error: {error}"
 msgstr "Scan error: {error}"
 
-#: src/ui/scan/scan_view.py:271 src/ui/scan_view.py:1491
+#: src/ui/scan/scan_view.py:271 src/ui/scan_view.py:1501
 msgid "Please select a file or folder to scan"
 msgstr "Please select a file or folder to scan"
 
-#: src/ui/scan/scan_view.py:298 src/ui/scan_view.py:1907
+#: src/ui/scan/scan_view.py:298 src/ui/scan_view.py:1920
 #, python-brace-format
 msgid "Target {current} of {total}: {path}"
 msgstr "Target {current} of {total}: {path}"
 
-#: src/ui/scan/scan_view.py:303 src/ui/scan_view.py:1649
-#: src/ui/scan_view.py:1904
+#: src/ui/scan/scan_view.py:303 src/ui/scan_view.py:1659
+#: src/ui/scan_view.py:1917
 #, python-brace-format
 msgid "Scanning {path}"
 msgstr "Scanning {path}"
 
-#: src/ui/scan/scan_view.py:326 src/ui/scan_view.py:1596
+#: src/ui/scan/scan_view.py:326 src/ui/scan_view.py:1606
 #, python-brace-format
 msgid "Failed to create EICAR test file: {error}"
 msgstr "Failed to create EICAR test file: {error}"
 
 #: src/ui/scan/target_selector.py:79 src/ui/scan/target_selector.py:234
-#: src/ui/scan_view.py:695 src/ui/scan_view.py:980
+#: src/ui/scan_view.py:705 src/ui/scan_view.py:990
 msgid "Drop files here or click Add"
 msgstr "Drop files here or click Add"
 
-#: src/ui/scan/target_selector.py:94 src/ui/scan_view.py:704
+#: src/ui/scan/target_selector.py:94 src/ui/scan_view.py:714
 msgid "Add files"
 msgstr "Add files"
 
-#: src/ui/scan/target_selector.py:101 src/ui/scan_view.py:712
+#: src/ui/scan/target_selector.py:101 src/ui/scan_view.py:722
 msgid "Add folders"
 msgstr "Add folders"
 
@@ -4265,7 +4286,7 @@ msgstr "Add folders"
 msgid "No targets selected"
 msgstr "No targets selected"
 
-#: src/ui/scan/target_selector.py:236 src/ui/scan_view.py:982
+#: src/ui/scan/target_selector.py:236 src/ui/scan_view.py:992
 msgid "Scan Target (1)"
 msgstr "Scan Target (1)"
 
@@ -4478,92 +4499,92 @@ msgstr "Failed to copy results"
 msgid "Export Scan Results"
 msgstr "Export Scan Results"
 
-#: src/ui/scan_view.py:389
+#: src/ui/scan_view.py:399
 msgid "Scan in progress - please wait until the current scan completes"
 msgstr "Scan in progress - please wait until the current scan completes"
 
-#: src/ui/scan_view.py:396
+#: src/ui/scan_view.py:406
 msgid "No files were dropped"
 msgstr "No files were dropped"
 
-#: src/ui/scan_view.py:416
+#: src/ui/scan_view.py:426
 msgid "Unable to accept dropped files"
 msgstr "Unable to accept dropped files"
 
-#: src/ui/scan_view.py:636
+#: src/ui/scan_view.py:646
 #, python-brace-format
 msgid "Profile '{name}' has no valid targets"
 msgstr "Profile '{name}' has no valid targets"
 
-#: src/ui/scan_view.py:720
+#: src/ui/scan_view.py:730
 msgid "Clear all"
 msgstr "Clear all"
 
-#: src/ui/scan_view.py:736
+#: src/ui/scan_view.py:746
 msgid "Drop files here or click Add Files/Folders"
 msgstr "Drop files here or click Add Files/Folders"
 
-#: src/ui/scan_view.py:812
+#: src/ui/scan_view.py:822
 msgid "Select Files to Scan"
 msgstr "Select Files to Scan"
 
-#: src/ui/scan_view.py:834
+#: src/ui/scan_view.py:844
 msgid "Select Folders to Scan"
 msgstr "Select Folders to Scan"
 
-#: src/ui/scan_view.py:1005
+#: src/ui/scan_view.py:1015
 msgid "Start Scan (F5)"
 msgstr "Start Scan (F5)"
 
-#: src/ui/scan_view.py:1022 src/ui/scan_view.py:1626
+#: src/ui/scan_view.py:1032 src/ui/scan_view.py:1636
 msgid "Cancel the current scan"
 msgstr "Cancel the current scan"
 
-#: src/ui/scan_view.py:1445
+#: src/ui/scan_view.py:1455
 #, python-brace-format
 msgid "View Results ({n} Threat)"
 msgid_plural "View Results ({n} Threats)"
 msgstr[0] "View Results ({n} Threat)"
 msgstr[1] "View Results ({n} Threats)"
 
-#: src/ui/scan_view.py:1622
+#: src/ui/scan_view.py:1632
 msgid "Cancel All"
 msgstr "Cancel All"
 
-#: src/ui/scan_view.py:1623
+#: src/ui/scan_view.py:1633
 msgid "Cancel all remaining scans"
 msgstr "Cancel all remaining scans"
 
-#: src/ui/scan_view.py:1646
+#: src/ui/scan_view.py:1656
 #, python-brace-format
 msgid "Scanning {path} \\u2014 File count pending"
 msgstr "Scanning {path} \\u2014 File count pending"
 
-#: src/ui/scan_view.py:1653
+#: src/ui/scan_view.py:1663
 #, python-brace-format
 msgid "Scanning {count} items \\u2014 File count pending"
 msgstr "Scanning {count} items \\u2014 File count pending"
 
-#: src/ui/scan_view.py:1659
+#: src/ui/scan_view.py:1669
 #, python-brace-format
 msgid "Scanning {count} items"
 msgstr "Scanning {count} items"
 
-#: src/ui/scan_view.py:1984 src/ui/scan_view.py:2026
+#: src/ui/scan_view.py:1997 src/ui/scan_view.py:2042
 #, python-brace-format
 msgid "Scan error: {detail}"
 msgstr "Scan error: {detail}"
 
-#: src/ui/scan_view.py:1993
+#: src/ui/scan_view.py:2009
 #, python-brace-format
 msgid "Scan completed with status: {status}"
 msgstr "Scan completed with status: {status}"
 
-#: src/ui/scan_view.py:2076
+#: src/ui/scan_view.py:2101
 msgid "Ready to scan"
 msgstr "Ready to scan"
 
-#: src/ui/scan_view.py:2077 src/ui/update_view.py:170
+#: src/ui/scan_view.py:2102 src/ui/update_view.py:170
 msgid "Dismiss"
 msgstr "Dismiss"
 
