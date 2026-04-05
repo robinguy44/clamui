@@ -104,8 +104,13 @@ class AuditView(Gtk.Box):
         self._lynis_spinner: Gtk.Spinner | None = None
         self._rootkit_spinner: Gtk.Spinner | None = None
 
+        # Track whether initial data load has happened
+        self._initial_load_done = False
+
         self._setup_ui()
-        GLib.idle_add(self._run_audit_if_needed)
+
+        # Defer audit to when the view first becomes visible
+        self.connect("map", self._on_first_map)
 
     # =========================================================================
     # UI Setup
@@ -316,8 +321,14 @@ class AuditView(Gtk.Box):
     # Audit Execution
     # =========================================================================
 
+    def _on_first_map(self, widget):
+        """Run audit when the view first becomes visible."""
+        if not self._initial_load_done:
+            self._initial_load_done = True
+            self._run_audit_if_needed()
+
     def _run_audit_if_needed(self) -> bool:
-        """Run audit if no cached results exist. Called via GLib.idle_add."""
+        """Run audit if no cached results exist."""
         if self._cached_report is not None:
             self._display_cached_report()
         else:

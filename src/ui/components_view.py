@@ -95,17 +95,19 @@ class ComponentsView(Gtk.Box):
     - Refresh button to re-check component status
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, log_manager=None, **kwargs):
         """
         Initialize the components view.
 
         Args:
+            log_manager: Optional shared LogManager instance. If not provided,
+                a new one is created.
             **kwargs: Additional arguments passed to parent
         """
         super().__init__(orientation=Gtk.Orientation.VERTICAL, **kwargs)
 
-        # Log manager for daemon status checking
-        self._log_manager = LogManager()
+        # Use shared log manager if provided, otherwise create own
+        self._log_manager = log_manager if log_manager is not None else LogManager()
 
         # Is checking state
         self._is_checking = False
@@ -119,11 +121,14 @@ class ComponentsView(Gtk.Box):
         self._status_labels = {}
         self._guide_rows = {}
 
+        # Track whether initial data load has happened
+        self._initial_load_done = False
+
         # Set up the UI
         self._setup_ui()
 
-        # Check component status on load (deferred to after widget is mapped)
-        GLib.idle_add(self._check_all_components)
+        # Defer data loading until view becomes visible
+        self.connect("map", self._on_first_map)
 
     def _setup_ui(self):
         """Set up the components view UI layout."""
@@ -441,6 +446,12 @@ class ComponentsView(Gtk.Box):
         refresh_box.append(self._refresh_button)
 
         group.set_header_suffix(refresh_box)
+
+    def _on_first_map(self, widget):
+        """Load component data when the view first becomes visible."""
+        if not self._initial_load_done:
+            self._initial_load_done = True
+            self._check_all_components()
 
     def _on_refresh_clicked(self, button: Gtk.Button):
         """Handle refresh button click."""

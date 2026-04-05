@@ -565,11 +565,15 @@ class QuarantineView(Gtk.Box):
         """
         Handle view being mapped (shown on screen).
 
-        Refreshes the quarantine list when the view becomes visible.
+        Refreshes the quarantine list when the view becomes visible,
+        but skips the first map if data was already loaded during
+        pre-initialization.
 
         Args:
             widget: The widget that was mapped
         """
+        if self._all_entries or self._is_loading:
+            return
         self._load_entries_async()
 
     def _set_loading_state(self, is_loading: bool):
