@@ -8,6 +8,7 @@ staged config files to their destination paths and normalizes permissions.
 
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -40,6 +41,18 @@ _ALLOWED_DEST_DIRS: tuple[Path, ...] = (
     Path("/etc/clamav"),
     Path("/etc/clamd.d"),
     Path("/etc/clamav-unofficial-sigs"),
+)
+
+_FRESHCLAM_UNITS: tuple[str, ...] = (
+    "clamav-freshclam.service",
+    "freshclam.service",
+)
+
+_CLAMD_UNITS: tuple[str, ...] = (
+    "clamav-daemon.service",
+    "clamd.service",
+    "clamd@scan.service",
+    "clamav-clamonacc.service",
 )
 
 
@@ -86,6 +99,50 @@ def _apply_config_file(source: Path, destination: Path) -> None:
     os.chmod(destination, 0o644)
 
 
+def _restart_units_for_destinations(destinations: list[Path]) -> None:
+    """
+    Restart active ClamAV services affected by the written config files.
+
+    Only active services are restarted so distro-specific or disabled units
+    are skipped without failing the save operation.
+
+    Args:
+        destinations: Final config destinations that were updated
+    """
+    if shutil.which("systemctl") is None:
+        return
+
+    units_to_restart: list[str] = []
+    for destination in destinations:
+        if destination.name == "freshclam.conf":
+            units_to_restart.extend(_FRESHCLAM_UNITS)
+        elif destination.name == "clamd.conf" or destination.parent == Path("/etc/clamd.d"):
+            units_to_restart.extend(_CLAMD_UNITS)
+
+    seen_units: set[str] = set()
+    for unit in units_to_restart:
+        if unit in seen_units:
+            continue
+        seen_units.add(unit)
+
+        active_result = subprocess.run(
+            ["systemctl", "is-active", "--quiet", unit],
+            capture_output=True,
+            text=True,
+        )
+        if active_result.returncode != 0:
+            continue
+
+        restart_result = subprocess.run(
+            ["systemctl", "restart", unit],
+            capture_output=True,
+            text=True,
+        )
+        if restart_result.returncode != 0:
+            error = restart_result.stderr.strip() or restart_result.stdout.strip() or "unknown error"
+            raise RuntimeError(f"Failed to restart {unit}: {error}")
+
+
 def main(argv: list[str] | None = None) -> int:
     """
     Entry point for privileged preferences apply helper.
@@ -105,8 +162,11 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     try:
+        destinations: list[Path] = []
         for source, destination in pairs:
             _apply_config_file(source, destination)
+            destinations.append(destination)
+        _restart_units_for_destinations(destinations)
     except Exception as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1

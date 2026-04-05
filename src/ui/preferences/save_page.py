@@ -433,7 +433,7 @@ class SavePage(PreferencesPageMixin):
             GLib.idle_add(
                 self._show_success_dialog,
                 _("Configuration Saved"),
-                _("Configuration changes have been applied successfully."),
+                _("Configuration saved. Active ClamAV services were restarted where needed."),
             )
         except Exception as e:
             # Store error for thread-safe handling

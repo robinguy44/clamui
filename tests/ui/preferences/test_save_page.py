@@ -872,7 +872,7 @@ class TestSavePageSaveConfigsThread:
                 glib.idle_add.assert_any_call(
                     save_page._show_success_dialog,
                     "Configuration Saved",
-                    "Configuration changes have been applied successfully.",
+                    "Configuration saved. Active ClamAV services were restarted where needed.",
                 )
 
     def test_save_configs_thread_shows_error_on_write_failure(self, mock_gi_modules, save_page):

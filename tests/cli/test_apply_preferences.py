@@ -6,7 +6,11 @@ from unittest.mock import patch
 
 import pytest
 
-from src.cli.apply_preferences import _validate_destination, main
+from src.cli.apply_preferences import (
+    _restart_units_for_destinations,
+    _validate_destination,
+    main,
+)
 
 
 class TestApplyPreferencesCli:
@@ -57,6 +61,94 @@ class TestApplyPreferencesCli:
 
         assert exit_code == 0
         assert destination.exists()
+
+    def test_main_restarts_active_services_for_written_configs(self, tmp_path):
+        """Helper should restart active relevant services after applying configs."""
+        source = tmp_path / "source.conf"
+        destination = Path("/etc/clamav/freshclam.conf")
+        source.write_text("DatabaseDirectory /var/lib/clamav\n", encoding="utf-8")
+
+        run_calls = []
+
+        def _fake_run(cmd, **_kwargs):
+            run_calls.append(cmd)
+
+            class _Result:
+                returncode = 0
+                stderr = ""
+                stdout = ""
+
+            return _Result()
+
+        with (
+            patch.dict(main.__globals__, {"_validate_destination": lambda _destination: None}),
+            patch.dict(main.__globals__, {"_apply_config_file": lambda _source, _destination: None}),
+            patch("src.cli.apply_preferences.shutil.which", return_value="/usr/bin/systemctl"),
+            patch("src.cli.apply_preferences.subprocess.run", side_effect=_fake_run),
+        ):
+            exit_code = main([str(source), str(destination)])
+
+        assert exit_code == 0
+        assert ["systemctl", "is-active", "--quiet", "clamav-freshclam.service"] in run_calls
+        assert ["systemctl", "restart", "clamav-freshclam.service"] in run_calls
+
+
+class TestRestartUnitsForDestinations:
+    """Tests for service restart behavior after privileged writes."""
+
+    def test_skips_restart_when_systemctl_unavailable(self):
+        """Restart helper should no-op when systemctl is not installed."""
+        with patch("src.cli.apply_preferences.shutil.which", return_value=None):
+            _restart_units_for_destinations([Path("/etc/clamav/freshclam.conf")])
+
+    def test_skips_inactive_units(self):
+        """Inactive units should be skipped without calling restart."""
+        run_calls = []
+
+        def _fake_run(cmd, **_kwargs):
+            run_calls.append(cmd)
+
+            class _Result:
+                returncode = 3
+                stderr = ""
+                stdout = ""
+
+            return _Result()
+
+        with (
+            patch("src.cli.apply_preferences.shutil.which", return_value="/usr/bin/systemctl"),
+            patch("src.cli.apply_preferences.subprocess.run", side_effect=_fake_run),
+        ):
+            _restart_units_for_destinations([Path("/etc/clamav/freshclam.conf")])
+
+        assert ["systemctl", "is-active", "--quiet", "clamav-freshclam.service"] in run_calls
+        assert not any(call[:2] == ["systemctl", "restart"] for call in run_calls)
+
+    def test_raises_when_active_unit_restart_fails(self):
+        """Restart helper should fail when an active relevant unit cannot restart."""
+        run_calls = []
+
+        def _fake_run(cmd, **_kwargs):
+            run_calls.append(cmd)
+
+            class _Result:
+                stderr = ""
+                stdout = ""
+
+            result = _Result()
+            if cmd[:3] == ["systemctl", "is-active", "--quiet"]:
+                result.returncode = 0
+            else:
+                result.returncode = 1
+                result.stderr = "bad config"
+            return result
+
+        with (
+            patch("src.cli.apply_preferences.shutil.which", return_value="/usr/bin/systemctl"),
+            patch("src.cli.apply_preferences.subprocess.run", side_effect=_fake_run),
+        ):
+            with pytest.raises(RuntimeError, match="Failed to restart clamav-freshclam.service"):
+                _restart_units_for_destinations([Path("/etc/clamav/freshclam.conf")])
 
 
 class TestValidateDestination:
