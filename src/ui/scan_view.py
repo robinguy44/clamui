@@ -1254,16 +1254,18 @@ class ScanView(Gtk.Box):
         # Update progress label with percentage and target context
         if self._progress_label is not None and progress.percentage is not None:
             pct = int(progress.percentage)
+            overflow_suffix = " +" if progress.estimate_exceeded else ""
             if self._total_target_count > 1:
                 self._progress_label.set_text(
-                    _("Target {current} of {total} \u2014 {pct}%").format(
+                    _("Target {current} of {total} \u2014 {pct}%{overflow}").format(
                         current=self._current_target_idx,
                         total=self._total_target_count,
                         pct=pct,
+                        overflow=overflow_suffix,
                     )
                 )
             else:
-                self._progress_label.set_text(_("Scanning... {pct}%").format(pct=pct))
+                self._progress_label.set_text(_("Scanning... {pct}%{overflow}").format(pct=pct, overflow=overflow_suffix))
 
         # Update current file row subtitle with the file being scanned
         if self._current_file_row is not None and progress.current_file:
@@ -1278,7 +1280,25 @@ class ScanView(Gtk.Box):
                 else self._cumulative_files_scanned
             )
             total_scanned = completed_files + progress.files_scanned
-            if self._total_target_count > 1:
+
+            # Handle overflow case for the stats row title
+            if progress.estimate_exceeded and progress.files_total:
+                self._stats_row.set_title(
+                    _("Scanned {scanned} files").format(
+                        scanned=f"{progress.files_scanned:,}",
+                    )
+                )
+                if self._total_target_count > 1:
+                    self._stats_row.set_subtitle(
+                        _("Target {current} of {total} ({cumulative} total)").format(
+                            current=self._current_target_idx,
+                            total=self._total_target_count,
+                            cumulative=f"{total_scanned:,}",
+                        )
+                    )
+                else:
+                    self._stats_row.set_subtitle("")
+            elif self._total_target_count > 1:
                 if progress.files_total:
                     self._stats_row.set_title(
                         _("Scanned {scanned} / {total} files").format(

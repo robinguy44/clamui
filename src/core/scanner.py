@@ -573,6 +573,7 @@ class Scanner:
                     infected_count=infected_count,
                     infected_files=infected_files,
                     infected_threats=infected_threats,
+                    estimate_exceeded=(files_total is not None and files_scanned > files_total),
                 )
                 progress_callback(progress)
 
@@ -598,6 +599,7 @@ class Scanner:
                         infected_count=infected_count,
                         infected_files=infected_files,
                         infected_threats=infected_threats,
+                        estimate_exceeded=(files_total is not None and files_scanned > files_total),
                     )
                     progress_callback(progress)
 

@@ -57,6 +57,9 @@ class ScanProgress:
     bytes_scanned: int = 0
     """Number of bytes processed (if available from scanner output)."""
 
+    estimate_exceeded: bool = False
+    """True if the number of files scanned has exceeded the initial estimate."""
+
     infected_threats: dict[str, str] | None = None
     """Map of file path -> threat name for infected files found so far."""
 
@@ -68,7 +71,8 @@ class ScanProgress:
             Percentage (0-100) if files_total is known and > 0, None otherwise.
         """
         if self.files_total and self.files_total > 0:
-            return (self.files_scanned / self.files_total) * 100
+            pct = (self.files_scanned / self.files_total) * 100
+            return min(100.0, max(0.0, pct))
         return None
 
 
