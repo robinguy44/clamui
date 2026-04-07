@@ -523,7 +523,12 @@ class PreferencesPageMixin:
         Args:
             folder_path: The folder path to open
         """
-        if not os.path.exists(folder_path):
+        # In Flatpak, we must check the host filesystem for the folder's existence
+        from ..core.clamav_detection import config_file_exists
+
+        # config_file_exists uses flatpak-spawn --host to check existence
+        # We use it here to verify the folder exists on the host
+        if not config_file_exists(folder_path):
             # Show error if folder doesn't exist
             self._show_simple_dialog(
                 _("Folder Not Found"),
