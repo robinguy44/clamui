@@ -32,6 +32,7 @@ class NotificationManager:
     NOTIFICATION_ID_VT_NO_KEY = "virustotal-no-key"
     NOTIFICATION_ID_DEVICE_SCAN_STARTED = "device-scan-started"
     NOTIFICATION_ID_DEVICE_SCAN_COMPLETE = "device-scan-complete"
+    NOTIFICATION_ID_AUDIT = "audit-complete"
 
     def __init__(self, settings_manager: SettingsManager | None = None):
         """
@@ -369,6 +370,42 @@ class NotificationManager:
             body=body,
             priority=priority,
             default_action="app.show-scan",
+        )
+
+    def notify_audit_complete(self, warnings: int = 0, issues: int = 0) -> bool:
+        """
+        Send notification when security audit finds issues.
+
+        Args:
+            warnings: Number of checks with WARNING status
+            issues: Number of checks with FAIL status
+
+        Returns:
+            True if notification was sent, False otherwise
+        """
+        if not self._can_notify():
+            return False
+
+        if warnings == 0 and issues == 0:
+            return False
+
+        title = _("Security Audit Complete")
+
+        parts = []
+        if issues:
+            parts.append(ngettext("{count} issue", "{count} issues", issues).format(count=issues))
+        if warnings:
+            parts.append(
+                ngettext("{count} warning", "{count} warnings", warnings).format(count=warnings)
+            )
+        body = _("Found {details}").format(details=", ".join(parts))
+
+        return self._send(
+            notification_id=self.NOTIFICATION_ID_AUDIT,
+            title=title,
+            body=body,
+            priority=Gio.NotificationPriority.NORMAL,
+            default_action="app.show-audit",
         )
 
     def _can_notify(self) -> bool:

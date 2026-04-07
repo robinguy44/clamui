@@ -65,6 +65,7 @@ class ScanView(Gtk.Box):
         self,
         settings_manager: "SettingsManager | None" = None,
         quarantine_manager: "QuarantineManager | None" = None,
+        log_manager=None,
         **kwargs,
     ):
         """
@@ -74,6 +75,8 @@ class ScanView(Gtk.Box):
             settings_manager: Optional SettingsManager for exclusion patterns
             quarantine_manager: Optional shared QuarantineManager instance.
                 If not provided, a new one is created.
+            log_manager: Optional shared LogManager instance. Passed to Scanner
+                to avoid creating a redundant instance.
             **kwargs: Additional arguments passed to parent
         """
         super().__init__(orientation=Gtk.Orientation.VERTICAL, **kwargs)
@@ -81,8 +84,8 @@ class ScanView(Gtk.Box):
         # Store settings manager
         self._settings_manager = settings_manager
 
-        # Initialize scanner with settings manager for exclusion patterns
-        self._scanner = Scanner(settings_manager=settings_manager)
+        # Initialize scanner with shared log_manager and settings manager
+        self._scanner = Scanner(log_manager=log_manager, settings_manager=settings_manager)
 
         # Use shared quarantine manager if provided, otherwise create own
         self._quarantine_manager = quarantine_manager or QuarantineManager()

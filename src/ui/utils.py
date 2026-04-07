@@ -62,6 +62,25 @@ ICON_FALLBACKS: dict[str, tuple[str, ...]] = {
         "preferences-system-symbolic",
     ),
     "applications-system-symbolic": ("preferences-system-symbolic",),
+    "object-select-symbolic": (
+        "emblem-ok-symbolic",
+        "emblem-default-symbolic",
+        "dialog-information-symbolic",
+    ),
+    "dialog-question-symbolic": (
+        "dialog-information-symbolic",
+        "help-about-symbolic",
+    ),
+    "system-lock-screen-symbolic": (
+        "changes-prevent-symbolic",
+        "channel-secure-symbolic",
+        "security-high-symbolic",
+        "preferences-system-symbolic",
+    ),
+    "network-server-symbolic": (
+        "network-workgroup-symbolic",
+        "preferences-system-symbolic",
+    ),
     "help-about-symbolic": ("dialog-information-symbolic",),
     "info-symbolic": ("dialog-information-symbolic",),
     "web-browser-symbolic": (

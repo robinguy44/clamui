@@ -128,6 +128,12 @@ class MockAdwApplicationWindow(MockGtkWidget):
     pass
 
 
+class MockAdwExpanderRow(MockGtkWidget):
+    """Mock for Adw.ExpanderRow (used as collapsible section containers)."""
+
+    pass
+
+
 class MockGtkListBox(MockGtkWidget):
     """Mock for Gtk.ListBox."""
 
@@ -265,6 +271,7 @@ def mock_gi_modules():
     mock_adw.Dialog = MockAdwDialog
     mock_adw.Window = MockAdwWindow
     mock_adw.ApplicationWindow = MockAdwApplicationWindow
+    mock_adw.ExpanderRow = MockAdwExpanderRow
 
     # Widget row constructors return unique MagicMock instances to track calls separately
     mock_adw.ActionRow = MagicMock(side_effect=lambda *args, **kwargs: MagicMock())

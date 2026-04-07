@@ -13,6 +13,7 @@ src/cli/scheduled_scan.py
 src/cli/status_cmd.py
 src/notification_dispatcher.py
 src/core/clamav_detection.py
+src/core/system_audit.py
 src/core/file_manager_integration.py
 src/core/keyring_manager.py
 src/core/device_monitor.py
@@ -25,6 +26,7 @@ src/core/virustotal.py
 src/ui/clipboard_helper.py
 src/ui/close_behavior_dialog.py
 src/ui/compat.py
+src/ui/audit_view.py
 src/ui/components_view.py
 src/ui/database_missing_dialog.py
 src/ui/file_export.py

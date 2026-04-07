@@ -76,17 +76,19 @@ class StatisticsView(Gtk.Box):
     Uses Adw.PreferencesGroup for consistent styling with other views.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, log_manager=None, **kwargs):
         """
         Initialize the statistics view.
 
         Args:
+            log_manager: Optional shared LogManager instance. If not provided,
+                StatisticsCalculator creates its own.
             **kwargs: Additional arguments passed to parent
         """
         super().__init__(orientation=Gtk.Orientation.VERTICAL, **kwargs)
 
-        # Initialize statistics calculator
-        self._calculator = StatisticsCalculator()
+        # Initialize statistics calculator with shared log manager
+        self._calculator = StatisticsCalculator(log_manager=log_manager)
 
         # Current selected timeframe
         self._current_timeframe: str = Timeframe.WEEKLY.value
@@ -101,11 +103,14 @@ class StatisticsView(Gtk.Box):
         # Quick action callback (for triggering scans from parent)
         self._on_quick_scan_requested = None
 
+        # Track whether initial data load has happened
+        self._initial_load_done = False
+
         # Set up the UI
         self._setup_ui()
 
-        # Load statistics on startup asynchronously
-        GLib.idle_add(self._load_statistics_async)
+        # Defer data loading until view becomes visible
+        self.connect("map", self._on_first_map)
 
     def _setup_ui(self):
         """Set up the statistics view UI layout."""
@@ -1059,6 +1064,12 @@ class StatisticsView(Gtk.Box):
             # Ensure loading flag is reset even if widget operations fail
             # This prevents stuck loading state
             self._is_loading = False
+
+    def _on_first_map(self, widget):
+        """Load statistics when the view first becomes visible."""
+        if not self._initial_load_done:
+            self._initial_load_done = True
+            self._load_statistics_async()
 
     def _on_refresh_clicked(self, button: Gtk.Button):
         """Handle refresh button click."""

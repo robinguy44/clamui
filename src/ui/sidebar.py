@@ -30,6 +30,7 @@ NAVIGATION_ITEMS = [
     ("components", "applications-system-symbolic", N_("Components")),
     ("quarantine", "security-medium-symbolic", N_("Quarantine")),
     ("statistics", "applications-science-symbolic", N_("Statistics")),
+    ("audit", "security-high-symbolic", N_("Audit")),
 ]
 
 

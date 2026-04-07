@@ -144,19 +144,21 @@ class LogsView(Gtk.Box):
     Uses a tabbed interface to separate historical logs from daemon logs.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, log_manager=None, **kwargs):
         """
         Initialize the logs view.
 
         Args:
+            log_manager: Optional shared LogManager instance. If not provided,
+                a new one is created.
             **kwargs: Additional arguments passed to parent
         """
         super().__init__(orientation=Gtk.Orientation.VERTICAL, **kwargs)
 
-        # Initialize log manager
-        self._log_manager = LogManager()
+        # Use shared log manager if provided, otherwise create own
+        self._log_manager = log_manager if log_manager is not None else LogManager()
 
-        # Initialize statistics calculator
+        # Initialize statistics calculator with shared log manager
         self._statistics_calculator = StatisticsCalculator(log_manager=self._log_manager)
 
         # Currently selected log entry
@@ -174,6 +176,9 @@ class LogsView(Gtk.Box):
         # Set up the UI (this creates self._logs_listbox and self._logs_scrolled)
         self._setup_ui()
 
+        # Track whether initial data load has happened
+        self._initial_load_done = False
+
         # Create pagination controller
         self._pagination = PaginatedListController(
             listbox=self._logs_listbox,
@@ -181,8 +186,8 @@ class LogsView(Gtk.Box):
             row_factory=self._create_log_row,
         )
 
-        # Load logs on startup asynchronously
-        GLib.idle_add(self._load_logs_async)
+        # Defer data loading until view becomes visible
+        self.connect("map", self._on_first_map)
 
     def _setup_ui(self):
         """Set up the logs view UI layout with tabbed interface."""
@@ -546,6 +551,12 @@ class LogsView(Gtk.Box):
 
         # Check daemon status on load
         GLib.idle_add(self._check_daemon_status)
+
+    def _on_first_map(self, widget):
+        """Load log data when the view first becomes visible."""
+        if not self._initial_load_done:
+            self._initial_load_done = True
+            self._load_logs_async()
 
     def _load_logs_async(self):
         """

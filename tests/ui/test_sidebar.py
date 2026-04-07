@@ -137,8 +137,8 @@ class TestNavigationItems:
         """Test that all expected views are in NAVIGATION_ITEMS."""
         from src.ui.sidebar import NAVIGATION_ITEMS
 
-        # Should have 6 navigation items
-        assert len(NAVIGATION_ITEMS) == 6
+        # Should have 7 navigation items (including Audit)
+        assert len(NAVIGATION_ITEMS) == 7
 
     def test_navigation_items_order(self, mock_gi_modules):
         """Test that navigation items are in expected order."""
@@ -153,5 +153,6 @@ class TestNavigationItems:
             "components",
             "quarantine",
             "statistics",
+            "audit",
         ]
         assert view_ids == expected_order

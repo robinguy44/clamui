@@ -45,6 +45,12 @@ class ViewCoordinator:
                 ["<Control>6"],
                 self._app._on_show_statistics,
             ),
+            (
+                "show-audit",
+                "app.show-audit",
+                ["<Control>7"],
+                self._app._on_show_audit,
+            ),
             ("start-scan", "app.start-scan", ["<Control>s"], self._app._on_start_scan),
             ("start-update", "app.start-update", ["<Control>u"], self._app._on_start_update),
             ("scan-file", "app.scan-file", [], self._app._on_scan_file),

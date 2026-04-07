@@ -118,6 +118,7 @@ class ClamUIApp(Adw.Application):
         self._components_view = None
         self._statistics_view = None
         self._quarantine_view = None
+        self._audit_view = None
         self._current_view = None
 
         # Tray indicator (initialized in do_startup if available)
@@ -132,6 +133,9 @@ class ClamUIApp(Adw.Application):
 
         # Shared quarantine manager (lazy-initialized)
         self._quarantine_manager = None
+
+        # Shared log manager (lazy-initialized, shared across views)
+        self._log_manager = None
 
         # VirusTotal client (lazy-initialized)
         self._vt_client = None
@@ -200,6 +204,20 @@ class ClamUIApp(Adw.Application):
             self._quarantine_manager = QuarantineManager()
         return self._quarantine_manager
 
+    @property
+    def log_manager(self):
+        """
+        Get the shared LogManager instance, creating it lazily if needed.
+
+        Shared across views to avoid redundant path resolution and directory
+        creation that occurs when each view creates its own LogManager.
+        """
+        if self._log_manager is None:
+            from .core.log_manager import LogManager
+
+            self._log_manager = LogManager()
+        return self._log_manager
+
     def _preinit_quarantine_async(self) -> None:
         """
         Pre-initialize quarantine manager asynchronously in a background thread.
@@ -235,6 +253,7 @@ class ClamUIApp(Adw.Application):
             self._scan_view = ScanView(
                 settings_manager=self._settings_manager,
                 quarantine_manager=self.quarantine_manager,
+                log_manager=self.log_manager,
             )
             self._scan_view.set_scan_state_changed_callback(self._on_scan_state_changed)
         return self._scan_view
@@ -254,7 +273,7 @@ class ClamUIApp(Adw.Application):
         if self._logs_view is None:
             from .ui.logs_view import LogsView
 
-            self._logs_view = LogsView()
+            self._logs_view = LogsView(log_manager=self.log_manager)
         return self._logs_view
 
     @property
@@ -263,7 +282,7 @@ class ClamUIApp(Adw.Application):
         if self._components_view is None:
             from .ui.components_view import ComponentsView
 
-            self._components_view = ComponentsView()
+            self._components_view = ComponentsView(log_manager=self.log_manager)
         return self._components_view
 
     @property
@@ -272,7 +291,7 @@ class ClamUIApp(Adw.Application):
         if self._statistics_view is None:
             from .ui.statistics_view import StatisticsView
 
-            self._statistics_view = StatisticsView()
+            self._statistics_view = StatisticsView(log_manager=self.log_manager)
         return self._statistics_view
 
     @property
@@ -286,19 +305,35 @@ class ClamUIApp(Adw.Application):
             )
         return self._quarantine_view
 
+    @property
+    def audit_view(self):
+        """Get the audit view instance, creating it lazily if needed."""
+        if self._audit_view is None:
+            from .ui.audit_view import AuditView
+
+            self._audit_view = AuditView(
+                notification_manager=self._notification_manager,
+            )
+        return self._audit_view
+
     def do_activate(self):
         """Activate the application, creating the main window."""
+        t0 = time.monotonic()
         win = self.props.active_window
         if not win:
             win = MainWindow(self)
+            logger.debug("MainWindow created in %.1f ms", (time.monotonic() - t0) * 1000)
 
         # Set scan view as the default content on first activation
         if self._first_activation:
+            t1 = time.monotonic()
             win.set_content_view(self.scan_view)
+            logger.debug("ScanView created in %.1f ms", (time.monotonic() - t1) * 1000)
             win.set_active_view("scan")
             self._current_view = "scan"
 
         win.present()
+        logger.debug("do_activate completed in %.1f ms", (time.monotonic() - t0) * 1000)
         self._ensure_log_privacy_migration_monitor()
 
         if self._first_activation:
@@ -316,9 +351,7 @@ class ClamUIApp(Adw.Application):
     def _get_startup_log_manager(self):
         """Get the shared LogManager used to monitor privacy migration progress."""
         if self._startup_log_manager is None:
-            from .core.log_manager import LogManager
-
-            self._startup_log_manager = LogManager()
+            self._startup_log_manager = self.log_manager
         return self._startup_log_manager
 
     def _format_log_privacy_status(self, processed_files: int, total_files: int) -> str:
@@ -600,7 +633,10 @@ class ClamUIApp(Adw.Application):
         """Handle the show-update action."""
         win = self.props.active_window
         if win:
-            win.set_content_view(self.update_view)
+            t0 = time.monotonic()
+            view = self.update_view
+            logger.debug("UpdateView ready in %.1f ms", (time.monotonic() - t0) * 1000)
+            win.set_content_view(view)
             win.set_active_view("update")
             self._current_view = "update"
 
@@ -608,7 +644,10 @@ class ClamUIApp(Adw.Application):
         """Handle the show-logs action."""
         win = self.props.active_window
         if win:
-            win.set_content_view(self.logs_view)
+            t0 = time.monotonic()
+            view = self.logs_view
+            logger.debug("LogsView ready in %.1f ms", (time.monotonic() - t0) * 1000)
+            win.set_content_view(view)
             win.set_active_view("logs")
             self._current_view = "logs"
 
@@ -616,7 +655,10 @@ class ClamUIApp(Adw.Application):
         """Handle the show-components action."""
         win = self.props.active_window
         if win:
-            win.set_content_view(self.components_view)
+            t0 = time.monotonic()
+            view = self.components_view
+            logger.debug("ComponentsView ready in %.1f ms", (time.monotonic() - t0) * 1000)
+            win.set_content_view(view)
             win.set_active_view("components")
             self._current_view = "components"
 
@@ -624,9 +666,23 @@ class ClamUIApp(Adw.Application):
         """Handle the show-statistics action."""
         win = self.props.active_window
         if win:
-            win.set_content_view(self.statistics_view)
+            t0 = time.monotonic()
+            view = self.statistics_view
+            logger.debug("StatisticsView ready in %.1f ms", (time.monotonic() - t0) * 1000)
+            win.set_content_view(view)
             win.set_active_view("statistics")
             self._current_view = "statistics"
+
+    def _on_show_audit(self, action, param):
+        """Handle the show-audit action."""
+        win = self.props.active_window
+        if win:
+            t0 = time.monotonic()
+            view = self.audit_view
+            logger.debug("AuditView ready in %.1f ms", (time.monotonic() - t0) * 1000)
+            win.set_content_view(view)
+            win.set_active_view("audit")
+            self._current_view = "audit"
 
     def _on_start_scan(self, action, param):
         """Handle the start-scan action."""
