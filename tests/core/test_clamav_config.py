@@ -1220,3 +1220,270 @@ class TestParseConfigFlatpak:
 
         assert config is None
         assert "Failed to read" in error
+
+
+class TestSetValueOrphanedRawLines:
+    """Tests for set_value blanking orphaned raw_lines from duplicated entries."""
+
+    def test_set_value_blanks_duplicate_entries(self):
+        """Test that set_value blanks raw_lines for duplicate key entries."""
+        config = ClamAVConfig(file_path=Path("/test"))
+        config.raw_lines = [
+            "# Comment\n",
+            "LogVerbose no\n",
+            "Checks 24\n",
+            "\n",
+            "LogVerbose no\n",  # Duplicate at line 5
+            "Checks 24\n",  # Duplicate at line 6
+        ]
+        config.values = {
+            "LogVerbose": [
+                ClamAVConfigValue(value="no", line_number=2),
+                ClamAVConfigValue(value="no", line_number=5),
+            ],
+            "Checks": [
+                ClamAVConfigValue(value="24", line_number=3),
+                ClamAVConfigValue(value="24", line_number=6),
+            ],
+        }
+
+        config.set_value("LogVerbose", "yes")
+        config.set_value("Checks", "12")
+
+        output = config.to_string()
+        # Duplicates should be gone
+        assert output.count("LogVerbose") == 1
+        assert output.count("Checks") == 1
+        assert "LogVerbose yes" in output
+        assert "Checks 12" in output
+
+    def test_set_value_blanks_many_duplicates(self):
+        """Test cleanup of heavily corrupted config (12x duplication)."""
+        config = ClamAVConfig(file_path=Path("/test"))
+
+        # Simulate 4 duplicate blocks
+        raw = ["# Comment\n", "UpdateLogFile /var/log/freshclam.log\n"]
+        values_list = [ClamAVConfigValue(value="/var/log/freshclam.log", line_number=2)]
+        for _i in range(3):
+            line_num = len(raw) + 1
+            raw.append("UpdateLogFile /var/log/freshclam.log\n")
+            values_list.append(
+                ClamAVConfigValue(value="/var/log/freshclam.log", line_number=line_num)
+            )
+
+        config.raw_lines = raw
+        config.values = {"UpdateLogFile": values_list}
+
+        config.set_value("UpdateLogFile", "/var/log/freshclam.log")
+
+        output = config.to_string()
+        assert output.count("UpdateLogFile") == 1
+
+    def test_set_value_single_entry_no_blanking(self):
+        """Test that set_value with a single entry doesn't blank anything."""
+        config = ClamAVConfig(file_path=Path("/test"))
+        config.raw_lines = ["LogVerbose no\n"]
+        config.values = {
+            "LogVerbose": [ClamAVConfigValue(value="no", line_number=1)],
+        }
+
+        config.set_value("LogVerbose", "yes")
+
+        output = config.to_string()
+        assert output.count("LogVerbose") == 1
+        assert "LogVerbose yes" in output
+
+    def test_set_value_idempotent_after_cleanup(self, tmp_path):
+        """Test that re-saving a cleaned config never re-introduces duplicates."""
+        config_file = tmp_path / "test.conf"
+        config_file.write_text("# Comment\nLogVerbose no\nChecks 24\n\nLogVerbose no\nChecks 24\n")
+
+        for _ in range(4):
+            config, _ = parse_config(str(config_file))
+            config.set_value("LogVerbose", "yes")
+            config.set_value("Checks", "12")
+            output = config.to_string()
+            config_file.write_text(output)
+
+            # Must never have duplicates regardless of iteration
+            assert output.count("LogVerbose") == 1
+            assert output.count("Checks") == 1
+
+
+class TestWriteConfigsFlatpak:
+    """Tests for Flatpak-aware write_configs_with_elevation."""
+
+    def test_flatpak_elevated_write_uses_host_spawn(self, monkeypatch):
+        """Test that elevated writes in Flatpak use flatpak-spawn --host."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/clamd.conf"))
+        config.set_value("LogVerbose", "yes")
+
+        monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _: True)
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+
+        run_calls = []
+
+        def _fake_run(cmd, **kwargs):
+            run_calls.append(cmd)
+
+            class _Result:
+                returncode = 0
+                stderr = ""
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, error = write_configs_with_elevation([config])
+
+        assert success is True
+        assert error is None
+        assert len(run_calls) == 1
+        cmd = run_calls[0]
+        # Must start with flatpak-spawn --host
+        assert cmd[0] == "flatpak-spawn"
+        assert cmd[1] == "--host"
+        assert cmd[2] == "pkexec"
+
+    def test_flatpak_elevated_write_skips_helper_binary(self, monkeypatch):
+        """Test that Flatpak uses shell fallback, not sandbox-local helper."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/clamd.conf"))
+        config.set_value("LogVerbose", "yes")
+
+        monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _: True)
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+        monkeypatch.setattr(
+            clamav_config_module,
+            "_get_privileged_writer_path",
+            lambda: "/app/bin/clamui-apply-preferences",
+        )
+
+        run_calls = []
+
+        def _fake_run(cmd, **kwargs):
+            run_calls.append(cmd)
+
+            class _Result:
+                returncode = 0
+                stderr = ""
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, _ = write_configs_with_elevation([config])
+
+        assert success is True
+        cmd = run_calls[0]
+        # Should NOT use the helper binary (it's inside the sandbox)
+        assert "/app/bin/clamui-apply-preferences" not in cmd
+        # Should use sh -c with inline script
+        assert "sh" in cmd
+        assert "-c" in cmd
+
+    def test_native_elevated_write_no_host_spawn(self, monkeypatch):
+        """Test that native (non-Flatpak) writes don't use flatpak-spawn."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/clamd.conf"))
+        config.set_value("LogVerbose", "yes")
+
+        monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _: True)
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: False)
+        monkeypatch.setattr(
+            clamav_config_module,
+            "_get_privileged_writer_path",
+            lambda: "/usr/bin/clamui-apply-preferences",
+        )
+
+        run_calls = []
+
+        def _fake_run(cmd, **kwargs):
+            run_calls.append(cmd)
+
+            class _Result:
+                returncode = 0
+                stderr = ""
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, _ = write_configs_with_elevation([config])
+
+        assert success is True
+        cmd = run_calls[0]
+        assert cmd[0] == "pkexec"
+        assert "flatpak-spawn" not in cmd
+
+    def test_flatpak_temp_files_use_host_visible_dir(self, monkeypatch, tmp_path):
+        """Test that Flatpak temp files are placed in host-visible directory."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/clamd.conf"))
+        config.set_value("LogVerbose", "yes")
+
+        monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _: True)
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+
+        temp_paths_seen = []
+
+        def _fake_run(cmd, **kwargs):
+            # Extract temp file paths from command args
+            for arg in cmd:
+                if str(tmp_path) in str(arg) and arg.endswith(".conf"):
+                    temp_paths_seen.append(arg)
+
+            class _Result:
+                returncode = 0
+                stderr = ""
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        write_configs_with_elevation([config])
+
+        # Temp file should be in the XDG_CACHE_HOME-based directory
+        assert len(temp_paths_seen) == 1
+        assert str(tmp_path) in temp_paths_seen[0]
+
+
+class TestBackupConfigFlatpak:
+    """Tests for backup_config Flatpak-awareness."""
+
+    def test_backup_skipped_for_system_path_in_flatpak(self):
+        """Test that backup is skipped for system paths in Flatpak."""
+        from src.core.clamav_config import backup_config
+
+        with (
+            mock.patch("src.core.flatpak.is_flatpak", return_value=True),
+            mock.patch("shutil.copy2") as mock_copy,
+        ):
+            backup_config("/etc/clamav/clamd.conf")
+
+        mock_copy.assert_not_called()
+
+    def test_backup_proceeds_for_user_path_in_flatpak(self, tmp_path):
+        """Test that backup works for user-writable paths in Flatpak."""
+        from src.core.clamav_config import backup_config
+
+        config_file = tmp_path / "freshclam.conf"
+        config_file.write_text("# test config\n")
+
+        with mock.patch("src.core.flatpak.is_flatpak", return_value=True):
+            backup_config(str(config_file))
+
+        # A backup file should have been created
+        backups = list(tmp_path.glob("freshclam.bak.*"))
+        assert len(backups) == 1
+
+    def test_backup_proceeds_in_native_mode(self, tmp_path):
+        """Test that backup works normally outside Flatpak."""
+        from src.core.clamav_config import backup_config
+
+        config_file = tmp_path / "clamd.conf"
+        config_file.write_text("# test config\n")
+
+        with mock.patch("src.core.flatpak.is_flatpak", return_value=False):
+            backup_config(str(config_file))
+
+        backups = list(tmp_path.glob("clamd.bak.*"))
+        assert len(backups) == 1

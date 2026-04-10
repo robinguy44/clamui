@@ -136,6 +136,13 @@ class ClamAVConfig:
                 # Preserve the original line number for in-place update
                 line_number = existing_values[0].line_number
 
+            # Blank orphaned raw_lines for any extra entries beyond the first.
+            # Without this, duplicate lines from prior corruption persist
+            # because to_string() keeps unmodified raw_lines verbatim.
+            for extra in existing_values[1:]:
+                if extra.line_number > 0 and extra.line_number <= len(self.raw_lines):
+                    self.raw_lines[extra.line_number - 1] = ""
+
         self.values[key] = [ClamAVConfigValue(value=value, line_number=line_number)]
 
     def add_value(self, key: str, value: str, line_number: int = 0) -> None:
@@ -807,11 +814,24 @@ def backup_config(file_path: str) -> None:
     Create a backup of a configuration file.
 
     Creates a timestamped backup in the same directory as the original file.
+    In Flatpak, system paths are not directly writable so the backup is
+    skipped for those paths (the elevated write helper preserves originals).
 
     Args:
         file_path: Path to the configuration file to backup
     """
     path = Path(file_path)
+
+    # In Flatpak, system paths are read-only from the sandbox.
+    # Attempting shutil.copy2 would always fail, so skip early.
+    from .flatpak import is_flatpak
+
+    if is_flatpak() and any(
+        str(path.resolve()).startswith(prefix) for prefix in _SYSTEM_PATH_PREFIXES
+    ):
+        logger.debug("Skipping backup of %s (system path in Flatpak)", file_path)
+        return
+
     if not path.exists():
         return
 
@@ -898,6 +918,33 @@ def _get_privileged_writer_path() -> str | None:
     return shutil.which(helper_name)
 
 
+def _get_host_visible_tmpdir() -> str | None:
+    """
+    Return a temp directory visible from the host when running in Flatpak.
+
+    Flatpak sandboxes have their own /tmp that is invisible to
+    ``flatpak-spawn --host`` processes.  XDG_CACHE_HOME maps to
+    ``~/.var/app/<app-id>/cache/`` which lives on the host filesystem.
+
+    Returns:
+        A host-visible temp directory path, or None outside Flatpak.
+    """
+    from .flatpak import is_flatpak
+
+    if not is_flatpak():
+        return None
+
+    cache_dir = os.environ.get("XDG_CACHE_HOME")
+    if cache_dir:
+        tmp_dir = Path(cache_dir) / "clamui-tmp"
+        try:
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+            return str(tmp_dir)
+        except OSError:
+            pass
+    return None
+
+
 def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str | None]:
     """
     Write one or more configuration files, requesting elevation at most once.
@@ -905,6 +952,10 @@ def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str
     Automatically detects whether each file needs privilege elevation:
     - User-writable paths (e.g., ~/.config/clamav/ in Flatpak): write directly
     - System paths (e.g., /etc/clamav/): write via a single pkexec invocation
+
+    In Flatpak, pkexec is invoked on the host via ``flatpak-spawn --host``
+    because setuid binaries cannot escalate privileges inside the sandbox.
+    Temp files are placed in XDG_CACHE_HOME so they are visible from the host.
 
     Args:
         configs: Configuration objects to write
@@ -916,6 +967,8 @@ def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str
     """
     if not configs:
         return (True, None)
+
+    from .flatpak import is_flatpak
 
     try:
         pending_writes: list[tuple[Path, str]] = []
@@ -940,6 +993,10 @@ def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str
         if not elevated_writes:
             return (True, None)
 
+        # In Flatpak, sandbox /tmp is invisible to host processes.
+        # Use a host-visible cache directory for temp files instead.
+        tmpdir = _get_host_visible_tmpdir()
+
         temp_paths: list[str] = []
         try:
             script_args: list[str] = []
@@ -949,22 +1006,32 @@ def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str
                     suffix=".conf",
                     delete=False,
                     encoding="utf-8",
+                    dir=tmpdir,
                 ) as tmp:
                     tmp.write(content)
                     tmp_path = tmp.name
                 temp_paths.append(tmp_path)
                 script_args.extend([tmp_path, str(file_path)])
 
+            # In Flatpak, pkexec must run on the host via flatpak-spawn
+            # because setuid binaries can't escalate inside the sandbox.
+            use_host_spawn = is_flatpak()
+            prefix = ["flatpak-spawn", "--host"] if use_host_spawn else []
+
             helper_path = _get_privileged_writer_path()
-            if helper_path:
-                # Preferred path: dedicated helper keeps pkexec prompt concise and readable.
+            if helper_path and not use_host_spawn:
+                # Preferred path: dedicated helper keeps pkexec prompt
+                # concise and readable.  Not used in Flatpak because
+                # the helper binary is inside the sandbox and not
+                # accessible from the host.
                 result = subprocess.run(
-                    ["pkexec", helper_path, *script_args],
+                    [*prefix, "pkexec", helper_path, *script_args],
                     capture_output=True,
                     text=True,
                 )
             else:
-                # Fallback: keep functionality if helper command isn't installed.
+                # Fallback (always used in Flatpak): inline shell script
+                # that copies staged files and sets permissions.
                 script = """
 set -e
 while [ "$#" -gt 0 ]; do
@@ -976,7 +1043,7 @@ while [ "$#" -gt 0 ]; do
 done
 """
                 result = subprocess.run(
-                    ["pkexec", "sh", "-c", script, "clamui-config-write", *script_args],
+                    [*prefix, "pkexec", "sh", "-c", script, "clamui-config-write", *script_args],
                     capture_output=True,
                     text=True,
                 )
