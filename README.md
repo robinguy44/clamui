@@ -49,17 +49,19 @@ ClamUI provides a comprehensive set of features designed to make antivirus prote
 - **Async Scanning** — Background processing keeps the UI responsive during scans
 - **Quarantine Management** — Safely isolate and manage detected threats
 - **Scan Profiles** — Create custom configurations for different use cases
+- **On-Access Scanning** — Configure real-time file monitoring via clamonacc
 - **Automatic Device Scanning** — Scan USB drives and external storage on mount
 
 </td>
 <td width="50%" valign="top">
 
-### Management & Integration
+### Security & Monitoring
 
+- **System Security Audit** — Dashboard checking firewall, AppArmor/SELinux, SSH hardening, intrusion detection, and more
+- **Deep Security Scans** — Optional Lynis and chkrootkit scans with privilege elevation
 - **Scan History** — Track and review all past scan results
 - **Statistics Dashboard** — Monitor scanning activity and threat detections
 - **VirusTotal Integration** — Optional enhanced threat analysis via API
-- **File Manager Integration** — Right-click "Scan with ClamUI" in Nautilus, Dolphin, and Nemo
 
 </td>
 </tr>
@@ -71,6 +73,8 @@ ClamUI provides a comprehensive set of features designed to make antivirus prote
 - **Modern UI** — Native Adwaita styling with proper GNOME integration
 - **System Tray** — Quick access with actions and real-time scan progress
 - **Desktop Notifications** — Stay informed of scan results and updates
+- **Language Selection** — Override the UI language without changing system locale
+- **File Manager Integration** — Right-click "Scan with ClamUI" in Nautilus, Dolphin, and Nemo
 
 </td>
 <td width="50%" valign="top">
@@ -79,8 +83,9 @@ ClamUI provides a comprehensive set of features designed to make antivirus prote
 
 - **Multiple Scan Backends** — Choose between daemon (clamd) or direct (clamscan)
 - **Scheduled Scans** — Configure automatic scanning with systemd or cron
-- **Customizable Settings** — Extensive configuration options for your workflow
+- **ClamAV Config Editor** — Edit clamd.conf and freshclam.conf directly from the GUI
 - **CLI Subcommands** — Full headless management: scan, quarantine, profiles, status, history
+- **Debug & Diagnostics** — Configurable log verbosity, log export, and privacy-hardened logging
 - **Multi-Distro Support** — Auto-detects ClamAV config paths across Debian, Fedora, and more
 
 </td>
@@ -204,6 +209,14 @@ ClamUI stores user preferences and can be configured through the Preferences dia
 <td>Choose between automatic detection, daemon (clamd), or direct clamscan</td>
 </tr>
 <tr>
+<td><strong>ClamAV Configuration</strong></td>
+<td>Edit clamd.conf and freshclam.conf directly, with validation and automatic service restart</td>
+</tr>
+<tr>
+<td><strong>On-Access Scanning</strong></td>
+<td>Configure real-time file monitoring via clamonacc with path, thread, and size limits</td>
+</tr>
+<tr>
 <td><strong>Notifications</strong></td>
 <td>Control desktop notifications for scan results and updates</td>
 </tr>
@@ -226,6 +239,10 @@ ClamUI stores user preferences and can be configured through the Preferences dia
 <tr>
 <td><strong>Device Scanning</strong></td>
 <td>Automatically scan USB drives and external storage when connected</td>
+</tr>
+<tr>
+<td><strong>Debug &amp; Logging</strong></td>
+<td>Configure log verbosity, export logs, and manage log storage</td>
 </tr>
 </table>
 
