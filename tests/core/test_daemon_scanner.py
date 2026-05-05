@@ -1,6 +1,7 @@
 # ClamUI Daemon Scanner Tests
 """Unit tests for the daemon scanner module."""
 
+import stat
 import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -239,6 +240,23 @@ Infected files: 0
         assert result.status == scan_status_class.CLEAN
         assert result.infected_count == 0
         assert result.scanned_files == 1
+
+    def test_parse_results_file_list_error_with_zero_exit_is_error(
+        self, daemon_scanner_class, scan_status_class
+    ):
+        """clamdscan can return 0 after failing to open --file-list."""
+        scanner = daemon_scanner_class()
+        stdout = """
+ERROR: --file-list: Can't open file /run/user/1000/clamui_filelist.txt
+
+----------- SCAN SUMMARY -----------
+Infected files: 0
+"""
+
+        result = scanner._parse_results("/home/user", stdout, "", 0, file_count=0, dir_count=0)
+
+        assert result.status == scan_status_class.ERROR
+        assert "--file-list" in result.error_message
 
     def test_parse_results_infected_scan(self, daemon_scanner_class, scan_status_class):
         """Test parsing infected scan results."""
@@ -1563,6 +1581,33 @@ class TestDaemonScannerExclusionHelpers:
 
 class TestDaemonScannerFlatpakSupport:
     """Tests for DaemonScanner Flatpak mode support."""
+
+    def test_file_list_temp_dir_uses_host_visible_cache_in_flatpak(
+        self, tmp_path, daemon_scanner_class
+    ):
+        """Flatpak daemon file lists must not be created in XDG_RUNTIME_DIR."""
+        scanner = daemon_scanner_class()
+
+        with (
+            patch("src.core.daemon_scanner.is_flatpak", return_value=True),
+            patch("src.core.daemon_scanner.Path.home", return_value=tmp_path),
+        ):
+            temp_dir = scanner._get_file_list_temp_dir()
+
+        expected = tmp_path / ".cache" / "clamui"
+        assert temp_dir == str(expected)
+        assert expected.is_dir()
+        assert stat.S_IMODE(expected.stat().st_mode) == 0o700
+
+    def test_file_list_temp_dir_prefers_runtime_dir_natively(
+        self, tmp_path, monkeypatch, daemon_scanner_class
+    ):
+        """Native daemon file lists can stay in the private runtime directory."""
+        scanner = daemon_scanner_class()
+        monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path))
+
+        with patch("src.core.daemon_scanner.is_flatpak", return_value=False):
+            assert scanner._get_file_list_temp_dir() == str(tmp_path)
 
     def test_build_command_uses_optimal_flags_in_flatpak(self, tmp_path, daemon_scanner_class):
         """Test _build_command uses --multiscan --fdpass in Flatpak mode."""

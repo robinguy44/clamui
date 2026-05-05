@@ -17,7 +17,7 @@ from pathlib import Path
 
 from gi.repository import GLib
 
-from .flatpak import wrap_host_command
+from .flatpak import is_flatpak, wrap_host_command
 from .log_manager import LogManager
 from .sanitize import sanitize_surrogate_path
 from .scanner_base import (
@@ -215,13 +215,10 @@ class DaemonScanner:
             # clamdscan only emits per-file output with --file-list, not when
             # scanning a directory (which produces a single summary line)
             if use_file_list and file_paths:
-                # Prefer $XDG_RUNTIME_DIR (per-user, mode 0o700) over the default
-                # /tmp so the file-list isn't exposed to same-user processes even
-                # transiently. Falls back to the system temp if unavailable.
-                runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
-                tmp_dir = runtime_dir if runtime_dir and os.path.isdir(runtime_dir) else None
                 fd, file_list_path = tempfile.mkstemp(
-                    prefix="clamui_filelist_", suffix=".txt", dir=tmp_dir
+                    prefix="clamui_filelist_",
+                    suffix=".txt",
+                    dir=self._get_file_list_temp_dir(),
                 )
                 os.fchmod(fd, 0o600)
                 try:
@@ -473,6 +470,27 @@ class DaemonScanner:
             cmd.append(path)
 
         return wrap_host_command(cmd, force_host=True)
+
+    def _get_file_list_temp_dir(self) -> str | None:
+        """
+        Return a temp directory that the clamdscan process can read.
+
+        In Flatpak, clamdscan runs on the host through flatpak-spawn. Files
+        created in the sandbox runtime directory (for example /run/user/$UID)
+        are not necessarily visible to that host process, so daemon file lists
+        must live in a host-visible app cache directory.
+        """
+        if is_flatpak():
+            cache_dir = Path.home() / ".cache" / "clamui"
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            with contextlib.suppress(OSError):
+                os.chmod(cache_dir, 0o700)
+            return str(cache_dir)
+
+        runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
+        if runtime_dir and os.path.isdir(runtime_dir):
+            return runtime_dir
+        return None
 
     def _scan_with_progress(
         self,
@@ -822,7 +840,7 @@ class DaemonScanner:
         # Determine overall status based on exit code
         warning_message = None
         if exit_code == 0:
-            status = ScanStatus.CLEAN
+            status = ScanStatus.ERROR if hard_error_lines else ScanStatus.CLEAN
         elif exit_code == 1:
             status = ScanStatus.INFECTED
         elif exit_code == 2:
