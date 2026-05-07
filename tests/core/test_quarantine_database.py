@@ -508,8 +508,7 @@ class TestQuarantineDatabasePermissionMasking:
         conn = sqlite3.connect(db_path)
         try:
             cursor = conn.execute(
-                "SELECT original_permissions FROM quarantine "
-                "WHERE quarantine_path = ?",
+                "SELECT original_permissions FROM quarantine WHERE quarantine_path = ?",
                 ("/quarantine/setuid.quar",),
             )
             (stored,) = cursor.fetchone()
@@ -524,6 +523,7 @@ class TestQuarantineDatabasePermissionMasking:
         db_path = os.path.join(temp_db_dir, "test_quarantine.db")
         conn = sqlite3.connect(db_path)
         try:
+            conn.execute("PRAGMA ignore_check_constraints = ON")
             conn.execute(
                 """
                 INSERT INTO quarantine
@@ -549,8 +549,7 @@ class TestQuarantineDatabasePermissionMasking:
         assert entry is not None
         # The materialized entry must NOT carry the high bits.
         assert entry.original_permissions == 0o755, (
-            f"from_row returned {oct(entry.original_permissions)}, "
-            f"expected {oct(0o755)}"
+            f"from_row returned {oct(entry.original_permissions)}, expected {oct(0o755)}"
         )
 
     def test_from_row_preserves_legacy_default_when_column_missing(self):

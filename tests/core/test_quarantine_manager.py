@@ -585,6 +585,7 @@ class TestQuarantineManagerPermissions:
         db_path = manager._database._db_path
         conn = sqlite3.connect(db_path)
         try:
+            conn.execute("PRAGMA ignore_check_constraints = ON")
             conn.execute(
                 "UPDATE quarantine SET original_permissions = ? WHERE id = ?",
                 (0o6755, entry_id),
@@ -599,8 +600,7 @@ class TestQuarantineManagerPermissions:
 
         restored_mode = os.stat(file_path).st_mode & 0o7777
         assert restored_mode == 0o755, (
-            f"Restored file mode is {oct(restored_mode)}; setuid/setgid leaked "
-            f"from tampered DB row"
+            f"Restored file mode is {oct(restored_mode)}; setuid/setgid leaked from tampered DB row"
         )
 
 
