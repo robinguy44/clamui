@@ -28,12 +28,12 @@ classifiers = [
 dependencies = [
     "PyGObject>=3.48.0",
     "pycairo>=1.25.0",
-    "psutil>=6.0.0",
+    "psutil>=7.2.2",
     "matplotlib>=3.10.9",
-    "requests>=2.32.4",
-    "urllib3>=2.6.3",
-    "certifi>=2026.4.22",
-    "keyring>=25.0.0",
+    "requests>=2.34.2",
+    "urllib3>=2.7.0",
+    "certifi>=2026.5.20",
+    "keyring>=25.7.0",
     "Pillow>=12.2.0",
     "cairosvg>=2.9.0",
 ]
@@ -41,11 +41,11 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=9.0.3",
-    "pytest-mock>=3.12.0",
-    "pytest-cov>=4.1.0",
-    "hypothesis>=6.98.0",
-    "ruff>=0.14.10",
-    "pygobject-stubs>=2.16.0",
+    "pytest-mock>=3.15.1",
+    "pytest-cov>=7.1.0",
+    "hypothesis>=6.152.9",
+    "ruff>=0.15.14",
+    "pygobject-stubs>=2.17.0",
 ]
 
 [project.scripts]
@@ -184,11 +184,11 @@ directory = "htmlcov"
 [dependency-groups]
 dev = [
     "pytest>=9.0.3",
-    "pytest-mock>=3.12.0",
-    "pytest-cov>=4.1.0",
-    "hypothesis>=6.98.0",
-    "ruff>=0.14.10",
-    "pygobject-stubs>=2.16.0",
+    "pytest-mock>=3.15.1",
+    "pytest-cov>=7.1.0",
+    "hypothesis>=6.152.9",
+    "ruff>=0.15.14",
+    "pygobject-stubs>=2.17.0",
 ]
 
 # System dependencies note:
