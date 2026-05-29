@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .i18n import _
+from .privileged_paths import staging_root_for_uid
 
 logger = logging.getLogger(__name__)
 
@@ -851,12 +852,28 @@ def _path_needs_elevation(file_path: Path) -> bool:
     """
     Check whether a config path requires elevated permissions for writing.
 
+    Inside a Flatpak sandbox the system config directories (/etc, /usr, /var,
+    /opt) are NOT the host's: the runtime supplies its own copies, which are
+    often writable but ephemeral.  A direct write there appears to succeed and
+    then silently vanishes on the next launch (issue #136), while reads are
+    redirected to the host via ``flatpak-spawn --host``.  To keep writes and
+    reads on the same (host) file, always route system paths through the host
+    privileged helper when running in Flatpak rather than trusting the
+    sandbox-local writability probe below.
+
     Args:
         file_path: Target configuration file path
 
     Returns:
         True if elevation is required, False otherwise
     """
+    from .flatpak import is_flatpak
+
+    if is_flatpak() and any(
+        str(file_path.resolve()).startswith(prefix) for prefix in _SYSTEM_PATH_PREFIXES
+    ):
+        return True
+
     parent_dir = file_path.parent
 
     try:
@@ -918,7 +935,18 @@ def _get_privileged_writer_path() -> str | None:
     """
     helper_name = "clamui-apply-preferences"
 
-    # Prefer helper in the active Python environment (venv/system install).
+    # In Flatpak the helper is invoked via ``flatpak-spawn --host pkexec``, so
+    # it must be resolved against the HOST filesystem.  The sandbox-internal
+    # ``/app/bin/clamui-apply-preferences`` does not exist on the host and would
+    # make pkexec exit 127, surfacing a misleading "Authorization failed" error
+    # (issue #136).  Resolve via ``flatpak-spawn --host which`` instead; a None
+    # result here yields the clear "helper not installed" message.
+    from .flatpak import is_flatpak, which_host_command
+
+    if is_flatpak():
+        return which_host_command(helper_name)
+
+    # Native: prefer helper in the active Python environment (venv/system install).
     python_bin_dir = Path(sys.executable).resolve().parent
     helper_path = python_bin_dir / helper_name
     if helper_path.is_file() and os.access(helper_path, os.X_OK):
@@ -931,57 +959,33 @@ def _make_staging_dir() -> Path:
     """
     Create a per-invocation staging directory with mode 0o700.
 
-    Preference order so the staging path is always reachable from the
-    privileged helper running on the host:
+    The staging root MUST match what the privileged helper expects: the helper
+    independently recomputes it via ``staging_root_for_uid`` and *rejects* any
+    staged source that does not resolve under that exact directory
+    (``validate_source_for_uid``).  We therefore use that single source of
+    truth -- ``/run/user/<uid>/clamui-staging`` -- as the only parent.
 
-    1. ``/run/user/<uid>/clamui-staging/<uuid>`` -- tmpfs, host-visible,
-       cleaned on logout, the canonical XDG runtime location.
-    2. ``$XDG_RUNTIME_DIR/clamui-staging/<uuid>`` -- whatever the session
-       manager exposes if ``/run/user`` is missing.
-    3. ``$XDG_CACHE_HOME/clamui-staging/<uuid>`` -- final fallback for
-       minimal containers without a runtime dir; survives reboot but is
-       under ``$HOME`` which is host-visible from Flatpak via
-       ``~/.var/app/<app-id>/cache/``.
+    The previous ``$XDG_RUNTIME_DIR`` / ``$XDG_CACHE_HOME`` fallbacks produced
+    staged paths the helper structurally refused (they are never equal to the
+    hard-coded ``/run/user/<uid>/clamui-staging`` it looks in), turning a
+    recoverable "no runtime dir" situation into an opaque "outside staging
+    root" failure.  If the canonical root cannot be created we now raise a
+    clear error instead.
 
     Returns:
         Newly-created staging directory path with mode 0o700.
 
     Raises:
-        OSError: If no candidate directory could be created.
+        OSError: If the canonical staging root could not be created.
     """
     uid = os.getuid()
-    candidates: list[Path] = []
-
-    run_user = Path(f"/run/user/{uid}")
-    if run_user.is_dir():
-        candidates.append(run_user / "clamui-staging")
-
-    xdg_runtime = os.environ.get("XDG_RUNTIME_DIR")
-    if xdg_runtime:
-        candidates.append(Path(xdg_runtime) / "clamui-staging")
-
-    xdg_cache = os.environ.get("XDG_CACHE_HOME")
-    if xdg_cache:
-        candidates.append(Path(xdg_cache) / "clamui-staging")
-    else:
-        candidates.append(Path.home() / ".cache" / "clamui-staging")
-
-    last_err: OSError | None = None
-    for parent in candidates:
-        try:
-            parent.mkdir(parents=True, exist_ok=True)
-            os.chmod(parent, 0o700)
-            staging = parent / uuid.uuid4().hex
-            staging.mkdir(mode=0o700)
-            os.chmod(staging, 0o700)
-            return staging
-        except OSError as exc:
-            last_err = exc
-            continue
-
-    if last_err is not None:
-        raise last_err
-    raise OSError("No staging directory candidate could be created")
+    parent = staging_root_for_uid(uid)
+    parent.mkdir(parents=True, exist_ok=True)
+    os.chmod(parent, 0o700)
+    staging = parent / uuid.uuid4().hex
+    staging.mkdir(mode=0o700)
+    os.chmod(staging, 0o700)
+    return staging
 
 
 def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str | None]:
@@ -1064,6 +1068,30 @@ def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str
 
             use_host_spawn = _running_in_flatpak()
             prefix = ["flatpak-spawn", "--host"] if use_host_spawn else []
+
+            if use_host_spawn:
+                # The helper runs on the HOST via flatpak-spawn and reads the
+                # staged files from /run/user/<uid>/clamui-staging.  If that
+                # directory is not shared across the sandbox/host boundary the
+                # helper would fail with an opaque "outside staging root" error
+                # (issue #136).  Probe host visibility first and surface a clear,
+                # actionable message instead.
+                probe = subprocess.run(
+                    ["flatpak-spawn", "--host", "test", "-e", str(staging_dir)],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if probe.returncode != 0:
+                    return (
+                        False,
+                        _(
+                            "The staging directory is not reachable by the privileged "
+                            "helper running on the host, so preferences cannot be applied "
+                            "from the Flatpak sandbox. A host-side ClamUI install is "
+                            "required to change system configuration."
+                        ),
+                    )
 
             argv = [*prefix, "pkexec", helper_path, "--protocol=2", *flat_pairs]
             result = subprocess.run(argv, capture_output=True, text=True, check=False)

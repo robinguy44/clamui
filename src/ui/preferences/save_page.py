@@ -429,12 +429,27 @@ class SavePage(PreferencesPageMixin):
                     # Disable scheduler if it was previously enabled
                     self._scheduler.disable_schedule()
 
-            # Show success message
-            GLib.idle_add(
-                self._show_success_dialog,
-                _("Configuration Saved"),
-                _("Configuration saved. Active ClamAV services were restarted where needed."),
-            )
+            # Only report success if something was actually applied.  When the
+            # user opens Save without modifying (or ever materializing) a
+            # config-backed page, nothing is collected and nothing is written;
+            # claiming "Configuration saved" in that case is misleading and was
+            # one way the Flatpak persistence bug (#136) surfaced as a phantom
+            # success.
+            if configs_to_write or scheduled_updates:
+                GLib.idle_add(
+                    self._show_success_dialog,
+                    _("Configuration Saved"),
+                    _("Configuration saved. Active ClamAV services were restarted where needed."),
+                )
+            else:
+                GLib.idle_add(
+                    self._show_success_dialog,
+                    _("No Changes to Apply"),
+                    _(
+                        "No configuration changes were detected, so nothing was saved. "
+                        "Open a settings page and modify a value before saving."
+                    ),
+                )
         except Exception as e:
             # Store error for thread-safe handling
             self._scheduler_error = str(e)

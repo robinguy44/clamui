@@ -1072,6 +1072,164 @@ class TestWriteConfigsWithElevation:
         )
 
 
+class TestFlatpakElevationRouting:
+    """Regression tests for issue #136 (Flatpak prefs silently not persisting).
+
+    Two coordinated routing rules must hold inside a Flatpak sandbox so that a
+    system-path config write reaches the *host* file instead of a non-persistent
+    sandbox copy:
+
+    1. ``_path_needs_elevation`` must force elevation for system paths so the
+       write never falls through to a direct (sandbox-local) write.
+    2. ``_get_privileged_writer_path`` must resolve the helper on the host, not
+       at the sandbox-internal ``/app/bin`` path.
+    """
+
+    def test_system_path_forces_elevation_in_flatpak(self, monkeypatch):
+        """In Flatpak, /etc paths always require elevation (no sandbox direct write)."""
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+
+        assert (
+            clamav_config_module._path_needs_elevation(Path("/etc/freshclam.conf"))
+            is True
+        )
+        assert (
+            clamav_config_module._path_needs_elevation(Path("/etc/clamav/clamd.conf"))
+            is True
+        )
+
+    def test_user_path_not_forced_to_elevation_in_flatpak(self, monkeypatch, tmp_path):
+        """In Flatpak, a writable non-system path still uses the direct write path."""
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+
+        # tmp_path is user-writable and not under a system prefix.
+        assert (
+            clamav_config_module._path_needs_elevation(tmp_path / "freshclam.conf")
+            is False
+        )
+
+    def test_writer_path_resolved_on_host_in_flatpak(self, monkeypatch):
+        """In Flatpak, the helper is resolved via the host, not /app/bin."""
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+        monkeypatch.setattr(
+            "src.core.flatpak.which_host_command",
+            lambda name: f"/usr/bin/{name}",
+        )
+
+        assert (
+            clamav_config_module._get_privileged_writer_path()
+            == "/usr/bin/clamui-apply-preferences"
+        )
+
+    def test_missing_host_helper_in_flatpak_gives_clear_error(self, monkeypatch):
+        """When the host helper is absent, the save fails with an actionable message
+        rather than silently resetting or showing 'Authorization failed'."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/freshclam.conf"))
+        config.set_value("DatabaseDirectory", "/var/lib/clamav")
+
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+        # Host helper not installed -> which returns None.
+        monkeypatch.setattr("src.core.flatpak.which_host_command", lambda _name: None)
+
+        success, error = write_configs_with_elevation([config])
+
+        assert success is False
+        assert error is not None
+        assert "helper not installed" in error.lower()
+
+    def test_flatpak_system_write_uses_host_helper_via_flatpak_spawn(
+        self, monkeypatch, tmp_path
+    ):
+        """End-to-end: a Flatpak /etc write invokes the HOST helper through
+        ``flatpak-spawn --host pkexec`` (never the sandbox /app/bin path)."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/freshclam.conf"))
+        config.set_value("DatabaseDirectory", "/var/lib/clamav")
+
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+        monkeypatch.setattr(
+            "src.core.flatpak.which_host_command",
+            lambda name: f"/usr/bin/{name}",
+        )
+        monkeypatch.setattr(
+            clamav_config_module,
+            "staging_root_for_uid",
+            lambda _uid: tmp_path / "clamui-staging",
+        )
+
+        run_calls = []
+
+        def _fake_run(cmd, **kwargs):
+            run_calls.append(cmd)
+
+            class _Result:
+                returncode = 0
+                stderr = ""
+                stdout = ""
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, error = write_configs_with_elevation([config])
+
+        assert success is True
+        assert error is None
+
+        # A host-visibility probe runs first, then the elevated pkexec call.
+        pkexec_calls = [c for c in run_calls if "pkexec" in c]
+        assert len(pkexec_calls) == 1
+        cmd = pkexec_calls[0]
+        # Host-spawn prefix, then host helper path (NOT /app/bin/...).
+        assert cmd[0:2] == ["flatpak-spawn", "--host"]
+        assert cmd[2:5] == ["pkexec", "/usr/bin/clamui-apply-preferences", "--protocol=2"]
+        assert not any(str(arg).startswith("/app/bin") for arg in cmd)
+
+        probe_calls = [c for c in run_calls if "test" in c and "-e" in c]
+        assert len(probe_calls) == 1
+
+    def test_flatpak_staging_not_host_visible_gives_clear_error(
+        self, monkeypatch, tmp_path
+    ):
+        """When the staging dir is not reachable on the host, fail clearly and
+        never invoke pkexec (issue #136 staging visibility)."""
+        config = ClamAVConfig(file_path=Path("/etc/clamav/freshclam.conf"))
+        config.set_value("DatabaseDirectory", "/var/lib/clamav")
+
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: True)
+        monkeypatch.setattr(
+            "src.core.flatpak.which_host_command",
+            lambda name: f"/usr/bin/{name}",
+        )
+        monkeypatch.setattr(
+            clamav_config_module,
+            "staging_root_for_uid",
+            lambda _uid: tmp_path / "clamui-staging",
+        )
+
+        pkexec_calls = []
+
+        def _fake_run(cmd, **kwargs):
+            if "pkexec" in cmd:
+                pkexec_calls.append(cmd)
+
+            class _Result:
+                stderr = ""
+                stdout = ""
+                # Host-visibility probe (`test -e`) fails; nothing else should run.
+                returncode = 1 if ("test" in cmd and "-e" in cmd) else 0
+
+            return _Result()
+
+        monkeypatch.setattr(clamav_config_module.subprocess, "run", _fake_run)
+
+        success, error = write_configs_with_elevation([config])
+
+        assert success is False
+        assert error is not None
+        assert "not reachable" in error.lower()
+        assert pkexec_calls == []
+
+
 class TestParseConfigFlatpak:
     """Tests for parse_config() Flatpak-aware file reading."""
 
@@ -1339,8 +1497,8 @@ class TestWriteConfigsFlatpak:
 
         assert success is True
         assert error is None
-        assert len(run_calls) == 1
-        cmd = run_calls[0]
+        # A host-visibility probe precedes the pkexec call; select the latter.
+        cmd = next(c for c in run_calls if "pkexec" in c)
         # Must start with flatpak-spawn --host
         assert cmd[0] == "flatpak-spawn"
         assert cmd[1] == "--host"
@@ -1383,7 +1541,7 @@ class TestWriteConfigsFlatpak:
         success, _err = write_configs_with_elevation([config])
 
         assert success is True
-        cmd = run_calls[0]
+        cmd = next(c for c in run_calls if "pkexec" in c)
         assert cmd[0:2] == ["flatpak-spawn", "--host"]
         assert cmd[2] == "pkexec"
         assert cmd[3] == "/usr/bin/clamui-apply-preferences"
@@ -1426,17 +1584,18 @@ class TestWriteConfigsFlatpak:
         assert "flatpak-spawn" not in cmd
 
     def test_staged_files_live_under_per_invocation_staging_dir(self, monkeypatch, tmp_path):
-        """Each invocation stages into a fresh per-user, mode-0o700 directory.
+        """Each invocation stages into a fresh per-invocation directory under the
+        canonical staging root.
 
-        The staging dir is rooted under ``/run/user/<uid>``, with
-        ``XDG_RUNTIME_DIR`` and ``XDG_CACHE_HOME`` as fallbacks.  We
-        force the cache fallback by hiding ``/run/user`` and
-        ``XDG_RUNTIME_DIR`` so the test can observe the staged path
-        and confirm it is mode 0o700.
+        The staging root is the single source of truth shared with the helper
+        (``staging_root_for_uid``); we redirect it under ``tmp_path`` so the
+        test does not depend on ``/run/user/<uid>`` existing, and confirm the
+        staged file lives under that root.
         """
         config = ClamAVConfig(file_path=Path("/etc/clamav/clamd.conf"))
         config.set_value("LogVerbose", "yes")
 
+        staging_root = tmp_path / "clamui-staging"
         monkeypatch.setattr(clamav_config_module, "_path_needs_elevation", lambda _: True)
         monkeypatch.setattr(clamav_config_module, "_running_in_flatpak", lambda: True)
         monkeypatch.setattr(
@@ -1444,33 +1603,23 @@ class TestWriteConfigsFlatpak:
             "_get_privileged_writer_path",
             lambda: "/usr/bin/clamui-apply-preferences",
         )
-        # Force the XDG_CACHE_HOME fallback so the test does not depend on
-        # /run/user/<uid> existing inside the test runner.
-        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-        monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
-        # Pretend /run/user/<uid> is missing so we fall through to XDG_CACHE_HOME.
-        real_is_dir = Path.is_dir
-
-        def _is_dir(self):
-            if str(self).startswith("/run/user/"):
-                return False
-            return real_is_dir(self)
-
-        monkeypatch.setattr(Path, "is_dir", _is_dir)
+        monkeypatch.setattr(
+            clamav_config_module, "staging_root_for_uid", lambda _uid: staging_root
+        )
 
         staged_paths: list[str] = []
 
         def _fake_run(cmd, **kwargs):
-            # The first staged-source argument is at index 4 (after
-            # pkexec, helper, --protocol=2, with optional flatpak-spawn
-            # --host prefix); collect any path under the staging tree.
+            # Both the host-visibility probe (`test -e <dir>`) and the pkexec
+            # call pass; collect the staged source path (ends in .conf).
             for arg in cmd:
-                if str(tmp_path) in str(arg) and str(arg).endswith(".conf"):
+                if str(staging_root) in str(arg) and str(arg).endswith(".conf"):
                     staged_paths.append(arg)
 
             class _Result:
                 returncode = 0
                 stderr = ""
+                stdout = ""
 
             return _Result()
 
@@ -1481,9 +1630,8 @@ class TestWriteConfigsFlatpak:
         assert success is True
         assert len(staged_paths) == 1
         staged = Path(staged_paths[0])
-        assert str(tmp_path) in str(staged)
-        # Even though _fake_run does not actually consume the file, the
-        # staging-dir cleanup in the finally block runs after subprocess.run
+        assert str(staging_root) in str(staged)
+        # The staging-dir cleanup in the finally block runs after subprocess.run
         # returns; the staged file should already be removed by now.
         assert not staged.exists()
 
