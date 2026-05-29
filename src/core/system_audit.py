@@ -26,6 +26,7 @@ from enum import Enum
 from pathlib import Path
 
 from .clamav_detection import (
+    _host_database_dirs_to_check,
     check_clamav_installed,
     check_clamd_connection,
     check_database_available,
@@ -236,6 +237,44 @@ def _run_command(args: list[str], timeout: int = _SUBPROCESS_TIMEOUT) -> tuple[i
         return (-1, "", str(e))
 
 
+def _read_cvd_header(cvd_path: str) -> tuple[str | None, str | None]:
+    """Read the first 512 bytes of a .cvd/.cld file (its colon-delimited header).
+
+    In Flatpak the database lives on the host, so the header is read via
+    ``flatpak-spawn --host head -c 512`` rather than direct file I/O.
+
+    Returns:
+        (header_text, None) on success or (None, error_message) on failure.
+    """
+    if is_flatpak():
+        try:
+            result = subprocess.run(
+                wrap_host_command(["head", "-c", "512", cvd_path]),
+                capture_output=True,
+                timeout=5,
+                env=get_clean_env(),
+            )
+        except subprocess.TimeoutExpired:
+            return (None, _("Timed out reading database"))
+        except FileNotFoundError:
+            return (None, _("flatpak-spawn not available"))
+        except OSError as e:
+            return (None, str(e))
+        if result.returncode != 0:
+            return (None, _("Permission denied reading database"))
+        return (result.stdout.decode("ascii", errors="ignore"), None)
+
+    try:
+        with open(cvd_path, "rb") as f:
+            return (f.read(512).decode("ascii", errors="ignore"), None)
+    except FileNotFoundError:
+        return (None, _("Database file not found"))
+    except PermissionError:
+        return (None, _("Permission denied reading database"))
+    except OSError as e:
+        return (None, str(e))
+
+
 def _parse_cvd_age(cvd_path: str) -> tuple[int | None, str | None]:
     """Parse a ClamAV .cvd/.cld file header to determine database age.
 
@@ -245,15 +284,9 @@ def _parse_cvd_age(cvd_path: str) -> tuple[int | None, str | None]:
     Returns:
         (days_old, build_date_string) or (None, error_message).
     """
-    try:
-        with open(cvd_path, "rb") as f:
-            header = f.read(512).decode("ascii", errors="ignore")
-    except FileNotFoundError:
-        return (None, _("Database file not found"))
-    except PermissionError:
-        return (None, _("Permission denied reading database"))
-    except OSError as e:
-        return (None, str(e))
+    header, error = _read_cvd_header(cvd_path)
+    if header is None:
+        return (None, error)
 
     fields = header.split(":")
     if len(fields) < 9 or not fields[0].startswith("ClamAV-VDB"):
@@ -270,18 +303,99 @@ def _parse_cvd_age(cvd_path: str) -> tuple[int | None, str | None]:
         return (None, _("Could not parse database timestamp"))
 
 
-def _find_daily_cvd_path() -> str | None:
-    """Find the path to the daily.cvd or daily.cld database file."""
-    if is_flatpak():
+def _host_find_daily_cvd(db_dir: str) -> str | None:
+    """Locate daily.cvd/daily.cld inside a host database directory (Flatpak)."""
+    try:
+        result = subprocess.run(
+            [
+                "flatpak-spawn", "--host", "find", db_dir,
+                "-maxdepth", "1", "-type", "f",
+                "(", "-iname", "daily.cvd", "-o", "-iname", "daily.cld", ")",
+                "-print", "-quit",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            env=get_clean_env(),
+        )
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return None
+    if result.returncode != 0:
+        return None
+    lines = result.stdout.strip().splitlines()
+    return lines[0] if lines else None
 
-    db_dir = Path("/var/lib/clamav")
 
-    for ext in (".cvd", ".cld"):
-        path = db_dir / f"daily{ext}"
-        if path.exists():
-            return str(path)
+def _find_daily_cvd_path() -> str | None:
+    """Find the path to the daily.cvd or daily.cld database file.
+
+    Checks every database directory ClamUI knows about -- the DatabaseDirectory
+    from freshclam.conf first, then distro defaults -- rather than assuming
+    /var/lib/clamav, which is wrong for custom setups and some distros.
+    """
+    for db_dir in _host_database_dirs_to_check():
+        if is_flatpak():
+            found = _host_find_daily_cvd(db_dir)
+            if found:
+                return found
+            continue
+        for ext in (".cvd", ".cld"):
+            path = Path(db_dir) / f"daily{ext}"
+            try:
+                if path.exists():
+                    return str(path)
+            except OSError:
+                # e.g. parent directory not searchable (Fedora /var/lib/clamav
+                # is mode 0750); fall through to the daemon-based fallback.
+                continue
     return None
+
+
+def _database_age_from_daemon() -> tuple[int | None, str | None]:
+    """Determine database age by asking the running clamd daemon.
+
+    ``clamdscan --version`` queries the daemon, which can read the database
+    even when the GUI user cannot -- e.g. on Fedora where /var/lib/clamav is
+    mode 0750 owned by clamupdate.  Output looks like::
+
+        ClamAV 1.0.3/27000/Thu May 28 09:00:00 2026
+
+    Returns:
+        (days_old, build_date_string); (None, build_date_string) when the date
+        could not be converted to an age; or (None, None) when unavailable.
+    """
+    returncode, stdout, _stderr = _run_command(["clamdscan", "--version"])
+    if returncode != 0 or not stdout:
+        return (None, None)
+
+    parts = stdout.split("/")
+    if len(parts) < 3:
+        return (None, None)
+    date_str = parts[2].strip()
+    if not date_str:
+        return (None, None)
+
+    try:
+        build = time.strptime(date_str, "%a %b %d %H:%M:%S %Y")
+        days_old = int((time.time() - time.mktime(build)) / 86400)
+        return (days_old, date_str)
+    except (ValueError, OverflowError):
+        # Non-C locale or unexpected format: surface the date without an age.
+        return (None, date_str)
+
+
+def _get_database_age() -> tuple[int | None, str | None]:
+    """Best-effort virus database age.
+
+    Tries the database file header first (a precise build timestamp), then
+    falls back to the daemon when the file is missing or unreadable.
+    """
+    daily_path = _find_daily_cvd_path()
+    if daily_path:
+        days_old, date_str = _parse_cvd_age(daily_path)
+        if days_old is not None:
+            return (days_old, date_str)
+    return _database_age_from_daemon()
 
 
 # =============================================================================
@@ -321,57 +435,62 @@ def check_clamav_health() -> AuditSectionResult:
         )
         return section  # No point checking further
 
-    # Check 2: Database age
-    daily_path = _find_daily_cvd_path()
-    if daily_path:
-        days_old, date_str = _parse_cvd_age(daily_path)
-        if days_old is not None:
-            if days_old <= 3:
-                section.checks.append(
-                    AuditCheckResult(
-                        name=_("Virus Database"),
-                        status=AuditStatus.PASS,
-                        detail=_("Up to date ({days} days old, built {date})").format(
-                            days=days_old, date=date_str
-                        ),
-                        info_url=_URLS["clamav_freshclam"],
-                    )
+    # Check 2: Database age.  _get_database_age() reads the database file header
+    # first, then falls back to the running daemon (clamdscan --version) when
+    # the file is missing or unreadable -- e.g. on Fedora where /var/lib/clamav
+    # is mode 0750 owned by clamupdate, so the GUI user cannot read it (#143).
+    days_old, date_str = _get_database_age()
+    if days_old is not None:
+        if days_old <= 3:
+            section.checks.append(
+                AuditCheckResult(
+                    name=_("Virus Database"),
+                    status=AuditStatus.PASS,
+                    detail=_("Up to date ({days} days old, built {date})").format(
+                        days=days_old, date=date_str
+                    ),
+                    info_url=_URLS["clamav_freshclam"],
                 )
-            elif days_old <= 7:
-                section.checks.append(
-                    AuditCheckResult(
-                        name=_("Virus Database"),
-                        status=AuditStatus.WARNING,
-                        detail=_("Database is {days} days old (built {date})").format(
-                            days=days_old, date=date_str
-                        ),
-                        recommendation=_("Update virus database to ensure protection"),
-                        install_command="sudo freshclam",
-                        info_url=_URLS["clamav_freshclam"],
-                    )
+            )
+        elif days_old <= 7:
+            section.checks.append(
+                AuditCheckResult(
+                    name=_("Virus Database"),
+                    status=AuditStatus.WARNING,
+                    detail=_("Database is {days} days old (built {date})").format(
+                        days=days_old, date=date_str
+                    ),
+                    recommendation=_("Update virus database to ensure protection"),
+                    install_command="sudo freshclam",
+                    info_url=_URLS["clamav_freshclam"],
                 )
-            else:
-                section.checks.append(
-                    AuditCheckResult(
-                        name=_("Virus Database"),
-                        status=AuditStatus.FAIL,
-                        detail=_("Database is {days} days old (built {date})").format(
-                            days=days_old, date=date_str
-                        ),
-                        recommendation=_("Database is critically outdated. Update immediately."),
-                        install_command="sudo freshclam",
-                        info_url=_URLS["clamav_freshclam"],
-                    )
-                )
+            )
         else:
             section.checks.append(
                 AuditCheckResult(
                     name=_("Virus Database"),
-                    status=AuditStatus.UNKNOWN,
-                    detail=_("Could not determine database age: {error}").format(error=date_str),
+                    status=AuditStatus.FAIL,
+                    detail=_("Database is {days} days old (built {date})").format(
+                        days=days_old, date=date_str
+                    ),
+                    recommendation=_("Database is critically outdated. Update immediately."),
+                    install_command="sudo freshclam",
                     info_url=_URLS["clamav_freshclam"],
                 )
             )
+    elif date_str:
+        # The daemon reported a build date but the age could not be computed
+        # locally (e.g. a non-English locale for the date string).
+        section.checks.append(
+            AuditCheckResult(
+                name=_("Virus Database"),
+                status=AuditStatus.UNKNOWN,
+                detail=_("Database built {date} (age could not be determined)").format(
+                    date=date_str
+                ),
+                info_url=_URLS["clamav_freshclam"],
+            )
+        )
     else:
         db_available, db_error = check_database_available()
         if not db_available:

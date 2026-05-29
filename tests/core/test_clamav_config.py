@@ -1066,10 +1066,11 @@ class TestWriteConfigsWithElevation:
         success, error = write_configs_with_elevation([config])
 
         assert success is False
-        assert (
-            error
-            == "Authorization failed. Administrator permission is required to apply these changes."
-        )
+        assert error is not None
+        # Exit 127 now yields an actionable message naming the polkit policy /
+        # helper, instead of a bare "Authorization failed" (issue #143).
+        assert "administrator authorization" in error.lower()
+        assert "polkit" in error.lower()
 
 
 class TestFlatpakElevationRouting:
@@ -1107,6 +1108,25 @@ class TestFlatpakElevationRouting:
             clamav_config_module._path_needs_elevation(tmp_path / "freshclam.conf")
             is False
         )
+
+    def test_existing_user_writable_file_skips_elevation(self, monkeypatch, tmp_path):
+        """A writable existing config (e.g. a chown'd /etc/freshclam.conf) writes
+        directly without pkexec, so the documented chown workaround works (#143)."""
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: False)
+        f = tmp_path / "freshclam.conf"
+        f.write_text("DatabaseDirectory /var/lib/clamav\n")
+
+        assert clamav_config_module._path_needs_elevation(f) is False
+
+    def test_existing_unwritable_file_needs_elevation(self, monkeypatch, tmp_path):
+        """An existing config the user cannot write (root:root) still elevates."""
+        monkeypatch.setattr("src.core.flatpak.is_flatpak", lambda: False)
+        f = tmp_path / "freshclam.conf"
+        f.write_text("DatabaseDirectory /var/lib/clamav\n")
+        # Simulate a file the current user cannot write.
+        monkeypatch.setattr(clamav_config_module.os, "access", lambda _p, _mode: False)
+
+        assert clamav_config_module._path_needs_elevation(f) is True
 
     def test_writer_path_resolved_on_host_in_flatpak(self, monkeypatch):
         """In Flatpak, the helper is resolved via the host, not /app/bin."""

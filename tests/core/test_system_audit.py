@@ -18,6 +18,8 @@ from src.core.system_audit import (
     AuditStatus,
     _check_systemd_service,
     _check_ufw_enabled,
+    _database_age_from_daemon,
+    _get_database_age,
     _parse_cvd_age,
     check_auto_updates,
     check_clamav_health,
@@ -229,6 +231,66 @@ class TestParseCvdAge:
         assert error is not None
 
 
+class TestDatabaseAgeDaemonFallback:
+    """Tests for the daemon-based database-age fallback (issue #143).
+
+    When the database files are unreadable by the GUI user (e.g. Fedora
+    /var/lib/clamav is mode 0750 owned by clamupdate), the age is recovered by
+    asking the running daemon via ``clamdscan --version``.
+    """
+
+    @patch("src.core.system_audit._run_command")
+    def test_daemon_version_parsed_to_age(self, mock_run):
+        import time
+
+        # A build date ~2 days ago in clamdscan --version's format.
+        two_days_ago = time.strftime(
+            "%a %b %d %H:%M:%S %Y", time.localtime(time.time() - 2 * 86400)
+        )
+        mock_run.return_value = (0, f"ClamAV 1.0.3/27000/{two_days_ago}", "")
+
+        days_old, date_str = _database_age_from_daemon()
+
+        assert days_old is not None
+        assert days_old >= 1
+        assert date_str == two_days_ago
+        mock_run.assert_called_once_with(["clamdscan", "--version"])
+
+    @patch("src.core.system_audit._run_command")
+    def test_daemon_unavailable_returns_none(self, mock_run):
+        mock_run.return_value = (-1, "", "command not found")
+        assert _database_age_from_daemon() == (None, None)
+
+    @patch("src.core.system_audit._run_command")
+    def test_daemon_version_without_db_info_returns_none(self, mock_run):
+        # Daemon down: clamdscan prints just the program version, no /date.
+        mock_run.return_value = (0, "ClamAV 1.0.3", "")
+        assert _database_age_from_daemon() == (None, None)
+
+    @patch("src.core.system_audit._database_age_from_daemon")
+    @patch("src.core.system_audit._find_daily_cvd_path")
+    def test_get_database_age_falls_back_to_daemon(self, mock_find, mock_daemon):
+        # File not found / unreadable -> consult the daemon.
+        mock_find.return_value = None
+        mock_daemon.return_value = (2, "Thu May 28 09:00:00 2026")
+
+        assert _get_database_age() == (2, "Thu May 28 09:00:00 2026")
+        mock_daemon.assert_called_once()
+
+    @patch("src.core.system_audit._database_age_from_daemon")
+    @patch("src.core.system_audit._parse_cvd_age")
+    @patch("src.core.system_audit._find_daily_cvd_path")
+    def test_get_database_age_prefers_readable_file(
+        self, mock_find, mock_parse, mock_daemon
+    ):
+        # A readable file header wins; the daemon is not consulted.
+        mock_find.return_value = "/var/lib/clamav/daily.cvd"
+        mock_parse.return_value = (1, "28 May 2026")
+
+        assert _get_database_age() == (1, "28 May 2026")
+        mock_daemon.assert_not_called()
+
+
 # =============================================================================
 # Check Function Tests
 # =============================================================================
@@ -246,13 +308,17 @@ class TestCheckClamavHealth:
         # Should return early with just the installation check
         assert len(result.checks) == 1
 
+    @patch("src.core.system_audit._database_age_from_daemon")
     @patch("src.core.system_audit._check_systemd_service")
     @patch("src.core.system_audit.check_clamd_connection")
     @patch("src.core.system_audit._find_daily_cvd_path")
     @patch("src.core.system_audit.check_clamav_installed")
-    def test_clamav_healthy(self, mock_installed, mock_cvd_path, mock_clamd, mock_systemd):
+    def test_clamav_healthy(
+        self, mock_installed, mock_cvd_path, mock_clamd, mock_systemd, mock_daemon_age
+    ):
         mock_installed.return_value = (True, "ClamAV 1.0.0")
         mock_cvd_path.return_value = None
+        mock_daemon_age.return_value = (None, None)
         mock_clamd.return_value = (True, "PONG")
         # Simulate: clamav-daemon active on first call,
         # clamav-freshclam active on fourth call

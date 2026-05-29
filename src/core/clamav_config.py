@@ -874,6 +874,14 @@ def _path_needs_elevation(file_path: Path) -> bool:
     ):
         return True
 
+    # If the target file already exists, decide on the file's own writability
+    # rather than its parent directory.  A user-owned /etc/freshclam.conf (e.g.
+    # after `chown $USER /etc/freshclam.conf`) is directly writable even though
+    # /etc is not -- the old parent-directory probe always demanded elevation
+    # in that case, so even the documented chown workaround failed (issue #143).
+    if file_path.exists():
+        return not os.access(file_path, os.W_OK)
+
     parent_dir = file_path.parent
 
     try:
@@ -1106,8 +1114,12 @@ def write_configs_with_elevation(configs: list[ClamAVConfig]) -> tuple[bool, str
                     return (
                         False,
                         _(
-                            "Authorization failed. Administrator permission is "
-                            "required to apply these changes."
+                            "Could not obtain administrator authorization to apply "
+                            "these changes. If you were not shown a password prompt, "
+                            "the ClamUI polkit policy or privileged helper is likely "
+                            "not installed on this system -- install the ClamUI system "
+                            "package (which provides clamui-apply-preferences and its "
+                            "polkit policy) to enable saving system configuration."
                         ),
                     )
                 if result.returncode == 3:
